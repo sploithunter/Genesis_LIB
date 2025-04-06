@@ -1,0 +1,1070 @@
+2025-04-06 14:41:03,075 - test_all_services - INFO - Starting test for all services
+2025-04-06 14:41:03,075 - test_all_services - INFO - Initializing test for all services
+2025-04-06 14:41:03,075 - generic_function_client - INFO - Initializing GenericFunctionClient
+2025-04-06 14:41:03,112 - test_all_services - INFO - Running all tests...
+2025-04-06 14:41:03,112 - test_all_services - INFO - Discovering functions...
+2025-04-06 14:41:03,112 - generic_function_client - INFO - Discovering all available functions
+FunctionCapability subscription matched with remote GUID: 01010953cb4a94a0d211a79080008402
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 0101d113514eb1f6070384a380000002
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 0101bdf6cc46f4540ccb7e9380000002
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 01013f2a0c4855c24c77718280000002
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 0101b6f4b14f413472b50c9d80000002
+FunctionCapability subscription matched with self GUID:   0101b6f4b14f413472b50c9d80000002
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=aa8e2f03-e4ea-4015-a583-fa50fdcdcd2a, provider=01013f2a0c4855c24c77718280000002, client=0101b6f4b14f413472b50c9d80000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample aa8e2f03-e4ea-4015-a583-fa50fdcdcd2a_<rti.connextdds.Time object at 0x10528a330>
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=3a8be584-dac2-4c09-818b-ed8b11b5578b, provider=01013f2a0c4855c24c77718280000002, client=0101b6f4b14f413472b50c9d80000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample 3a8be584-dac2-4c09-818b-ed8b11b5578b_<rti.connextdds.Time object at 0x1059111b0>
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=824dfcd5-ea2d-430c-a1bd-5f03e89dabc1, provider=01013f2a0c4855c24c77718280000002, client=0101b6f4b14f413472b50c9d80000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample 824dfcd5-ea2d-430c-a1bd-5f03e89dabc1_<rti.connextdds.Time object at 0x1059116b0>
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=a793123b-dfa7-4a7b-8783-71f1d581fd7e, provider=01013f2a0c4855c24c77718280000002, client=0101b6f4b14f413472b50c9d80000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample a793123b-dfa7-4a7b-8783-71f1d581fd7e_<rti.connextdds.Time object at 0x105911bf0>
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=5619beec-81dd-4f35-b1fc-8f049dc11ca2, provider=0101bdf6cc46f4540ccb7e9380000002, client=0101b6f4b14f413472b50c9d80000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample 5619beec-81dd-4f35-b1fc-8f049dc11ca2_<rti.connextdds.Time object at 0x1059120b0>
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=f21692b9-3fec-4d51-b3e0-862a337434fa, provider=0101bdf6cc46f4540ccb7e9380000002, client=0101b6f4b14f413472b50c9d80000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample f21692b9-3fec-4d51-b3e0-862a337434fa_<rti.connextdds.Time object at 0x1059126f0>
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=26902824-4418-4375-8f63-e0ba0a02d0d8, provider=0101bdf6cc46f4540ccb7e9380000002, client=0101b6f4b14f413472b50c9d80000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample 26902824-4418-4375-8f63-e0ba0a02d0d8_<rti.connextdds.Time object at 0x105912e30>
+*********ODA******** Reader structure and methods:2025-04-06 14:41:18,138 - generic_function_client - INFO - Discovered 10 functions
+2025-04-06 14:41:18,138 - generic_function_client - INFO -   - aa8e2f03-e4ea-4015-a583-fa50fdcdcd2a: add - Add two numbers
+2025-04-06 14:41:18,138 - generic_function_client - INFO -   - 3a8be584-dac2-4c09-818b-ed8b11b5578b: subtract - Subtract two numbers
+2025-04-06 14:41:18,138 - generic_function_client - INFO -   - 824dfcd5-ea2d-430c-a1bd-5f03e89dabc1: multiply - Multiply two numbers
+2025-04-06 14:41:18,138 - generic_function_client - INFO -   - a793123b-dfa7-4a7b-8783-71f1d581fd7e: divide - Divide two numbers
+2025-04-06 14:41:18,138 - generic_function_client - INFO -   - 5619beec-81dd-4f35-b1fc-8f049dc11ca2: count_letter - Count occurrences of a letter in text
+2025-04-06 14:41:18,138 - generic_function_client - INFO -   - f21692b9-3fec-4d51-b3e0-862a337434fa: count_multiple_letters - Count occurrences of multiple letters in text
+2025-04-06 14:41:18,138 - generic_function_client - INFO -   - 26902824-4418-4375-8f63-e0ba0a02d0d8: get_letter_frequency - Get frequency distribution of letters in text
+2025-04-06 14:41:18,138 - generic_function_client - INFO -   - 9a902f32-1236-4ca9-ad07-d0da140d4d89: transform_case - Transform text to specified case (upper, lower, or title)
+2025-04-06 14:41:18,138 - generic_function_client - INFO -   - b370456b-c6bd-4530-9179-78ee9781cbce: analyze_text - Analyze text and return detailed statistics about its composition
+2025-04-06 14:41:18,138 - generic_function_client - INFO -   - d42031df-f666-4c59-aee5-e1408cdd58e2: generate_text - Generate text by repeating or padding the input text
+2025-04-06 14:41:18,139 - test_all_services - INFO - Discovered 10 functions across 3 services
+2025-04-06 14:41:18,139 - test_all_services - INFO - Service: CalculatorService - 4 functions
+2025-04-06 14:41:18,139 - test_all_services - INFO -   - add: Add two numbers
+2025-04-06 14:41:18,139 - test_all_services - INFO -   - subtract: Subtract two numbers
+2025-04-06 14:41:18,139 - test_all_services - INFO -   - multiply: Multiply two numbers
+2025-04-06 14:41:18,139 - test_all_services - INFO -   - divide: Divide two numbers
+2025-04-06 14:41:18,139 - test_all_services - INFO - Service: LetterCounterService - 3 functions
+2025-04-06 14:41:18,139 - test_all_services - INFO -   - count_letter: Count occurrences of a letter in text
+2025-04-06 14:41:18,139 - test_all_services - INFO -   - count_multiple_letters: Count occurrences of multiple letters in text
+2025-04-06 14:41:18,139 - test_all_services - INFO -   - get_letter_frequency: Get frequency distribution of letters in text
+2025-04-06 14:41:18,139 - test_all_services - INFO - Service: TextProcessorService - 3 functions
+2025-04-06 14:41:18,139 - test_all_services - INFO -   - transform_case: Transform text to specified case (upper, lower, or title)
+2025-04-06 14:41:18,139 - test_all_services - INFO -   - analyze_text: Analyze text and return detailed statistics about its composition
+2025-04-06 14:41:18,139 - test_all_services - INFO -   - generate_text: Generate text by repeating or padding the input text
+2025-04-06 14:41:18,139 - test_all_services - INFO - ===== Testing Calculator Service =====
+2025-04-06 14:41:18,139 - test_all_services - INFO - Testing add function...
+2025-04-06 14:41:18,139 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,139 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:18,139 - generic_function_client - INFO - Creating new client for service: CalculatorService
+2025-04-06 14:41:18,139 - GenesisRPCClient - INFO - Initializing DDS Domain Participant...
+2025-04-06 14:41:18,146 - GenesisRPCClient - INFO - Creating RPC Requester for service: CalculatorService...
+2025-04-06 14:41:18,160 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,160 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,162 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,162 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:18,162 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:18,177 - GenesisRPCClient - INFO - Function add returned: {'x': 10, 'y': 5, 'result': 15}
+2025-04-06 14:41:18,178 - test_all_services - INFO - Result: {'x': 10, 'y': 5, 'result': 15}
+2025-04-06 14:41:18,178 - test_all_services - INFO - Testing subtract function...
+2025-04-06 14:41:18,178 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,178 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:18,178 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,178 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,179 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,179 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:18,179 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:18,192 - GenesisRPCClient - INFO - Function subtract returned: {'x': 10, 'y': 5, 'result': 5}
+2025-04-06 14:41:18,192 - test_all_services - INFO - Result: {'x': 10, 'y': 5, 'result': 5}
+2025-04-06 14:41:18,192 - test_all_services - INFO - Testing multiply function...
+2025-04-06 14:41:18,192 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,192 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:18,192 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,192 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,193 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,193 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:18,193 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:18,204 - GenesisRPCClient - INFO - Function multiply returned: {'x': 10, 'y': 5, 'result': 50}
+2025-04-06 14:41:18,204 - test_all_services - INFO - Result: {'x': 10, 'y': 5, 'result': 50}
+2025-04-06 14:41:18,204 - test_all_services - INFO - Testing divide function...
+2025-04-06 14:41:18,205 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,205 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,205 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,205 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,206 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,206 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,206 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,216 - GenesisRPCClient - INFO - Function divide returned: {'x': 10, 'y': 5, 'result': 2.0}
+2025-04-06 14:41:18,216 - test_all_services - INFO - Result: {'x': 10, 'y': 5, 'result': 2.0}
+2025-04-06 14:41:18,216 - test_all_services - INFO - ===== Testing Calculator Service Performance =====
+2025-04-06 14:41:18,216 - test_all_services - INFO - Running 100 rapid calculator operations...
+2025-04-06 14:41:18,216 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,216 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,216 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,216 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,217 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,217 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,217 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,227 - GenesisRPCClient - INFO - Function divide returned: {'x': 55.56856157455353, 'y': 22.16047412725665, 'result': 2.5075529185635084}
+2025-04-06 14:41:18,238 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,238 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,238 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,238 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,239 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,239 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,239 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,250 - GenesisRPCClient - INFO - Function divide returned: {'x': 98.47308864688657, 'y': 42.518420691552144, 'result': 2.316010026836483}
+2025-04-06 14:41:18,261 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,261 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:18,261 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,261 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,262 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,262 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:18,262 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:18,272 - GenesisRPCClient - INFO - Function multiply returned: {'x': 39.013681874612104, 'y': 61.37843057346706, 'result': 2394.598564356209}
+2025-04-06 14:41:18,284 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,284 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:18,284 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,284 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,285 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,285 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:18,285 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:18,295 - GenesisRPCClient - INFO - Function multiply returned: {'x': 39.50335460812222, 'y': 17.146307578533925, 'result': 677.3366684947591}
+2025-04-06 14:41:18,306 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,306 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:18,306 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,306 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,307 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,307 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:18,308 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:18,318 - GenesisRPCClient - INFO - Function subtract returned: {'x': 31.50416727154057, 'y': 99.59002348880226, 'result': -68.08585621726169}
+2025-04-06 14:41:18,329 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,329 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:18,329 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,329 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,330 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,330 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:18,330 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:18,341 - GenesisRPCClient - INFO - Function multiply returned: {'x': 55.720984330127266, 'y': 79.83866364336188, 'result': 4448.688925810069}
+2025-04-06 14:41:18,353 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,353 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,353 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,353 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,354 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,354 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,354 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,365 - GenesisRPCClient - INFO - Function divide returned: {'x': 66.69935547887246, 'y': 62.873066445525026, 'result': 1.0608573630914382}
+2025-04-06 14:41:18,376 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,376 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,376 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,376 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,377 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,377 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,377 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,389 - GenesisRPCClient - INFO - Function divide returned: {'x': 6.072321301715963, 'y': 22.344202715442815, 'result': 0.2717627198002094}
+2025-04-06 14:41:18,400 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,400 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:18,400 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,400 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,401 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,401 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:18,401 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:18,412 - GenesisRPCClient - INFO - Function subtract returned: {'x': 12.424683821850298, 'y': 6.442096552027435, 'result': 5.982587269822863}
+2025-04-06 14:41:18,423 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,423 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:18,423 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,423 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,424 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,424 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:18,424 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:18,435 - GenesisRPCClient - INFO - Function add returned: {'x': 29.594238813454364, 'y': 92.35877631561075, 'result': 121.95301512906512}
+2025-04-06 14:41:18,435 - test_all_services - INFO - Completed 10/100 tests. Current success rate: 100.00%
+2025-04-06 14:41:18,446 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,446 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,446 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,446 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,447 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,447 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,448 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,459 - GenesisRPCClient - INFO - Function divide returned: {'x': 42.63203375761759, 'y': 57.89114165090455, 'result': 0.7364172227712746}
+2025-04-06 14:41:18,470 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,470 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:18,470 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,470 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,471 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,471 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:18,471 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:18,482 - GenesisRPCClient - INFO - Function multiply returned: {'x': 72.4326256778415, 'y': 38.05246203214667, 'result': 2756.239738494756}
+2025-04-06 14:41:18,493 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,493 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:18,493 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,493 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,494 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,494 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:18,495 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:18,506 - GenesisRPCClient - INFO - Function subtract returned: {'x': 36.00400903611607, 'y': 91.24008274903483, 'result': -55.23607371291876}
+2025-04-06 14:41:18,517 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,517 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,517 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,517 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,518 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,518 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,518 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,528 - GenesisRPCClient - INFO - Function divide returned: {'x': 6.01009469360787, 'y': 7.78553238549797, 'result': 0.7719568034682909}
+2025-04-06 14:41:18,540 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,540 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:18,540 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,540 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,541 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,541 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:18,541 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:18,551 - GenesisRPCClient - INFO - Function multiply returned: {'x': 96.0455009771304, 'y': 93.23913257211174, 'result': 8955.19919856155}
+2025-04-06 14:41:18,563 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,563 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:18,563 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,563 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,564 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,564 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:18,564 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:18,575 - GenesisRPCClient - INFO - Function add returned: {'x': 59.48204974427862, 'y': 40.09714631684079, 'result': 99.5791960611194}
+2025-04-06 14:41:18,586 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,586 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,586 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,586 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,587 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,587 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,587 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,597 - GenesisRPCClient - INFO - Function divide returned: {'x': 69.10722748598144, 'y': 36.716725613711674, 'result': 1.8821729424634124}
+2025-04-06 14:41:18,608 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,609 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,609 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,609 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,610 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,610 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,610 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,621 - GenesisRPCClient - INFO - Function divide returned: {'x': 94.13555928948871, 'y': 28.011423823929874, 'result': 3.3606131513054205}
+2025-04-06 14:41:18,632 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,632 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:18,632 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,632 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,633 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,633 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:18,633 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:18,644 - GenesisRPCClient - INFO - Function multiply returned: {'x': 45.966113888641345, 'y': 57.33745511797709, 'result': 2635.5799920377967}
+2025-04-06 14:41:18,655 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,655 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:18,655 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,655 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,656 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,656 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:18,656 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:18,667 - GenesisRPCClient - INFO - Function multiply returned: {'x': 29.184474931501253, 'y': 81.28566941368264, 'result': 2372.2795812939194}
+2025-04-06 14:41:18,668 - test_all_services - INFO - Completed 20/100 tests. Current success rate: 100.00%
+2025-04-06 14:41:18,679 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,679 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:18,679 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,679 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,680 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,680 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:18,680 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:18,691 - GenesisRPCClient - INFO - Function subtract returned: {'x': 57.64088457204888, 'y': 9.862690452160875, 'result': 47.778194119888006}
+2025-04-06 14:41:18,702 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,702 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:18,702 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,702 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,703 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,703 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:18,703 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:18,714 - GenesisRPCClient - INFO - Function add returned: {'x': 94.27993333820295, 'y': 31.75085992880353, 'result': 126.03079326700649}
+2025-04-06 14:41:18,725 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,725 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,725 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,725 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,726 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,726 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,726 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,737 - GenesisRPCClient - INFO - Function divide returned: {'x': 12.023785054485256, 'y': 13.693784959967248, 'result': 0.8780468723319292}
+2025-04-06 14:41:18,748 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,748 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,748 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,748 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,750 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,750 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,750 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,761 - GenesisRPCClient - INFO - Function divide returned: {'x': 42.67541024883665, 'y': 82.86153754198486, 'result': 0.5150207383879833}
+2025-04-06 14:41:18,772 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,772 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:18,772 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,772 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,773 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,773 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:18,773 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:18,784 - GenesisRPCClient - INFO - Function subtract returned: {'x': 3.524613468555544, 'y': 49.59314267252544, 'result': -46.068529203969895}
+2025-04-06 14:41:18,795 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,795 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,795 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,795 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,796 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,796 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,796 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,807 - GenesisRPCClient - INFO - Function divide returned: {'x': 15.531080279514043, 'y': 4.938654096309124, 'result': 3.144800177668064}
+2025-04-06 14:41:18,818 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,818 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,818 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,818 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,819 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,819 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,819 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,830 - GenesisRPCClient - INFO - Function divide returned: {'x': 77.37125454537197, 'y': 39.39301673099812, 'result': 1.9640855401787243}
+2025-04-06 14:41:18,841 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,841 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:18,841 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,841 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,842 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,842 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:18,842 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:18,853 - GenesisRPCClient - INFO - Function add returned: {'x': 84.17399869045157, 'y': 54.98689228362448, 'result': 139.16089097407604}
+2025-04-06 14:41:18,864 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,864 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:18,864 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,864 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,865 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,865 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:18,865 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:18,876 - GenesisRPCClient - INFO - Function multiply returned: {'x': 93.12626862442453, 'y': 84.53574856374898, 'result': 7872.498829114497}
+2025-04-06 14:41:18,888 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,888 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,888 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,888 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,889 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,889 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,889 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,900 - GenesisRPCClient - INFO - Function divide returned: {'x': 94.64583302711571, 'y': 65.07174181043509, 'result': 1.4544843951286093}
+2025-04-06 14:41:18,900 - test_all_services - INFO - Completed 30/100 tests. Current success rate: 100.00%
+2025-04-06 14:41:18,911 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,911 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:18,911 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,911 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,912 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,912 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:18,912 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:18,923 - GenesisRPCClient - INFO - Function multiply returned: {'x': 46.62186965796732, 'y': 14.60145635249883, 'result': 680.7471948826994}
+2025-04-06 14:41:18,934 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,934 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:18,934 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,934 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,935 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,935 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:18,935 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:18,946 - GenesisRPCClient - INFO - Function multiply returned: {'x': 36.16622235241087, 'y': 66.76937403720102, 'result': 2414.7960277607012}
+2025-04-06 14:41:18,957 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,957 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:18,957 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,957 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,958 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,958 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:18,958 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:18,969 - GenesisRPCClient - INFO - Function add returned: {'x': 49.96986559175323, 'y': 9.826325525871288, 'result': 59.796191117624524}
+2025-04-06 14:41:18,980 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:18,980 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:18,980 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:18,980 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:18,981 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:18,981 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:18,981 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:18,992 - GenesisRPCClient - INFO - Function divide returned: {'x': 24.24297421796561, 'y': 47.53756311013392, 'result': 0.5099751150853075}
+2025-04-06 14:41:19,003 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,004 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:19,004 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,004 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,005 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,005 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:19,005 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:19,015 - GenesisRPCClient - INFO - Function multiply returned: {'x': 60.406943032077194, 'y': 92.21370807475827, 'result': 5570.34821044852}
+2025-04-06 14:41:19,026 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,026 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,026 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,027 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,028 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,028 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,028 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,039 - GenesisRPCClient - INFO - Function divide returned: {'x': 94.26273873762511, 'y': 30.817414005808924, 'result': 3.058749144878187}
+2025-04-06 14:41:19,050 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,050 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,050 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,050 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,051 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,051 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,051 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,061 - GenesisRPCClient - INFO - Function divide returned: {'x': 36.29760132341185, 'y': 96.19381782864279, 'result': 0.3773381922325972}
+2025-04-06 14:41:19,072 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,072 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:19,072 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,072 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,073 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,073 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:19,073 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:19,084 - GenesisRPCClient - INFO - Function subtract returned: {'x': 17.844927100739806, 'y': 55.26617227659659, 'result': -37.42124517585678}
+2025-04-06 14:41:19,095 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,095 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,095 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,095 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,096 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,096 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,096 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,107 - GenesisRPCClient - INFO - Function divide returned: {'x': 31.63588219901556, 'y': 55.17250408080848, 'result': 0.573399426509263}
+2025-04-06 14:41:19,118 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,118 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,118 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,118 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,119 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,119 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,119 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,130 - GenesisRPCClient - INFO - Function divide returned: {'x': 37.446335068840554, 'y': 24.894778532883855, 'result': 1.5041843019160495}
+2025-04-06 14:41:19,130 - test_all_services - INFO - Completed 40/100 tests. Current success rate: 100.00%
+2025-04-06 14:41:19,141 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,141 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,141 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,141 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,142 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,142 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,142 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,153 - GenesisRPCClient - INFO - Function add returned: {'x': 37.06745993667058, 'y': 30.051344037985665, 'result': 67.11880397465625}
+2025-04-06 14:41:19,164 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,164 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,164 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,164 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,165 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,165 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,165 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,176 - GenesisRPCClient - INFO - Function divide returned: {'x': 80.6879132645697, 'y': 96.37894864716405, 'result': 0.8371943707329904}
+2025-04-06 14:41:19,186 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,186 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:19,186 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,186 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,187 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,187 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:19,187 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:19,198 - GenesisRPCClient - INFO - Function subtract returned: {'x': 42.72813045413152, 'y': 27.838924678429557, 'result': 14.88920577570196}
+2025-04-06 14:41:19,209 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,209 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,209 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,209 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,211 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,211 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,211 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,222 - GenesisRPCClient - INFO - Function divide returned: {'x': 19.677870510897623, 'y': 7.72017356369555, 'result': 2.5488896523562192}
+2025-04-06 14:41:19,233 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,233 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:19,233 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,233 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,234 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,234 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:19,234 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:19,245 - GenesisRPCClient - INFO - Function multiply returned: {'x': 26.455874638716207, 'y': 19.689685505241236, 'result': 520.9078514024097}
+2025-04-06 14:41:19,256 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,256 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,256 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,256 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,257 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,257 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,257 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,268 - GenesisRPCClient - INFO - Function add returned: {'x': 1.2448080358901843, 'y': 30.938240419656502, 'result': 32.18304845554669}
+2025-04-06 14:41:19,279 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,279 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,279 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,279 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,280 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,280 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,280 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,291 - GenesisRPCClient - INFO - Function divide returned: {'x': 18.51899444198872, 'y': 61.63404202833553, 'result': 0.3004669794895949}
+2025-04-06 14:41:19,302 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,302 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:19,302 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,302 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,304 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,304 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:19,304 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:19,314 - GenesisRPCClient - INFO - Function multiply returned: {'x': 11.324965506072816, 'y': 55.155366897409785, 'result': 624.6326275879562}
+2025-04-06 14:41:19,325 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,325 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,325 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,325 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,327 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,327 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,327 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,338 - GenesisRPCClient - INFO - Function divide returned: {'x': 26.226189559025897, 'y': 37.10239593357413, 'result': 0.7068597296514131}
+2025-04-06 14:41:19,349 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,349 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,349 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,349 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,350 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,350 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,350 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,360 - GenesisRPCClient - INFO - Function add returned: {'x': 8.40266070407662, 'y': 27.33375105498068, 'result': 35.736411759057304}
+2025-04-06 14:41:19,360 - test_all_services - INFO - Completed 50/100 tests. Current success rate: 100.00%
+2025-04-06 14:41:19,371 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,372 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,372 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,372 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,373 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,373 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,373 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,384 - GenesisRPCClient - INFO - Function add returned: {'x': 54.49429874841638, 'y': 76.33010761144152, 'result': 130.8244063598579}
+2025-04-06 14:41:19,395 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,395 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:19,395 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,395 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,396 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,396 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:19,396 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:19,407 - GenesisRPCClient - INFO - Function multiply returned: {'x': 74.4163563182366, 'y': 75.90446016681518, 'result': 5648.533353917115}
+2025-04-06 14:41:19,418 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,418 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:19,418 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,418 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,419 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,419 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:19,419 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:19,430 - GenesisRPCClient - INFO - Function multiply returned: {'x': 96.29139971424063, 'y': 73.36646348883745, 'result': 7064.559461423888}
+2025-04-06 14:41:19,441 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,441 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:19,441 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,441 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,442 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,442 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:19,442 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:19,453 - GenesisRPCClient - INFO - Function subtract returned: {'x': 95.41930063054056, 'y': 80.36354773898276, 'result': 15.055752891557802}
+2025-04-06 14:41:19,464 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,464 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,464 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,464 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,465 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,465 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,465 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,475 - GenesisRPCClient - INFO - Function add returned: {'x': 64.54703218781432, 'y': 95.77373022607004, 'result': 160.32076241388438}
+2025-04-06 14:41:19,486 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,486 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:19,486 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,486 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,487 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,487 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:19,487 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:19,497 - GenesisRPCClient - INFO - Function subtract returned: {'x': 90.50703596911607, 'y': 6.646801849927378, 'result': 83.8602341191887}
+2025-04-06 14:41:19,508 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,509 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:19,509 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,509 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,510 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,510 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:19,510 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:19,520 - GenesisRPCClient - INFO - Function multiply returned: {'x': 22.399300399506735, 'y': 77.4660745641856, 'result': 1735.1858749337812}
+2025-04-06 14:41:19,532 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,532 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,532 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,532 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,533 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,533 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,533 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,544 - GenesisRPCClient - INFO - Function divide returned: {'x': 22.432582927399377, 'y': 12.820305271855752, 'result': 1.7497697950020998}
+2025-04-06 14:41:19,555 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,555 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:19,555 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,555 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,556 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,556 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:19,556 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:19,566 - GenesisRPCClient - INFO - Function subtract returned: {'x': 95.24558315007239, 'y': 54.84434870043149, 'result': 40.4012344496409}
+2025-04-06 14:41:19,578 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,578 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,578 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,578 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,579 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,579 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,579 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,590 - GenesisRPCClient - INFO - Function divide returned: {'x': 72.880137764342, 'y': 67.72062016203827, 'result': 1.0761882804669878}
+2025-04-06 14:41:19,590 - test_all_services - INFO - Completed 60/100 tests. Current success rate: 100.00%
+2025-04-06 14:41:19,601 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,601 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,601 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,601 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,602 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,602 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,602 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,613 - GenesisRPCClient - INFO - Function add returned: {'x': 34.83894338353571, 'y': 21.097417885513448, 'result': 55.93636126904916}
+2025-04-06 14:41:19,624 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,624 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:19,624 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,624 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,625 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,625 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:19,625 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:19,636 - GenesisRPCClient - INFO - Function subtract returned: {'x': 9.809539929923009, 'y': 95.0320791309543, 'result': -85.2225392010313}
+2025-04-06 14:41:19,647 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,647 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,647 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,647 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,648 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,648 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,648 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,659 - GenesisRPCClient - INFO - Function add returned: {'x': 10.9291726414411, 'y': 31.401075311695024, 'result': 42.33024795313612}
+2025-04-06 14:41:19,670 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,670 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:19,670 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,670 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,671 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,671 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:19,671 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:19,682 - GenesisRPCClient - INFO - Function subtract returned: {'x': 55.45953998185236, 'y': 90.7415499206627, 'result': -35.28200993881035}
+2025-04-06 14:41:19,693 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,693 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:19,693 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,693 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,694 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,694 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:19,694 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:19,705 - GenesisRPCClient - INFO - Function multiply returned: {'x': 74.319044735578, 'y': 38.88519027306196, 'result': 2889.9101954551543}
+2025-04-06 14:41:19,716 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,717 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:19,717 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,717 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,718 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,718 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:19,718 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:19,729 - GenesisRPCClient - INFO - Function multiply returned: {'x': 41.61601137800289, 'y': 6.740036849752486, 'result': 280.4934502274582}
+2025-04-06 14:41:19,740 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,740 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,740 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,740 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,741 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,741 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,741 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,752 - GenesisRPCClient - INFO - Function add returned: {'x': 1.332075257365429, 'y': 11.323153138737194, 'result': 12.655228396102622}
+2025-04-06 14:41:19,763 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,763 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,763 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,763 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,764 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,764 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,764 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,775 - GenesisRPCClient - INFO - Function add returned: {'x': 60.73936156569595, 'y': 80.29542530856244, 'result': 141.0347868742584}
+2025-04-06 14:41:19,786 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,786 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,786 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,786 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,787 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,787 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,787 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,798 - GenesisRPCClient - INFO - Function add returned: {'x': 50.00292356132637, 'y': 73.3421959555461, 'result': 123.34511951687247}
+2025-04-06 14:41:19,809 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,809 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:19,809 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,809 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,810 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,810 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:19,810 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:19,821 - GenesisRPCClient - INFO - Function multiply returned: {'x': 76.55860164627904, 'y': 42.631534403244665, 'result': 3263.8106599476487}
+2025-04-06 14:41:19,821 - test_all_services - INFO - Completed 70/100 tests. Current success rate: 100.00%
+2025-04-06 14:41:19,832 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,832 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,832 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,832 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,833 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,833 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,833 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,844 - GenesisRPCClient - INFO - Function add returned: {'x': 7.433307949197967, 'y': 35.35665614106802, 'result': 42.78996409026599}
+2025-04-06 14:41:19,855 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,855 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,855 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,855 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,856 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,856 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,856 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,867 - GenesisRPCClient - INFO - Function divide returned: {'x': 61.991600695856086, 'y': 47.53968583263699, 'result': 1.303996852526475}
+2025-04-06 14:41:19,878 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,878 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,878 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,878 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,880 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,880 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,880 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,891 - GenesisRPCClient - INFO - Function divide returned: {'x': 57.01964737593026, 'y': 25.234823267130523, 'result': 2.259561985924462}
+2025-04-06 14:41:19,902 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,902 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:19,902 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,902 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,903 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,903 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:19,903 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:19,915 - GenesisRPCClient - INFO - Function multiply returned: {'x': 50.499695322446335, 'y': 56.434039973550526, 'result': 2849.901824479059}
+2025-04-06 14:41:19,926 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,926 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:19,926 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,926 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,927 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,927 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:19,927 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:19,938 - GenesisRPCClient - INFO - Function multiply returned: {'x': 35.41548722255977, 'y': 3.687997557135625, 'result': 130.61223036156838}
+2025-04-06 14:41:19,949 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,949 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,949 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,949 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,950 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,950 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,950 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:19,961 - GenesisRPCClient - INFO - Function divide returned: {'x': 30.65501228185301, 'y': 77.39668021571119, 'result': 0.3960765784322385}
+2025-04-06 14:41:19,972 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,972 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:19,972 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,972 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,973 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,973 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:19,973 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:19,984 - GenesisRPCClient - INFO - Function add returned: {'x': 41.13187321688218, 'y': 35.7659806101987, 'result': 76.89785382708088}
+2025-04-06 14:41:19,995 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:19,995 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:19,996 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:19,996 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:19,997 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:19,997 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:19,997 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:20,008 - GenesisRPCClient - INFO - Function divide returned: {'x': 50.7325194025568, 'y': 62.155687261907595, 'result': 0.8162168521889783}
+2025-04-06 14:41:20,019 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,019 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:20,019 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,019 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,020 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,020 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:20,020 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:20,031 - GenesisRPCClient - INFO - Function multiply returned: {'x': 3.1439315397691825, 'y': 23.99763915894995, 'result': 75.44693463182276}
+2025-04-06 14:41:20,041 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,041 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:20,041 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,041 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,042 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,042 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:20,042 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:20,053 - GenesisRPCClient - INFO - Function divide returned: {'x': 56.11272998903734, 'y': 80.37429522354819, 'result': 0.6981427312422311}
+2025-04-06 14:41:20,053 - test_all_services - INFO - Completed 80/100 tests. Current success rate: 100.00%
+2025-04-06 14:41:20,064 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,064 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:20,064 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,064 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,065 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,065 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:20,065 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:20,076 - GenesisRPCClient - INFO - Function multiply returned: {'x': 12.143850632703872, 'y': 58.26250783579709, 'result': 707.5311926446587}
+2025-04-06 14:41:20,087 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,087 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:20,087 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,087 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,088 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,088 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:20,088 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:20,099 - GenesisRPCClient - INFO - Function multiply returned: {'x': 16.711246600292064, 'y': 48.36953414193426, 'result': 808.3152129871098}
+2025-04-06 14:41:20,110 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,110 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:20,110 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,110 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,112 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,112 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:20,112 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:20,123 - GenesisRPCClient - INFO - Function add returned: {'x': 37.58970866521784, 'y': 89.87437036375755, 'result': 127.46407902897539}
+2025-04-06 14:41:20,134 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,134 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:20,134 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,134 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,135 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,135 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:20,135 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:20,146 - GenesisRPCClient - INFO - Function add returned: {'x': 1.1617778355273924, 'y': 57.55798885793455, 'result': 58.71976669346195}
+2025-04-06 14:41:20,157 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,157 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:20,157 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,157 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,158 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,158 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:20,158 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:20,168 - GenesisRPCClient - INFO - Function subtract returned: {'x': 41.86337521942762, 'y': 15.14926100736889, 'result': 26.714114212058725}
+2025-04-06 14:41:20,179 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,179 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:20,179 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,179 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,180 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,180 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:20,180 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:20,191 - GenesisRPCClient - INFO - Function multiply returned: {'x': 25.633544748731488, 'y': 81.89959273756178, 'result': 2099.376875341174}
+2025-04-06 14:41:20,202 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,202 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:20,202 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,202 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,203 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,203 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:20,203 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:20,214 - GenesisRPCClient - INFO - Function add returned: {'x': 23.29763008948262, 'y': 92.4400797780011, 'result': 115.73770986748373}
+2025-04-06 14:41:20,225 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,225 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:20,225 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,225 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,226 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,226 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:20,226 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:20,237 - GenesisRPCClient - INFO - Function subtract returned: {'x': 7.971234523254783, 'y': 40.99651162373693, 'result': -33.02527710048214}
+2025-04-06 14:41:20,248 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,248 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:20,248 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,248 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,249 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,249 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:20,249 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:20,260 - GenesisRPCClient - INFO - Function subtract returned: {'x': 17.034876125920402, 'y': 95.17487744472132, 'result': -78.14000131880091}
+2025-04-06 14:41:20,272 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,272 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:20,272 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,272 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,273 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,273 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:20,273 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:20,284 - GenesisRPCClient - INFO - Function add returned: {'x': 94.55591099827488, 'y': 27.39905497605748, 'result': 121.95496597433237}
+2025-04-06 14:41:20,284 - test_all_services - INFO - Completed 90/100 tests. Current success rate: 100.00%
+2025-04-06 14:41:20,295 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,295 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:20,295 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,295 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,296 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,296 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:20,296 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:20,308 - GenesisRPCClient - INFO - Function subtract returned: {'x': 74.719743260316, 'y': 38.20126687445615, 'result': 36.51847638585984}
+2025-04-06 14:41:20,319 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,319 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:20,319 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,319 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,320 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,320 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:20,320 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:20,331 - GenesisRPCClient - INFO - Function divide returned: {'x': 55.823971930970366, 'y': 18.419670564804434, 'result': 3.0306715711646097}
+2025-04-06 14:41:20,342 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,342 - generic_function_client - INFO - Using service name: CalculatorService for function: multiply
+2025-04-06 14:41:20,342 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,342 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,343 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,343 - generic_function_client - INFO - Calling function multiply via RPC
+2025-04-06 14:41:20,343 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-06 14:41:20,354 - GenesisRPCClient - INFO - Function multiply returned: {'x': 43.49741364445306, 'y': 30.015467786289058, 'result': 1305.595218031971}
+2025-04-06 14:41:20,365 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,365 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:20,365 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,365 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,366 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,366 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:20,366 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:20,377 - GenesisRPCClient - INFO - Function add returned: {'x': 47.66838908928602, 'y': 4.614759530432733, 'result': 52.28314861971876}
+2025-04-06 14:41:20,389 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,389 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:20,389 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,389 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,390 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,390 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:20,390 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:20,401 - GenesisRPCClient - INFO - Function subtract returned: {'x': 11.642280027029624, 'y': 71.82709185392346, 'result': -60.184811826893835}
+2025-04-06 14:41:20,412 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,412 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:20,412 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,412 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,413 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,413 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:20,413 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:20,425 - GenesisRPCClient - INFO - Function add returned: {'x': 9.25531088914191, 'y': 98.90705672249902, 'result': 108.16236761164093}
+2025-04-06 14:41:20,436 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,436 - generic_function_client - INFO - Using service name: CalculatorService for function: add
+2025-04-06 14:41:20,436 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,436 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,437 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,437 - generic_function_client - INFO - Calling function add via RPC
+2025-04-06 14:41:20,437 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-06 14:41:20,448 - GenesisRPCClient - INFO - Function add returned: {'x': 71.32107609149287, 'y': 85.44821317712224, 'result': 156.76928926861513}
+2025-04-06 14:41:20,459 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,459 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:20,459 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,459 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,460 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,460 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:20,460 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:20,471 - GenesisRPCClient - INFO - Function divide returned: {'x': 32.609898135939105, 'y': 20.519060143450552, 'result': 1.589249113164075}
+2025-04-06 14:41:20,482 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,482 - generic_function_client - INFO - Using service name: CalculatorService for function: divide
+2025-04-06 14:41:20,482 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,482 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,484 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,484 - generic_function_client - INFO - Calling function divide via RPC
+2025-04-06 14:41:20,484 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-06 14:41:20,495 - GenesisRPCClient - INFO - Function divide returned: {'x': 45.89986919613336, 'y': 82.08980491309833, 'result': 0.5591421400589726}
+2025-04-06 14:41:20,506 - generic_function_client - INFO - Using provider ID to determine service: 01013f2a0c4855c24c77718280000002
+2025-04-06 14:41:20,506 - generic_function_client - INFO - Using service name: CalculatorService for function: subtract
+2025-04-06 14:41:20,506 - generic_function_client - INFO - Waiting for service CalculatorService to be discovered
+2025-04-06 14:41:20,506 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,507 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,507 - generic_function_client - INFO - Calling function subtract via RPC
+2025-04-06 14:41:20,507 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-06 14:41:20,518 - GenesisRPCClient - INFO - Function subtract returned: {'x': 89.28103126166592, 'y': 13.286384825922246, 'result': 75.99464643574368}
+2025-04-06 14:41:20,518 - test_all_services - INFO - Completed 100/100 tests. Current success rate: 100.00%
+2025-04-06 14:41:20,529 - test_all_services - INFO - ===== Performance Test Results =====
+2025-04-06 14:41:20,529 - test_all_services - INFO - Total tests: 100
+2025-04-06 14:41:20,529 - test_all_services - INFO - Successful tests: 100
+2025-04-06 14:41:20,529 - test_all_services - INFO - Success rate: 100.00%
+2025-04-06 14:41:20,529 - test_all_services - INFO - Total time: 1.21 seconds
+2025-04-06 14:41:20,529 - test_all_services - INFO - Average request time: 0.0121 seconds
+2025-04-06 14:41:20,529 - test_all_services - INFO - ===== Testing Letter Counter Service =====
+2025-04-06 14:41:20,529 - test_all_services - INFO - Testing count_letter function...
+2025-04-06 14:41:20,529 - generic_function_client - INFO - Using provider ID to determine service: 0101bdf6cc46f4540ccb7e9380000002
+2025-04-06 14:41:20,529 - generic_function_client - INFO - Using service name: LetterCounterService for function: count_letter
+2025-04-06 14:41:20,529 - generic_function_client - INFO - Creating new client for service: LetterCounterService
+2025-04-06 14:41:20,529 - GenesisRPCClient - INFO - Initializing DDS Domain Participant...
+2025-04-06 14:41:20,533 - GenesisRPCClient - INFO - Creating RPC Requester for service: LetterCounterService...
+2025-04-06 14:41:20,542 - generic_function_client - INFO - Waiting for service LetterCounterService to be discovered
+2025-04-06 14:41:20,542 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,543 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,543 - generic_function_client - INFO - Calling function count_letter via RPC
+2025-04-06 14:41:20,543 - GenesisRPCClient - INFO - Calling remote function: count_letter
+2025-04-06 14:41:20,553 - GenesisRPCClient - INFO - Function count_letter returned: {'text': 'lollapalooza', 'letter': 'l', 'result': 4}
+2025-04-06 14:41:20,553 - test_all_services - INFO - Result: {'text': 'lollapalooza', 'letter': 'l', 'result': 4}
+2025-04-06 14:41:20,553 - test_all_services - INFO - Testing count_multiple_letters function...
+2025-04-06 14:41:20,553 - generic_function_client - INFO - Using provider ID to determine service: 0101bdf6cc46f4540ccb7e9380000002
+2025-04-06 14:41:20,553 - generic_function_client - INFO - Using service name: LetterCounterService for function: count_multiple_letters
+2025-04-06 14:41:20,553 - generic_function_client - INFO - Waiting for service LetterCounterService to be discovered
+2025-04-06 14:41:20,554 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,555 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,555 - generic_function_client - INFO - Calling function count_multiple_letters via RPC
+2025-04-06 14:41:20,555 - GenesisRPCClient - INFO - Calling remote function: count_multiple_letters
+2025-04-06 14:41:20,565 - GenesisRPCClient - INFO - Function count_multiple_letters returned: {'text': 'mississippi', 'letters': ['m', 'i', 's', 'p'], 'm': 1, 'i': 4, 's': 4, 'p': 2}
+2025-04-06 14:41:20,565 - test_all_services - INFO - Result: {'text': 'mississippi', 'letters': ['m', 'i', 's', 'p'], 'm': 1, 'i': 4, 's': 4, 'p': 2}
+2025-04-06 14:41:20,565 - test_all_services - INFO - Testing get_letter_frequency function...
+2025-04-06 14:41:20,565 - generic_function_client - INFO - Using provider ID to determine service: 0101bdf6cc46f4540ccb7e9380000002
+2025-04-06 14:41:20,565 - generic_function_client - INFO - Using service name: LetterCounterService for function: get_letter_frequency
+2025-04-06 14:41:20,565 - generic_function_client - INFO - Waiting for service LetterCounterService to be discovered
+2025-04-06 14:41:20,565 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,566 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,566 - generic_function_client - INFO - Calling function get_letter_frequency via RPC
+2025-04-06 14:41:20,566 - GenesisRPCClient - INFO - Calling remote function: get_letter_frequency
+2025-04-06 14:41:20,576 - GenesisRPCClient - INFO - Function get_letter_frequency returned: {'text': 'mississippi', 'total_letters': 11, 'frequencies': {'m': {'count': 1, 'percentage': 9.1}, 'i': {'count': 4, 'percentage': 36.4}, 's': {'count': 4, 'percentage': 36.4}, 'p': {'count': 2, 'percentage': 18.2}}}
+2025-04-06 14:41:20,576 - test_all_services - INFO - Result: {'text': 'mississippi', 'total_letters': 11, 'frequencies': {'m': {'count': 1, 'percentage': 9.1}, 'i': {'count': 4, 'percentage': 36.4}, 's': {'count': 4, 'percentage': 36.4}, 'p': {'count': 2, 'percentage': 18.2}}}
+2025-04-06 14:41:20,576 - test_all_services - INFO - ===== Testing Text Processor Service =====
+2025-04-06 14:41:20,576 - test_all_services - INFO - Testing transform_case function...
+2025-04-06 14:41:20,576 - generic_function_client - INFO - Using provider ID to determine service: 01010953cb4a94a0d211a79080008402
+2025-04-06 14:41:20,576 - generic_function_client - INFO - Using service name: TextProcessorService for function: transform_case
+2025-04-06 14:41:20,576 - generic_function_client - INFO - Creating new client for service: TextProcessorService
+2025-04-06 14:41:20,576 - GenesisRPCClient - INFO - Initializing DDS Domain Participant...
+2025-04-06 14:41:20,579 - GenesisRPCClient - INFO - Creating RPC Requester for service: TextProcessorService...
+2025-04-06 14:41:20,588 - generic_function_client - INFO - Waiting for service TextProcessorService to be discovered
+2025-04-06 14:41:20,588 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,589 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,589 - generic_function_client - INFO - Calling function transform_case via RPC
+2025-04-06 14:41:20,589 - GenesisRPCClient - INFO - Calling remote function: transform_case
+2025-04-06 14:41:20,598 - GenesisRPCClient - INFO - Function transform_case returned: {'text': 'Hello World', 'case': 'upper', 'result': 'HELLO WORLD'}
+2025-04-06 14:41:20,598 - test_all_services - INFO - Result: {'text': 'Hello World', 'case': 'upper', 'result': 'HELLO WORLD'}
+2025-04-06 14:41:20,598 - test_all_services - INFO - Testing analyze_text function...
+2025-04-06 14:41:20,598 - generic_function_client - INFO - Using provider ID to determine service: 01010953cb4a94a0d211a79080008402
+2025-04-06 14:41:20,598 - generic_function_client - INFO - Using service name: TextProcessorService for function: analyze_text
+2025-04-06 14:41:20,598 - generic_function_client - INFO - Waiting for service TextProcessorService to be discovered
+2025-04-06 14:41:20,599 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,600 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,600 - generic_function_client - INFO - Calling function analyze_text via RPC
+2025-04-06 14:41:20,600 - GenesisRPCClient - INFO - Calling remote function: analyze_text
+2025-04-06 14:41:20,610 - GenesisRPCClient - INFO - Function analyze_text returned: {'text': 'The quick brown fox jumps over the lazy dog.', 'statistics': {'total_length': 44, 'alpha_count': 35, 'digit_count': 0, 'space_count': 8, 'punctuation_count': 1, 'word_count': 9, 'line_count': 1, 'uppercase_count': 1, 'lowercase_count': 34}}
+2025-04-06 14:41:20,610 - test_all_services - INFO - Result: {'text': 'The quick brown fox jumps over the lazy dog.', 'statistics': {'total_length': 44, 'alpha_count': 35, 'digit_count': 0, 'space_count': 8, 'punctuation_count': 1, 'word_count': 9, 'line_count': 1, 'uppercase_count': 1, 'lowercase_count': 34}}
+2025-04-06 14:41:20,610 - test_all_services - INFO - Testing generate_text function...
+2025-04-06 14:41:20,610 - generic_function_client - INFO - Using provider ID to determine service: 01010953cb4a94a0d211a79080008402
+2025-04-06 14:41:20,610 - generic_function_client - INFO - Using service name: TextProcessorService for function: generate_text
+2025-04-06 14:41:20,610 - generic_function_client - INFO - Waiting for service TextProcessorService to be discovered
+2025-04-06 14:41:20,610 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-06 14:41:20,611 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-06 14:41:20,611 - generic_function_client - INFO - Calling function generate_text via RPC
+2025-04-06 14:41:20,611 - GenesisRPCClient - INFO - Calling remote function: generate_text
+2025-04-06 14:41:20,622 - GenesisRPCClient - INFO - Function generate_text returned: {'text': 'Hello', 'operation': 'repeat', 'count': 3, 'result': 'HelloHelloHello', 'result_length': 15}
+2025-04-06 14:41:20,622 - test_all_services - INFO - Result: {'text': 'Hello', 'operation': 'repeat', 'count': 3, 'result': 'HelloHelloHello', 'result_length': 15}
+2025-04-06 14:41:20,622 - test_all_services - INFO - ===== Test Results =====
+2025-04-06 14:41:20,622 - test_all_services - INFO - Total tests: 11
+2025-04-06 14:41:20,622 - test_all_services - INFO - Successful tests: 11
+2025-04-06 14:41:20,622 - test_all_services - INFO - Failed tests: 0
+2025-04-06 14:41:20,622 - test_all_services - INFO - Success rate: 100.00%
+2025-04-06 14:41:20,622 - test_all_services - INFO - Service: CalculatorService
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Total tests: 5
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Successful tests: 5
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Failed tests: 0
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Success rate: 100.00%
+2025-04-06 14:41:20,622 - test_all_services - INFO - Service: LetterCounterService
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Total tests: 3
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Successful tests: 3
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Failed tests: 0
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Success rate: 100.00%
+2025-04-06 14:41:20,622 - test_all_services - INFO - Service: TextProcessorService
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Total tests: 3
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Successful tests: 3
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Failed tests: 0
+2025-04-06 14:41:20,622 - test_all_services - INFO -   Success rate: 100.00%
+2025-04-06 14:41:20,622 - test_all_services - INFO - Cleaning up resources...
+2025-04-06 14:41:20,622 - generic_function_client - INFO - Cleaning up client resources...
+2025-04-06 14:41:20,622 - GenesisRPCClient - INFO - Cleaning up client resources...
+2025-04-06 14:41:20,771 - GenesisRPCClient - INFO - Client cleanup complete.
+2025-04-06 14:41:20,771 - GenesisRPCClient - INFO - Cleaning up client resources...
+2025-04-06 14:41:20,940 - GenesisRPCClient - INFO - Client cleanup complete.
+2025-04-06 14:41:20,940 - GenesisRPCClient - INFO - Cleaning up client resources...
+2025-04-06 14:41:21,083 - GenesisRPCClient - INFO - Client cleanup complete.
+2025-04-06 14:41:21,083 - generic_function_client - INFO - Client cleanup complete.
+
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=9a902f32-1236-4ca9-ad07-d0da140d4d89, provider=01010953cb4a94a0d211a79080008402, client=0101b6f4b14f413472b50c9d80000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample 9a902f32-1236-4ca9-ad07-d0da140d4d89_<rti.connextdds.Time object at 0x105913270>
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=b370456b-c6bd-4530-9179-78ee9781cbce, provider=01010953cb4a94a0d211a79080008402, client=0101b6f4b14f413472b50c9d80000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample b370456b-c6bd-4530-9179-78ee9781cbce_<rti.connextdds.Time object at 0x105913a70>
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=d42031df-f666-4c59-aee5-e1408cdd58e2, provider=01010953cb4a94a0d211a79080008402, client=0101b6f4b14f413472b50c9d80000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample d42031df-f666-4c59-aee5-e1408cdd58e2_<rti.connextdds.Time object at 0x105913ef0>

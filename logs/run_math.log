@@ -1,0 +1,23 @@
+###############################################################################
+
+         (c) Copyright, Real-Time Innovations, All rights reserved.            
+                                                                               
+                           RTI Connext DDS 7.3.0                       
+
+###############################################################################
+Warning: ANTHROPIC_API_KEY not found in environment, .bash_profile, or .env file
+Setup complete. RTI Connext DDS environment configured.
+Python Version: 3.11
+PYTHONPATH: /Applications/rti_connext_dds-7.3.0//lib/python3.11::/Users/jason/Documents/Genesis-LIB
+LD_LIBRARY_PATH: /Applications/rti_connext_dds-7.3.0//lib:
+DYLD_LIBRARY_PATH: /Applications/rti_connext_dds-7.3.0/lib/arm64Darwin20clang12.0:/Applications/rti_connext_dds-7.3.0/third_party/openssl-3.0.12/arm64Darwin20clang12.0/release/lib:/Applications/rti_connext_dds-7.3.0/third_party/openssl-/arm64Darwin20clang12.0/release/lib:/Applications/rti_connext_dds-7.3.0/third_party/civetweb-/arm64Darwin20clang12.0/release/lib:/Applications/rti_connext_dds-7.3.0//lib:
+ANTHROPIC_API_KEY is not set
+OPENAI_API_KEY is set
+Starting calculator service...
+Waiting for service to start...
+Running test client...
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+ImportError: cannot import name 'RPCClient' from 'genesis_lib.rpc_client' (/Users/jason/Documents/Genesis-LIB/genesis_lib/rpc_client.py)
+Stopping calculator service...
+Test completed.

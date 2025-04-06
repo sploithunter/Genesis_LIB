@@ -1,0 +1,71 @@
+FunctionCapability subscription matched with remote GUID: 01010953cb4a94a0d211a79080008402
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 0101d113514eb1f6070384a380000002
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 0101bdf6cc46f4540ccb7e9380000002
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 01013f2a0c4855c24c77718280000002
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 01012e794540c9afea40e9a480000002
+FunctionCapability subscription matched with self GUID:   01012e794540c9afea40e9a480000002
+FunctionCapability subscription matched with remote GUID: 01010953cb4a94a0d211a79080008402
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 0101d113514eb1f6070384a380000002
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 0101bdf6cc46f4540ccb7e9380000002
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 01012e794540c9afea40e9a480000002
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 01013f2a0c4855c24c77718280000002
+FunctionCapability subscription matched with self GUID:   0
+FunctionCapability subscription matched with remote GUID: 0101abac624793111bc93d8480002102
+FunctionCapability subscription matched with self GUID:   0101abac624793111bc93d8480002102
+FunctionCapability subscription matched with remote GUID: 0101abac624793111bc93d8480002102
+FunctionCapability subscription matched with self GUID:   01012e794540c9afea40e9a480000002
+[14:41:21.f] [INFO] [genesis_app] GenesisApp initialized with agent_id=7d6a8316-aed6-4f65-839e-714c8898e283, dds_guid=0101abac624793111bc93d84000001c1
+2025-04-06 14:41:21,454 - genesis_app - INFO - GenesisApp initialized with agent_id=7d6a8316-aed6-4f65-839e-714c8898e283, dds_guid=0101abac624793111bc93d84000001c1
+Traceback (most recent call last):
+  File "<string>", line 25, in <module>
+  File "/Users/jason/anaconda3/envs/genesis_lib/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/jason/anaconda3/envs/genesis_lib/lib/python3.11/asyncio/runners.py", line 118, in run
+Agent initialization failed: Failed to get get DynamicType from type library
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=aa8e2f03-e4ea-4015-a583-fa50fdcdcd2a, provider=01013f2a0c4855c24c77718280000002, client=01012e794540c9afea40e9a480000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample aa8e2f03-e4ea-4015-a583-fa50fdcdcd2a_<rti.connextdds.Time object at 0x10312a2b0>
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=3a8be584-dac2-4c09-818b-ed8b11b5578b, provider=01013f2a0c4855c24c77718280000002, client=01012e794540c9afea40e9a480000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample 3a8be584-dac2-4c09-818b-ed8b11b5578b_<rti.connextdds.Time object at 0x107552cb0>
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=824dfcd5-ea2d-430c-a1bd-5f03e89dabc1, provider=01013f2a0c4855c24c77718280000002, client=01012e794540c9afea40e9a480000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample 824dfcd5-ea2d-430c-a1bd-5f03e89dabc1_<rti.connextdds.Time object at 0x107552cf0>
+*********ODA******** Reader structure and methods:
+['Selector', '__class__', '__delattr__', '__dir__', '__doc__', '__enter__', '__eq__', '__exit__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lshift__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rshift__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'acknowledge_all', 'acknowledge_sample', 'close', 'closed', 'datareader_cache_status', 'datareader_protocol_status', 'default_filter_state', 'enable', 'enabled', 'find_all_by_topic', 'find_by_name', 'find_by_topic', 'instance_handle', 'is_matched_publication_alive', 'key_value', 'listener', 'liveliness_changed_status', 'lookup_instance', 'matched_publication_data', 'matched_publication_datareader_protocol_status', 'matched_publication_participant_data', 'matched_publications', 'qos', 'read', 'read_data', 'read_loaned', 'requested_deadline_missed_status', 'requested_incompatible_qos_status', 'retain', 'sample_lost_status', 'sample_rejected_status', 'select', 'set_listener', 'status_changes', 'subscriber', 'subscription_matched_status', 'take', 'take_async', 'take_data', 'take_data_async', 'take_loaned', 'topic_description', 'topic_name', 'type_name', 'unretain', 'use_count', 'wait_for_historical_data', 'wait_for_historical_data_async']    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jason/anaconda3/envs/genesis_lib/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "<string>", line 18, in run_agent
+  File "/Users/jason/Documents/Genesis-LIB/genesis_lib/agent.py", line 41, in __init__
+    self.request_type = self.type_provider.type("genesis_lib", f"{service_name}Request")
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+rti.connextdds.Error: Failed to get get DynamicType from type library
+
+**********ODA******** Reader matched publications:
+['__add__', '__bool__', '__class__', '__contains__', '__delattr__', '__delitem__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__getstate__', '__gt__', '__hash__', '__iadd__', '__imul__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__mul__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__rmul__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', 'append', 'clear', 'count', 'extend', 'insert', 'pop', 'remove']
+*********ODA********* Current publication: 01010953cb4a94a0d211a79080008402
+DEBUG: CLIENT side processing function_id=a793123b-dfa7-4a7b-8783-71f1d581fd7e, provider=01013f2a0c4855c24c77718280000002, client=01012e794540c9afea40e9a480000002
+DEBUG: FunctionCapabilityListener.on_data_available processed sample a793123b-dfa7-4a7b-8783-71f1d581fd7e_<rti.connextdds.Time object at 0x1075535f0>

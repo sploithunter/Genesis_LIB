@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/7.3.0/rti_dds_qos_profiles.xsd"
+     version="7.3.0">
+  <type_library name="genesis_lib">
+
+    <!-- agent registration  -->
+    <struct name= "genesis_agent_registration_announce">
+      <member name="message" type="string" stringMaxLength="2048" />
+      <member name="prefered_name" type="string" stringMaxLength="256" />
+      <member name="default_capable" type="int32"/>
+      <member name="instance_id" type="string" key="true" stringMaxLength="128"/>
+    </struct>
+
+    <!-- Echo service interface -->
+    <struct name="EchoRequest">
+      <member name="message" type="string" stringMaxLength="2048"/>
+    </struct>
+
+    <struct name="EchoReply">
+      <member name="message" type="string" stringMaxLength="2048"/>
+      <member name="status" type="int32"/>
+    </struct>
+
+    <!-- Chat service interface -->
+    <struct name="ChatRequest">
+      <member name="message" type="string" stringMaxLength="8192"/>
+      <member name="conversation_id" type="string" stringMaxLength="128"/>
+    </struct>
+
+    <struct name="ChatReply">
+      <member name="response" type="string" stringMaxLength="8192"/>
+      <member name="status" type="int32"/>
+    </struct>
+
+    <!-- ChatGPT service interface -->
+    <struct name="ChatGPTRequest">
+      <member name="message" type="string" stringMaxLength="8192"/>
+      <member name="conversation_id" type="string" stringMaxLength="128"/>
+    </struct>
+
+    <struct name="ChatGPTReply">
+      <member name="message" type="string" stringMaxLength="8192"/>
+      <member name="status" type="int32"/>
+      <member name="conversation_id" type="string" stringMaxLength="128"/>
+    </struct>
+
+    <!-- Monitoring and Logging interface -->
+    <struct name="LogMessage">
+      <member name="log_id" type="string" stringMaxLength="128"/>
+      <member name="timestamp" type="int64"/>
+      <member name="source_id" type="string" stringMaxLength="128"/>
+      <member name="source_name" type="string" stringMaxLength="256"/>
+      <member name="level" type="int32"/>
+      <member name="level_name" type="string" stringMaxLength="32"/>
+      <member name="message" type="string" stringMaxLength="8192"/>
+      <member name="logger_name" type="string" stringMaxLength="256"/>
+      <member name="thread_id" type="string" stringMaxLength="128"/>
+      <member name="thread_name" type="string" stringMaxLength="256"/>
+      <member name="file_name" type="string" stringMaxLength="256"/>
+      <member name="line_number" type="int32"/>
+      <member name="function_name" type="string" stringMaxLength="256"/>
+    </struct>
+
+    <!-- Function Discovery and Advertisement -->
+    <struct name="FunctionCapability">
+      <member name="function_id" type="string" key="true" stringMaxLength="128"/>
+      <member name="name" type="string" stringMaxLength="256"/>
+      <member name="description" type="string" stringMaxLength="2048"/>
+      <member name="provider_id" type="string" stringMaxLength="128"/>
+      <member name="parameter_schema" type="string" stringMaxLength="8192"/>
+      <member name="capabilities" type="string" stringMaxLength="2048"/>
+      <member name="performance_metrics" type="string" stringMaxLength="2048"/>
+      <member name="security_requirements" type="string" stringMaxLength="2048"/>
+      <member name="classification" type="string" stringMaxLength="2048"/>
+      <member name="last_seen" type="int64"/>
+    </struct>
+
+    <!-- Function Execution Request/Reply -->
+    <struct name="FunctionExecutionRequest">
+      <member name="request_id" type="string" stringMaxLength="128"/>
+      <member name="function_id" type="string" stringMaxLength="128"/>
+      <member name="parameters" type="string" stringMaxLength="8192"/>
+      <member name="timestamp" type="int64"/>
+      <member name="metadata" type="string" stringMaxLength="2048"/>
+    </struct>
+
+    <struct name="FunctionExecutionReply">
+      <member name="request_id" type="string" stringMaxLength="128"/>
+      <member name="function_id" type="string" stringMaxLength="128"/>
+      <member name="result" type="string" stringMaxLength="8192"/>
+      <member name="status" type="int32"/>
+      <member name="error_message" type="string" stringMaxLength="2048"/>
+      <member name="timestamp" type="int64"/>
+      <member name="metadata" type="string" stringMaxLength="2048"/>
+    </struct>
+
+    <!-- Test service interface -->
+    <struct name="TestRequest">
+      <member name="message" type="string" stringMaxLength="8192"/>
+    </struct>
+
+    <struct name="TestReply">
+      <member name="message" type="string" stringMaxLength="8192"/>
+      <member name="status" type="int32"/>
+    </struct>
+
+    <!-- LLM Function Schema -->
+    <struct name="LLMFunctionSchema">
+      <member name="function_id" type="string" key="true" stringMaxLength="128"/>
+      <member name="name" type="string" stringMaxLength="256"/>
+      <member name="description" type="string" stringMaxLength="2048"/>
+      <member name="parameters_schema" type="string" stringMaxLength="8192"/>
+      <member name="returns_schema" type="string" stringMaxLength="2048"/>
+      <member name="provider_id" type="string" stringMaxLength="128"/>
+      <member name="version" type="string" stringMaxLength="64"/>
+      <member name="tags" type="string" stringMaxLength="1024"/>
+    </struct>
+
+    <!-- Function Monitoring Events -->
+    <enum name="EventType">
+      <enumerator name="FUNCTION_DISCOVERY"/>
+      <enumerator name="FUNCTION_CALL"/>
+      <enumerator name="FUNCTION_RESULT"/>
+      <enumerator name="FUNCTION_STATUS"/>
+      <enumerator name="FUNCTION_DISCOVERY_V2"/>
+    </enum>
+
+    <enum name="EntityType">
+      <enumerator name="FUNCTION"/>
+      <enumerator name="AGENT"/>
+      <enumerator name="SPECIALIZED_AGENT"/>
+      <enumerator name="INTERFACE"/>
+    </enum>
+
+    <struct name="MonitoringEvent">
+      <member name="event_id" type="string" key="true" stringMaxLength="128"/>
+      <member name="timestamp" type="int64"/>
+      <member name="event_type" type="nonBasic" nonBasicTypeName="EventType"/>
+      <member name="entity_type" type="nonBasic" nonBasicTypeName="EntityType"/>
+      <member name="entity_id" type="string" stringMaxLength="128"/>
+      <member name="metadata" type="string" stringMaxLength="2048"/>
+      <member name="call_data" type="string" stringMaxLength="8192"/>
+      <member name="result_data" type="string" stringMaxLength="8192"/>
+      <member name="status_data" type="string" stringMaxLength="2048"/>
+    </struct>
+
+    <!-- New Enhanced Monitoring Types -->
+    <enum name="ComponentType">
+      <enumerator name="INTERFACE"/>
+      <enumerator name="PRIMARY_AGENT"/>
+      <enumerator name="SPECIALIZED_AGENT"/>
+      <enumerator name="FUNCTION"/>
+    </enum>
+
+    <enum name="ComponentState">
+      <enumerator name="JOINING"/>
+      <enumerator name="DISCOVERING"/>
+      <enumerator name="READY"/>
+      <enumerator name="BUSY"/>
+      <enumerator name="DEGRADED"/>
+      <enumerator name="OFFLINE"/>
+    </enum>
+
+    <enum name="EventCategory">
+      <enumerator name="NODE_DISCOVERY"/>      <!-- Node/Agent/Component discovery -->
+      <enumerator name="EDGE_DISCOVERY"/>      <!-- Connection/Relationship discovery -->
+      <enumerator name="STATE_CHANGE"/>        <!-- Component state transitions -->
+      <enumerator name="AGENT_INIT"/>          <!-- Agent initialization -->
+      <enumerator name="AGENT_READY"/>         <!-- Agent ready state -->
+      <enumerator name="AGENT_SHUTDOWN"/>      <!-- Agent shutdown -->
+      <enumerator name="DDS_ENDPOINT"/>        <!-- DDS endpoint discovery -->
+    </enum>
+
+    <struct name="ComponentLifecycleEvent">
+      <member name="component_id" type="string" key="true" stringMaxLength="128"/>
+      <member name="component_type" type="nonBasic" nonBasicTypeName="ComponentType"/>
+      <member name="previous_state" type="nonBasic" nonBasicTypeName="ComponentState"/>
+      <member name="new_state" type="nonBasic" nonBasicTypeName="ComponentState"/>
+      <member name="timestamp" type="int64"/>
+      <member name="reason" type="string" stringMaxLength="1024"/>
+      <member name="capabilities" type="string" stringMaxLength="2048"/>
+      <member name="chain_id" type="string" stringMaxLength="128"/>
+      <member name="call_id" type="string" stringMaxLength="128"/>
+      <member name="event_category" type="nonBasic" nonBasicTypeName="EventCategory"/>
+      <member name="source_id" type="string" stringMaxLength="128"/>
+      <member name="target_id" type="string" stringMaxLength="128"/>
+      <member name="connection_type" type="string" stringMaxLength="128"/>
+    </struct>
+
+    <struct name="ChainEvent">
+      <member name="chain_id" type="string" key="true" stringMaxLength="128"/>
+      <member name="call_id" type="string" stringMaxLength="128"/>
+      <member name="interface_id" type="string" stringMaxLength="128"/>
+      <member name="primary_agent_id" type="string" stringMaxLength="128"/>
+      <member name="specialized_agent_ids" type="string" stringMaxLength="2048"/>
+      <member name="function_id" type="string" stringMaxLength="128"/>
+      <member name="query_id" type="string" stringMaxLength="128"/>
+      <member name="timestamp" type="int64"/>
+      <member name="event_type" type="string" stringMaxLength="128"/>
+      <member name="source_id" type="string" stringMaxLength="128"/>
+      <member name="target_id" type="string" stringMaxLength="128"/>
+      <member name="status" type="int32"/>
+    </struct>
+
+    <struct name="LivelinessUpdate">
+      <member name="component_id" type="string" key="true" stringMaxLength="128"/>
+      <member name="component_type" type="nonBasic" nonBasicTypeName="ComponentType"/>
+      <member name="state" type="nonBasic" nonBasicTypeName="ComponentState"/>
+      <member name="last_active" type="int64"/>
+      <member name="health_metrics" type="string" stringMaxLength="1024"/>
+    </struct>
+
+  </type_library>
+
+</dds>
