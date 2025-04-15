@@ -142,31 +142,6 @@ class GenesisRPCService:
                 for request_sample in requests:
                     request = request_sample.data
                     request_info = request_sample.info  # Get the request info with publication handle
-                    
-                    # Handle discovery requests
-                    if request.type == "discovery":
-                        logger.info("Received function discovery request")
-                        
-                        # Create a dictionary of function info
-                        function_info = {}
-                        for name, func_data in self.functions.items():
-                            function_info[name] = {
-                                "name": name,
-                                "description": func_data["tool"].function.description,
-                                "parameters": json.loads(func_data["tool"].function.parameters),
-                                "operation_type": func_data["operation_type"]
-                            }
-                        
-                        # Send the reply
-                        reply = self.get_reply_type()(
-                            result_json=json.dumps(function_info),
-                            success=True,
-                            error_message=""
-                        )
-                        self.replier.send_reply(reply, request_sample.info)
-                        continue
-                    
-                    # Handle regular function calls
                     function_name = request.function.name
                     arguments_json = request.function.arguments
                     

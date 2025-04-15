@@ -56,9 +56,6 @@ class GenesisRPCClient:
                 "maximum": 1000
             }
         }
-        
-        # Store discovered functions
-        self.discovered_functions = {}
     
     def get_request_type(self):
         """Get the request type for RPC communication. Override if needed."""
@@ -271,59 +268,4 @@ class GenesisRPCClient:
         logger.info("Cleaning up client resources...")
         self.requester.close()
         self.participant.close()
-        logger.info("Client cleanup complete.")
-
-    async def discover_functions(self, timeout_seconds: int = 10) -> Dict[str, Any]:
-        """
-        Discover available functions from the service.
-        
-        Args:
-            timeout_seconds: How long to wait for function discovery
-            
-        Returns:
-            Dictionary of discovered functions
-            
-        Raises:
-            TimeoutError: If discovery times out
-        """
-        logger.info("Starting function discovery...")
-        
-        # Create a request to discover functions
-        request = self.get_request_type()(
-            id=f"discovery_{uuid.uuid4().hex[:8]}",
-            type="discovery",
-            function=None
-        )
-        
-        # Send the request
-        request_id = self.requester.send_request(request)
-        
-        try:
-            # Wait for and receive the reply
-            replies = self.requester.receive_replies(
-                max_wait=dds.Duration(seconds=timeout_seconds),
-                related_request_id=request_id
-            )
-            
-            if not replies:
-                raise TimeoutError("No reply received during function discovery")
-            
-            # Process the reply
-            reply = replies[0].data
-            
-            if reply.success:
-                # Parse the result JSON
-                try:
-                    self.discovered_functions = json.loads(reply.result_json)
-                    logger.info(f"Discovered {len(self.discovered_functions)} functions")
-                    return self.discovered_functions
-                except json.JSONDecodeError as e:
-                    logger.error(f"Error parsing discovery result JSON: {str(e)}")
-                    raise ValueError(f"Invalid discovery result JSON: {str(e)}")
-            else:
-                logger.warning(f"Function discovery failed: {reply.error_message}")
-                raise RuntimeError(f"Function discovery failed: {reply.error_message}")
-                
-        except dds.TimeoutError:
-            logger.error("Timeout during function discovery")
-            raise TimeoutError("Timeout during function discovery") 
+        logger.info("Client cleanup complete.") 

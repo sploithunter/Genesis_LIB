@@ -12,8 +12,7 @@ import rti.rpc as rpc
 from .genesis_app import GenesisApp
 import uuid
 import json
-from genesis_lib.utils import get_datamodel_path, load_datamodel
-from genesis_lib.datamodel import FunctionRequest, FunctionReply
+from genesis_lib.utils import get_datamodel_path
 
 # Get logger
 logger = logging.getLogger(__name__)
@@ -25,12 +24,14 @@ class GenesisInterface(ABC):
         self.service_name = service_name
         self.app = GenesisApp(preferred_name=interface_name)
         
-        # Use IDL-based types directly for RPC
-        self.request_type = FunctionRequest
-        self.reply_type = FunctionReply
+        # Get types from XML
+        config_path = get_datamodel_path()
+        self.type_provider = dds.QosProvider(config_path)
+        self.request_type = self.type_provider.type("genesis_lib", f"{service_name}Request")
+        self.reply_type = self.type_provider.type("genesis_lib", f"{service_name}Reply")
         
         # Store member names for later use
-        self.reply_members = ["result_json", "success", "error_message"]
+        self.reply_members = [member.name for member in self.reply_type.members()]
         
         # Create requester
         self.requester = rpc.Requester(
@@ -55,10 +56,24 @@ class GenesisInterface(ABC):
         if self.requester.matched_replier_count > 0:
             # Get the DDS participant GUIDs
             provider_id = str(self.app.participant.instance_handle)  # Interface's GUID
+            print("Requester Attributes:")
+            print(dir(self.requester))
             
-            # Get the replier's GUID
+            # Original method using builtin subscriber
+            reply_datareader = self.requester.reply_datareader
+            print("Reply Datareader Attributes:")
+            print(dir(reply_datareader))
+            builtin_subscriber = reply_datareader.subscriber.participant.builtin_subscriber
+            print("Builtin Subscriber Attributes:")
+            print(dir(builtin_subscriber))
+            # Correctly access the DCPSPublications built-in topic reader
             replier_guids = self.requester.reply_datareader.matched_publications
             first_replier_guid = replier_guids[0]
+            print(f"First replier GUID: {first_replier_guid}")
+            # I am stuck here.
+    
+            # Get the replier's handle from the request info
+            
             client_id = str(first_replier_guid)
             
             agent_id = str(uuid.uuid4())
@@ -102,12 +117,10 @@ class GenesisInterface(ABC):
     def send_request(self, request_data: Dict[str, Any], timeout_seconds: int = 15) -> Optional[Any]:
         """Send request to agent and wait for reply"""
         try:
-            # Create request using IDL type
-            request = FunctionRequest()
-            request.id = str(uuid.uuid4())
-            request.type = "function"
-            request.function.name = request_data.get("function_name", "")
-            request.function.arguments = json.dumps(request_data.get("parameters", {}))
+            # Create request
+            request = dds.DynamicData(self.request_type)
+            for key, value in request_data.items():
+                request[key] = value
                 
             # Send request and wait for reply
             logger.info(f"Sending request: {request}")
@@ -124,11 +137,7 @@ class GenesisInterface(ABC):
                 if replies:
                     reply, info = replies[0]  # Get first reply
                     logger.info(f"Received reply: {reply}")
-                    return {
-                        "result": json.loads(reply.result_json) if reply.success else None,
-                        "success": reply.success,
-                        "error_message": reply.error_message
-                    }
+                    return {key: reply[key] for key in self.reply_members}
                     
                 logger.error("No reply received")
                 return None
