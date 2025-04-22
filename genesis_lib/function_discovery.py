@@ -630,7 +630,7 @@ class FunctionRegistry:
         is_provider = function_id in self.functions
         role = "PROVIDER" if is_provider else "CLIENT"
         
-        print(f"DEBUG: {role} side processing function_id={function_id}, provider={provider_id}, client={client_id}")
+       # print(f"DEBUG: {role} side processing function_id={function_id}, provider={provider_id}, client={client_id}")
         
         # Skip if this is our own function - we don't need to discover it
         if is_provider:
@@ -773,7 +773,7 @@ class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
         """Handle subscription matches"""
         # First check if this is a FunctionCapability topic match
         if reader.topic_name != "FunctionCapability":
-            print(f"Ignoring subscription match for topic: {reader.topic_name}")
+           # print(f"Ignoring subscription match for topic: {reader.topic_name}")
             return
             
         # Now we know this is a FunctionCapability topic match
@@ -785,21 +785,21 @@ class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
         else:
             self_guid = "0"  # Default value if capability_writer is not available
             
-        print(f"FunctionCapability subscription matched with remote GUID: {remote_guid}")
-        print(f"FunctionCapability subscription matched with self GUID:   {self_guid}")
+        #print(f"FunctionCapability subscription matched with remote GUID: {remote_guid}")
+        #print(f"FunctionCapability subscription matched with self GUID:   {self_guid}")
         
    
 
     def on_data_available(self, reader):
         """Handle new function capability advertisements"""
         try:
-            print("*********ODA******** Reader structure and methods:")
-            print(dir(reader))
+           # print("*********ODA******** Reader structure and methods:")
+           # print(dir(reader))
             reader_matched_publications = reader.matched_publications
-            print("**********ODA******** Reader matched publications:")
-            print(dir(reader_matched_publications))
+            #print("**********ODA******** Reader matched publications:")
+            #print(dir(reader_matched_publications))
             current_publication = reader_matched_publications[0]
-            print(f"*********ODA********* Current publication: {current_publication}")
+            #print(f"*********ODA********* Current publication: {current_publication}")
             samples = reader.take()
             for data, info in samples:
                 # Create unique sample ID from function_id and timestamp
@@ -812,7 +812,7 @@ class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
                 if data and info.state.instance_state == dds.InstanceState.ALIVE:
                     self.registry.handle_capability_advertisement(data, info)
                     self.processed_samples.add(sample_id)
-                    print(f"DEBUG: FunctionCapabilityListener.on_data_available processed sample {sample_id}")
+                   # print(f"DEBUG: FunctionCapabilityListener.on_data_available processed sample {sample_id}")
                     
                     # Clean up old samples (keep last 1000)
                     if len(self.processed_samples) > 1000:

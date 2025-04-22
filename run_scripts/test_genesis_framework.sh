@@ -3,17 +3,23 @@
 # Genesis Framework Test Suite
 # This script runs comprehensive tests for the Genesis distributed framework
 
+# Get the project root directory
+PROJECT_ROOT=$(dirname $(dirname $(realpath $0)))
+
 # Source the setup script to set environment variables
 echo "===== Sourcing setup.sh ====="
-source setup.sh
+source "${PROJECT_ROOT}/setup.sh"
+
+# Set PYTHONPATH to include project root
+export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH}"
 
 # Create logs directory if it doesn't exist
-mkdir -p logs
+mkdir -p "${PROJECT_ROOT}/logs"
 
 # Get current timestamp for log files
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-MAIN_LOG_FILE="logs/genesis_framework_test_${TIMESTAMP}.log"
-SERVICES_LOG_FILE="logs/services_test_${TIMESTAMP}.log"
+MAIN_LOG_FILE="${PROJECT_ROOT}/logs/genesis_framework_test_${TIMESTAMP}.log"
+SERVICES_LOG_FILE="${PROJECT_ROOT}/logs/services_test_${TIMESTAMP}.log"
 
 echo "===== Starting Genesis Framework Test Suite ====="
 echo "Date: $(date)"
@@ -40,21 +46,21 @@ run_service_tests() {
     
     # Start multiple calculator services
     log_message "Starting Calculator Service instances..."
-    python3 test_functions/calculator_service.py &
+    python3 "${PROJECT_ROOT}/test_functions/calculator_service.py" &
     CALCULATOR_PID_1=$!
-    python3 test_functions/calculator_service.py &
+    python3 "${PROJECT_ROOT}/test_functions/calculator_service.py" &
     CALCULATOR_PID_2=$!
-    python3 test_functions/calculator_service.py &
+    python3 "${PROJECT_ROOT}/test_functions/calculator_service.py" &
     CALCULATOR_PID_3=$!
     
     # Start letter counter service
     log_message "Starting Letter Counter Service..."
-    python3 test_functions/letter_counter_service.py &
+    python3 "${PROJECT_ROOT}/test_functions/letter_counter_service.py" &
     LETTER_COUNTER_PID=$!
     
     # Start text processor service
     log_message "Starting Text Processor Service..."
-    python3 test_functions/text_processor_service.py &
+    python3 "${PROJECT_ROOT}/test_functions/text_processor_service.py" &
     TEXT_PROCESSOR_PID=$!
     
     # Wait for services to initialize
@@ -77,7 +83,7 @@ run_service_tests() {
     
     # Run the service tests
     log_message "Running service test suite..."
-    python3 test_functions/test_all_services.py | tee -a ${SERVICES_LOG_FILE}
+    python3 "${PROJECT_ROOT}/test_functions/test_all_services.py" | tee -a ${SERVICES_LOG_FILE}
     local test_result=$?
     
     # Stop all services
@@ -103,12 +109,11 @@ run_dds_tests() {
     # Test DDS domain participant creation
     log_message "Testing DDS domain participant creation..."
     python3 -c "
-from genesis_lib.dds_domain import DDSDomain
+import rti.connextdds as dds
 try:
-    domain = DDSDomain()
-    domain.initialize()
+    participant = dds.DomainParticipant(domain_id=0)
     print('DDS domain participant creation: SUCCESS')
-    domain.cleanup()
+    participant.close()
 except Exception as e:
     print(f'DDS domain participant creation: FAILED - {str(e)}')
     exit(1)
@@ -136,8 +141,8 @@ try:
     client = GenesisRPCClient('TestService')
     service = GenesisRPCService('TestService')
     print('RPC client/service creation: SUCCESS')
-    client.cleanup()
-    service.cleanup()
+    client.close()
+    service.close()
 except Exception as e:
     print(f'RPC client/service creation: FAILED - {str(e)}')
     exit(1)

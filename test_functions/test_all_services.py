@@ -482,6 +482,12 @@ async def main():
         # Create and run the test
         test = AllServicesTest()
         await test.run_all_tests()
+        
+        # Check if any tests failed
+        if test.test_results and any(not result.get('success', False) for result in test.test_results):
+            logger.error("Some tests failed - see above for details")
+            return 1
+            
         return 0
     except Exception as e:
         logger.error(f"Error in main: {str(e)}")

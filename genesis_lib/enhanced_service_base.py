@@ -87,8 +87,8 @@ class EnhancedFunctionCapabilityListener(FunctionCapabilityListener):
             connection_type="function_connection"
         )
         
-        print(f"FunctionCapability subscription matched with remote GUID: {remote_guid}")
-        print(f"FunctionCapability subscription matched with self GUID:   {self_guid}")
+       # print(f"FunctionCapability subscription matched with remote GUID: {remote_guid}")
+       # print(f"FunctionCapability subscription matched with self GUID:   {self_guid}")
 
 class EnhancedServiceBase(GenesisRPCService):
     """
@@ -120,6 +120,9 @@ class EnhancedServiceBase(GenesisRPCService):
         
         # Store service name as instance variable
         self.service_name = service_name
+        
+        # Now we can auto-register decorated functions
+        self._auto_register_decorated_functions()
         
         # Get DDS instance handle for consistent identification - will be set after registry is initialized
         self.app_guid = None  # Will be set after capability writer is created
@@ -239,6 +242,28 @@ class EnhancedServiceBase(GenesisRPCService):
         # Initialize logger
         self.logger = logging.getLogger("enhanced_service_base")
     
+    # ---------------------------------------------------------------------- #
+    # Decorator auto‑scan                                                    #
+    # ---------------------------------------------------------------------- #
+    def _auto_register_decorated_functions(self):
+        """
+        Detect methods that carry __genesis_meta__ (set by @genesis_function)
+        and register them via existing register_enhanced_function().
+        """
+        for attr in dir(self):
+            fn = getattr(self, attr)
+            meta = getattr(fn, "__genesis_meta__", None)
+            if not meta:
+                continue
+            if fn.__name__ in self.functions:          # Already registered?
+                continue
+            self.register_enhanced_function(
+                fn,
+                meta["description"],
+                meta["parameters"],
+                operation_type=meta.get("operation_type"),
+                common_patterns=meta.get("common_patterns"),
+            )
     def register_enhanced_function(self, 
                                   func: Callable, 
                                   description: str, 
@@ -933,6 +958,19 @@ class EnhancedServiceBase(GenesisRPCService):
             metadata=metadata,
             status_data={"status": "removed", "state": "unavailable"}
         )
+
+    def close(self):
+        """Clean up all service resources"""
+        logger.info(f"Closing {self.service_name}...")
+        
+        # Close registry if it exists
+        if hasattr(self, 'registry'):
+            self.registry.close()
+            
+        # Close base class resources
+        super().close()
+            
+        logger.info(f"{self.service_name} closed successfully")
 
 # Example of how to use the enhanced service base
 if __name__ == "__main__":

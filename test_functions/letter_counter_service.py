@@ -6,6 +6,8 @@ import json
 from typing import Dict, Any, List
 import re
 from genesis_lib.enhanced_service_base import EnhancedServiceBase
+import rti.connextdds as dds
+from genesis_lib.utils import get_datamodel_path
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, 
@@ -22,6 +24,11 @@ class LetterCounterService(EnhancedServiceBase):
             service_name="LetterCounterService",
             capabilities=["letter_counter", "text_analysis"]
         )
+        
+        # Get types from XML for monitoring
+        config_path = get_datamodel_path()
+        self.type_provider = dds.QosProvider(config_path)
+        self.component_lifecycle_type = self.type_provider.type("genesis_lib", "ComponentLifecycleEvent")
         
         # Get common schemas
         text_schema = self.get_common_schema("text")

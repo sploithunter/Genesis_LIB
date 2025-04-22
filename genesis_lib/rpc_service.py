@@ -319,4 +319,13 @@ class GenesisRPCService:
         """
         if schema_type not in self.common_schemas:
             raise ValueError(f"Unknown schema type: {schema_type}")
-        return self.common_schemas[schema_type].copy() 
+        return self.common_schemas[schema_type].copy()
+
+    def close(self):
+        """Clean up service resources"""
+        logger.info("Cleaning up service resources...")
+        if hasattr(self, 'replier'):
+            self.replier.close()
+        if hasattr(self, 'participant'):
+            self.participant.close()
+        logger.info("Service cleanup complete") 

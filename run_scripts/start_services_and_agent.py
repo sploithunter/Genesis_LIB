@@ -50,7 +50,7 @@ class ServiceStarter:
     def start_cli_agent(self) -> Optional[subprocess.Popen]:
         """Start the CLI agent."""
         try:
-            agent_path = os.path.join(self.workspace_dir, "genesis_lib", "interface_cli.py")
+            agent_path = os.path.join(self.workspace_dir, "interface_cli.py")
             if not os.path.exists(agent_path):
                 logger.error(f"Agent file not found: {agent_path}")
                 return None
@@ -78,31 +78,36 @@ class ServiceStarter:
                 process.kill()
         self.processes.clear()
 
-def run_test_client():
+async def run_test_client():
     """Run a test client that makes requests to the services."""
     try:
-        from genesis_lib.rpc_client import RPCClient
+        from genesis_lib.rpc_client import GenesisRPCClient
         
         # Test calculator service
-        calc_client = RPCClient('CalculatorService')
-        result = calc_client.call_function('add', {'a': 10, 'b': 20})
+        calc_client = GenesisRPCClient('CalculatorService')
+        print('Waiting for calculator service to be available...')
+        await calc_client.wait_for_service(timeout_seconds=30)  # Increased timeout
+        result = await calc_client.call_function('add', x=10, y=20)
         print(f'Calculator test: 10 + 20 = {result}')
         
         # Test text processor service
-        text_client = RPCClient('TextProcessorService')
-        result = text_client.call_function('count_words', {'text': 'This is a test sentence with seven words.'})
+        text_client = GenesisRPCClient('TextProcessorService')
+        print('Waiting for text processor service to be available...')
+        await text_client.wait_for_service(timeout_seconds=30)  # Increased timeout
+        result = await text_client.call_function('count_words', text='This is a test sentence with seven words.')
         print(f'Text processor test: Word count = {result}')
         
         # Test letter counter service
-        letter_client = RPCClient('LetterCounterService')
-        result = letter_client.call_function('count_letters', {'text': 'Hello World'})
+        letter_client = GenesisRPCClient('LetterCounterService')
+        print('Waiting for letter counter service to be available...')
+        await letter_client.wait_for_service(timeout_seconds=30)  # Increased timeout
+        result = await letter_client.call_function('count_letter', text='Hello World', letter='l')
         print(f'Letter counter test: Letter count = {result}')
         
         print('All service tests completed successfully')
-        return True
     except Exception as e:
         logger.error(f"Error running test client: {str(e)}")
-        return False
+        raise
 
 def main():
     starter = ServiceStarter()
@@ -121,11 +126,8 @@ def main():
         time.sleep(3)
         
         # Run test client
-        if run_test_client():
-            logger.info("Test client completed successfully")
-        else:
-            logger.error("Test client failed")
-            return 1
+        asyncio.run(run_test_client())
+        logger.info("Test client completed successfully")
             
         # Clean up and exit
         starter.cleanup()

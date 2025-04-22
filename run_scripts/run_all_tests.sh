@@ -49,10 +49,46 @@ run_with_timeout() {
         # Clean up any processes that might still be running
         cleanup
         return 1
-    else
-        echo "✅ SUCCESS: $script_name completed successfully"
-        return 0
     fi
+    
+    # Check for test failures in the log
+    if grep -q "Some tests failed" "$log_file"; then
+        echo "❌ ERROR: $script_name reported test failures"
+        echo "Check $log_file for details"
+        # Clean up any processes that might still be running
+        cleanup
+        return 1
+    fi
+    
+    # Check for Python errors in the log
+    if grep -q "ImportError\|NameError\|TypeError\|AttributeError\|RuntimeError\|SyntaxError\|IndentationError" "$log_file"; then
+        echo "❌ ERROR: $script_name encountered Python errors"
+        echo "Check $log_file for details"
+        # Clean up any processes that might still be running
+        cleanup
+        return 1
+    fi
+    
+    # Check for any error messages in the log
+    if grep -q "ERROR\|Error\|error\|Exception\|exception\|Traceback" "$log_file"; then
+        echo "❌ ERROR: $script_name encountered errors"
+        echo "Check $log_file for details"
+        # Clean up any processes that might still be running
+        cleanup
+        return 1
+    fi
+    
+    # Check for unexpected termination
+    if grep -q "Killed\|Segmentation fault\|Aborted\|core dumped" "$log_file"; then
+        echo "❌ ERROR: $script_name terminated unexpectedly"
+        echo "Check $log_file for details"
+        # Clean up any processes that might still be running
+        cleanup
+        return 1
+    fi
+    
+    echo "✅ SUCCESS: $script_name completed successfully"
+    return 0
 }
 
 # Function to clean up processes
