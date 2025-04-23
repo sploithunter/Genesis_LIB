@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Source conda without sourcing entire .bash_profile to avoid potential errors
-source ~/anaconda3/etc/profile.d/conda.sh 
-
-# Activate the genesis_lib environment
-conda activate genesis_lib
-
 # Get Python version for RTI path
 PYTHON_VERSION=$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
 
@@ -17,7 +11,6 @@ export DYLD_LIBRARY_PATH=$NDDSHOME/lib:$DYLD_LIBRARY_PATH
 
 # Source RTI's environment setup script
 source $NDDSHOME/resource/scripts/rtisetenv_arm64Darwin20clang12.0.bash
-
 
 # Check if ANTHROPIC_API_KEY is already set
 if [ ! -z "$ANTHROPIC_API_KEY" ]; then
@@ -91,7 +84,6 @@ if [ -z "$OPENAI_API_KEY" ]; then
         export OPENAI_API_KEY="your_openai_api_key_here"
     fi
 fi
-
 
 echo "Setup complete. RTI Connext DDS environment configured."
 echo "Python Version: $PYTHON_VERSION"

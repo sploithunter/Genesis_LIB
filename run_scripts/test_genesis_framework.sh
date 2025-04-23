@@ -65,21 +65,55 @@ run_service_tests() {
     
     # Wait for services to initialize
     log_message "Waiting for services to initialize..."
-    sleep 10
+    sleep 15
     
-    # Verify all services are running
-    local all_services_running=true
-    for pid in ${CALCULATOR_PID_1} ${CALCULATOR_PID_2} ${CALCULATOR_PID_3} ${LETTER_COUNTER_PID} ${TEXT_PROCESSOR_PID}; do
-        if ! check_process ${pid}; then
-            log_message "ERROR: Service with PID ${pid} failed to start"
-            all_services_running=false
-        fi
-    done
+    # Verify all services are running and have registered their functions
+    log_message "Verifying service function registration..."
+    python3 -c "
+import asyncio
+from genesis_lib.generic_function_client import GenericFunctionClient
+
+async def verify_functions():
+    client = GenericFunctionClient()
+    await client.discover_functions(timeout_seconds=30)
+    functions = client.list_available_functions()
     
-    if [ "$all_services_running" = false ]; then
-        log_message "Service startup verification failed"
-        return 1
-    fi
+    # Check for required services
+    services = {}
+    for func in functions:
+        service_name = func.get('service_name', 'UnknownService')
+        if service_name not in services:
+            services[service_name] = []
+        services[service_name].append(func['name'])
+    
+    # Verify we have all required services and their functions
+    required_services = {
+        'CalculatorService': ['add', 'subtract', 'multiply', 'divide'],
+        'LetterCounterService': ['count_letter', 'count_multiple_letters', 'get_letter_frequency'],
+        'TextProcessorService': ['transform_case', 'analyze_text', 'generate_text']
+    }
+    
+    missing_services = []
+    missing_functions = []
+    
+    for service, required_funcs in required_services.items():
+        if service not in services:
+            missing_services.append(service)
+            continue
+            
+        for func in required_funcs:
+            if func not in services[service]:
+                missing_functions.append(f'{service}.{func}')
+    
+    if missing_services or missing_functions:
+        print(f'ERROR: Missing services: {missing_services}')
+        print(f'ERROR: Missing functions: {missing_functions}')
+        exit(1)
+    
+    print('All services and functions verified successfully!')
+
+asyncio.run(verify_functions())
+" || exit 1
     
     # Run the service tests
     log_message "Running service test suite..."

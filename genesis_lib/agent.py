@@ -53,7 +53,7 @@ class GenesisAgent(ABC):
         # Store discovered functions
         self.discovered_functions = []
 
-    def discover_functions(self, function_client, max_retries: int = 5) -> List[Dict[str, Any]]:
+    async def discover_functions(self, function_client, max_retries: int = 5) -> List[Dict[str, Any]]:
         """
         Discover available functions from all services using the provided function client.
         
@@ -72,19 +72,12 @@ class GenesisAgent(ABC):
         
         while retry_count < max_retries:
             try:
-                # Create event loop for async calls
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                
                 # Discover functions using the client
                 logger.info("===== TRACING: Calling discover_functions on function client =====")
-                loop.run_until_complete(function_client.discover_functions())
+                await function_client.discover_functions()
                 
                 # Get the list of available functions
                 available_functions = function_client.list_available_functions()
-                
-                # Close the loop
-                loop.close()
                 
                 if available_functions:
                     logger.info(f"===== TRACING: Discovered {len(available_functions)} functions =====")
@@ -100,12 +93,12 @@ class GenesisAgent(ABC):
                 else:
                     logger.warning("===== TRACING: No functions discovered, retrying... =====")
                     retry_count += 1
-                    time.sleep(1)
+                    await asyncio.sleep(1)
             except Exception as e:
                 logger.error(f"===== TRACING: Error discovering functions: {str(e)} =====")
                 logger.error(traceback.format_exc())
                 retry_count += 1
-                time.sleep(1)
+                await asyncio.sleep(1)
                 
         if retry_count >= max_retries:
             logger.warning("===== TRACING: Could not discover functions after maximum retries =====")
@@ -113,11 +106,11 @@ class GenesisAgent(ABC):
         return available_functions
 
     @abstractmethod
-    def process_request(self, request: Any) -> Dict[str, Any]:
+    async def process_request(self, request: Any) -> Dict[str, Any]:
         """Process the request and return reply data as a dictionary"""
         pass
 
-    def on_request(self, replier):
+    async def on_request(self, replier):
         """Handle incoming requests"""
         samples = replier.take_requests()
         for request, info in samples:
@@ -127,7 +120,7 @@ class GenesisAgent(ABC):
             logger.info(f"Received request: {request}")
             
             # Get reply data from concrete implementation
-            reply_data = self.process_request(request)
+            reply_data = await self.process_request(request)
             
             # Create reply
             reply = dds.DynamicData(self.reply_type)
@@ -138,7 +131,7 @@ class GenesisAgent(ABC):
             replier.send_reply(reply, info)
             logger.info(f"Sent reply: {reply}")
 
-    def run(self):
+    async def run(self):
         """Main agent loop"""
         try:
             # Announce presence
@@ -147,29 +140,38 @@ class GenesisAgent(ABC):
             # Main loop - process requests
             logger.info(f"{self.agent_name} listening for requests (Ctrl+C to exit)...")
             while True:
-                time.sleep(0.1)
+                await asyncio.sleep(0.1)
                 
         except KeyboardInterrupt:
             logger.info(f"\nShutting down {self.agent_name}...")
-            self.replier.close()
-            self.app.close()
+            await self.close()
             sys.exit(0)
 
-    def close(self):
+    async def close(self):
         """Clean up resources"""
         try:
             # Close replier
             if hasattr(self, 'replier') and not getattr(self.replier, '_closed', False):
                 self.replier.close()
                 
-            # Close app
-            if hasattr(self, 'app') and not getattr(self.app, '_closed', False):
-                self.app.close()
+            # Close app if it exists and hasn't been closed
+            if hasattr(self, 'app') and self.app is not None and not getattr(self.app, '_closed', False):
+                await self.app.close()
                 
             logger.info(f"GenesisAgent {self.agent_name} closed successfully")
         except Exception as e:
             logger.error(f"Error closing GenesisAgent: {str(e)}")
             logger.error(traceback.format_exc())
+
+    # Sync version of close for backward compatibility
+    def close_sync(self):
+        """Synchronous version of close for backward compatibility"""
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(self.close())
+        finally:
+            loop.close()
 
 class GenesisAnthropicChatAgent(GenesisAgent, AnthropicChatAgent):
     """Genesis agent that uses Anthropic's Claude model"""
@@ -178,12 +180,12 @@ class GenesisAnthropicChatAgent(GenesisAgent, AnthropicChatAgent):
         GenesisAgent.__init__(self, "Claude", "Chat")
         AnthropicChatAgent.__init__(self, model_name, api_key, system_prompt, max_history)
         
-    def process_request(self, request: Any) -> Dict[str, Any]:
+    async def process_request(self, request: Any) -> Dict[str, Any]:
         """Process chat request using Claude"""
         message = request["message"]
         conversation_id = request["conversation_id"]
         
-        response, status = self.generate_response(message, conversation_id)
+        response, status = await self.generate_response(message, conversation_id)
         
         return {
             "response": response,

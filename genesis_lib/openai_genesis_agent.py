@@ -498,9 +498,21 @@ Always explain your reasoning and the steps you're taking."""
     
     async def close(self):
         """Clean up resources"""
-        if self.generic_client:
-            self.generic_client.close()
-        await super().close()
+        try:
+            # Close OpenAI-specific resources
+            if hasattr(self, 'generic_client') and self.generic_client is not None:
+                if asyncio.iscoroutinefunction(self.generic_client.close):
+                    await self.generic_client.close()
+                else:
+                    self.generic_client.close()
+            
+            # Close base class resources
+            await super().close()
+            
+            logger.info(f"OpenAIGenesisAgent closed successfully")
+        except Exception as e:
+            logger.error(f"Error closing OpenAIGenesisAgent: {str(e)}")
+            logger.error(traceback.format_exc())
 
 async def run_test():
     """Test the OpenAIGenesisAgent"""

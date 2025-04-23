@@ -15,6 +15,7 @@ import rti.rpc as rpc
 from genesis_lib.utils import get_datamodel_path
 from .agent import GenesisAgent
 import traceback
+import asyncio
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -66,6 +67,8 @@ class MonitoredAgent(GenesisAgent):
             agent_id=agent_id
         )
         self.agent_type = agent_type
+        self.monitor = None
+        self.subscription = None
         
         # Get types from XML
         config_path = get_datamodel_path()
@@ -500,7 +503,7 @@ class MonitoredAgent(GenesisAgent):
         """
         raise NotImplementedError("Concrete agents must implement _process_request")
     
-    def close(self):
+    async def close(self):
         """Clean up resources"""
         try:
             # First transition to BUSY state for shutdown
@@ -511,7 +514,7 @@ class MonitoredAgent(GenesisAgent):
             )
 
             # Add a small delay to ensure events are distinguishable
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
 
             # Then transition to OFFLINE
             self.publish_component_lifecycle_event(
@@ -527,25 +530,28 @@ class MonitoredAgent(GenesisAgent):
                 metadata={"service": self.service_name}
             )
             
-            # Close monitoring resources
-            if hasattr(self, 'monitoring_writer'):
+            # Close monitoring resources if they exist
+            if hasattr(self, 'monitoring_writer') and self.monitoring_writer is not None:
                 self.monitoring_writer.close()
-            if hasattr(self, 'monitoring_publisher'):
+            if hasattr(self, 'monitoring_publisher') and self.monitoring_publisher is not None:
                 self.monitoring_publisher.close()
-            if hasattr(self, 'monitoring_topic'):
+            if hasattr(self, 'monitoring_topic') and self.monitoring_topic is not None:
                 self.monitoring_topic.close()
-            if hasattr(self, 'component_lifecycle_writer'):
+            if hasattr(self, 'component_lifecycle_writer') and self.component_lifecycle_writer is not None:
                 self.component_lifecycle_writer.close()
-            if hasattr(self, 'chain_event_writer'):
+            if hasattr(self, 'chain_event_writer') and self.chain_event_writer is not None:
                 self.chain_event_writer.close()
-            if hasattr(self, 'liveliness_writer'):
+            if hasattr(self, 'liveliness_writer') and self.liveliness_writer is not None:
                 self.liveliness_writer.close()
             
             # Close base class resources
-            super().close()
+            if hasattr(self, 'app') and self.app is not None:
+                await super().close()
             
+            logger.info(f"MonitoredAgent {self.agent_name} closed successfully")
         except Exception as e:
             logger.error(f"Error closing monitored agent: {str(e)}")
+            logger.error(traceback.format_exc())
 
     def wait_for_agent(self) -> bool:
         """
@@ -954,4 +960,51 @@ class MonitoredAgent(GenesisAgent):
         except Exception as e:
             logger.error(f"===== TRACING: Error publishing explicit requester-to-provider edge: {e} =====")
             logger.error(traceback.format_exc())
-            return False 
+            return False
+
+    async def setup_monitoring(self):
+        """Set up monitoring for this agent"""
+        if self.monitor is None:
+            self.monitor = Monitor(self.app.participant)
+            self.subscription = self.monitor.subscribe(
+                "genesis_lib.DiscoveryEvent",
+                self.on_subscription_match
+            )
+            
+    async def on_subscription_match(self, data_reader, info):
+        """Handle subscription matches"""
+        samples = data_reader.take()
+        for sample, info in samples:
+            if sample is None or info.state.instance_state != dds.InstanceState.ALIVE:
+                continue
+                
+            logger.info(f"Received discovery event: {sample}")
+            
+            # Process the discovery event
+            await self.process_discovery_event(sample)
+            
+    async def process_discovery_event(self, event):
+        """Process a discovery event"""
+        # This method can be overridden by subclasses to handle discovery events
+        pass
+        
+    async def publish_discovery_event(self, event_data: Dict[str, Any]):
+        """Publish a discovery event"""
+        if self.monitor is None:
+            await self.setup_monitoring()
+            
+        event = dds.DynamicData(self.monitor.get_type("genesis_lib.DiscoveryEvent"))
+        for key, value in event_data.items():
+            event[key] = value
+            
+        self.monitor.write(event)
+        
+    # Sync version of close for backward compatibility
+    def close_sync(self):
+        """Synchronous version of close for backward compatibility"""
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(self.close())
+        finally:
+            loop.close() 

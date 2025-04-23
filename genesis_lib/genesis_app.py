@@ -11,6 +11,7 @@ from .function_patterns import SuccessPattern, FailurePattern, pattern_registry
 import os
 import traceback
 from genesis_lib.utils import get_datamodel_path
+import asyncio
 
 # Configure logging
 logger = configure_genesis_logging(
@@ -131,7 +132,7 @@ class GenesisApp:
         # Give time for discovery
         time.sleep(0.2)
 
-    def close(self):
+    async def close(self):
         """Close all DDS entities and cleanup resources"""
         if hasattr(self, '_closed') and self._closed:
             logger.info(f"GenesisApp {self.agent_id} is already closed")
@@ -144,10 +145,15 @@ class GenesisApp:
                 if hasattr(self, resource):
                     try:
                         resource_obj = getattr(self, resource)
-                        if hasattr(resource_obj, 'closed') and not resource_obj.closed:
-                            resource_obj.close()
+                        if hasattr(resource_obj, 'close') and not getattr(resource_obj, '_closed', False):
+                            if asyncio.iscoroutinefunction(resource_obj.close):
+                                await resource_obj.close()
+                            else:
+                                resource_obj.close()
                     except Exception as e:
-                        logger.warning(f"Error closing {resource}: {str(e)}")
+                        # Only log as warning if the error is not about being already closed
+                        if "already closed" not in str(e).lower():
+                            logger.warning(f"Error closing {resource}: {str(e)}")
                 
             # Mark as closed
             self._closed = True
@@ -155,6 +161,16 @@ class GenesisApp:
         except Exception as e:
             logger.error(f"Error closing GenesisApp: {str(e)}")
             logger.error(traceback.format_exc())
+
+    # Sync version of close for backward compatibility
+    def close_sync(self):
+        """Synchronous version of close for backward compatibility"""
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(self.close())
+        finally:
+            loop.close()
 
     def _register_builtin_functions(self):
         """Register any built-in functions for this application"""
