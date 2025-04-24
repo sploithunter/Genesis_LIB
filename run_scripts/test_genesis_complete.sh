@@ -89,13 +89,21 @@ test_agent() {
     # Start test agent
     log_message "Starting Test Agent..."
     python -c "
-from genesis_lib.agent import GenesisAgent
+from genesis_lib.agent import MonitoredAgent
 from genesis_lib.function_discovery import FunctionRegistry
 from genesis_lib.rpc_client import GenesisRPCClient
 import asyncio
 
-class TestAgent(GenesisAgent):
-    def process_request(self, request):
+class TestAgent(MonitoredAgent):
+    def __init__(self):
+        super().__init__(
+            agent_name="TestAgent",
+            service_name="TestService",
+            agent_type="AGENT"
+        )
+        logger.info("TestAgent initialized")
+
+    def _process_request(self, request):
         # Simple echo implementation
         return {'response': request}
 
@@ -105,7 +113,7 @@ async def run_agent():
         registry = FunctionRegistry()
         
         # Then create agent
-        agent = TestAgent('TestAgent', 'TestService')
+        agent = TestAgent()
         print('Agent initialized successfully')
         return agent
     except Exception as e:

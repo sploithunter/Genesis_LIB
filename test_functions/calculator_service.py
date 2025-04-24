@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import logging, asyncio
+import logging, asyncio, sys
 from typing import Dict, Any
 from pydantic import BaseModel, Field
 
