@@ -32,15 +32,26 @@ logger = logging.getLogger("openai_genesis_agent")
 class OpenAIGenesisAgent(MonitoredAgent):
     """An agent that uses OpenAI API with Genesis function calls"""
     
-    def __init__(self, model_name="gpt-4o", classifier_model_name="gpt-4o"):
-        """Initialize the agent with the specified models"""
+    def __init__(self, model_name="gpt-4o", classifier_model_name="gpt-4o", domain_id: int = 0,
+                 agent_name: str = "OpenAIAgent", description: str = None):
+        """Initialize the agent with the specified models
+        
+        Args:
+            model_name: OpenAI model to use (default: gpt-4o)
+            classifier_model_name: Model to use for function classification (default: gpt-4o)
+            domain_id: DDS domain ID (default: 0)
+            agent_name: Name of the agent (default: "OpenAIAgent")
+            description: Optional description of the agent
+        """
         logger.info(f"Initializing OpenAIGenesisAgent with model {model_name}")
         
         # Initialize monitored agent base class
         super().__init__(
-            agent_name="OpenAIAgent",
+            agent_name=agent_name,
             service_name="ChatGPT",
-            agent_type="SPECIALIZED_AGENT"  # This is a specialized AI agent
+            agent_type="SPECIALIZED_AGENT",  # This is a specialized AI agent
+            description=description or f"An OpenAI-powered agent using {model_name} model",
+            domain_id=domain_id
         )
         
         # Get API key from environment
@@ -60,12 +71,23 @@ class OpenAIGenesisAgent(MonitoredAgent):
         # Initialize function classifier
         self.function_classifier = FunctionClassifier(llm_client=self.client)
         
-        # Set enhanced system prompt with information about function classification
-        self.system_prompt = """You are a helpful assistant that can perform various operations using remote services.
+        # Set system prompts for different scenarios
+        self.function_based_system_prompt = """You are a helpful assistant that can perform various operations using remote services.
 You have access to a set of functions that can help you solve problems.
 When a function is available that can help with a task, you should use it rather than trying to solve the problem yourself.
 This is especially important for mathematical calculations and data processing tasks.
 Always explain your reasoning and the steps you're taking."""
+
+        self.general_system_prompt = """You are a helpful and engaging AI assistant. You can:
+- Answer questions and provide information
+- Tell jokes and engage in casual conversation
+- Help with creative tasks like writing and brainstorming
+- Provide explanations and teach concepts
+- Assist with problem-solving and decision making
+Be friendly, professional, and maintain a helpful tone while being concise and clear in your responses."""
+
+        # Start with general prompt, will switch to function-based if functions are discovered
+        self.system_prompt = self.general_system_prompt
         
         logger.info("OpenAIGenesisAgent initialized successfully")
     
@@ -79,8 +101,13 @@ Always explain your reasoning and the steps you're taking."""
             functions = self.generic_client.list_available_functions()
             if not functions:
                 logger.info("===== TRACING: No functions available in the system =====")
+                # Use general system prompt since no functions are available
+                self.system_prompt = self.general_system_prompt
                 return
                 
+            # Switch to function-based prompt since functions are available
+            self.system_prompt = self.function_based_system_prompt
+            
             for func in functions:
                 self.function_cache[func["name"]] = {
                     "function_id": func["function_id"],
@@ -191,12 +218,58 @@ Always explain your reasoning and the steps you're taking."""
             
             # If no functions are available, proceed with basic response
             if not self.function_cache:
-                logger.info("===== TRACING: No functions available, proceeding with basic response =====")
-                response = {
-                    "message": "I understand your request, but I don't have access to any specialized functions at the moment. I'll do my best to help you with the information I have.",
-                    "functions_used": []
+                logger.info("===== TRACING: No functions available, proceeding with general conversation =====")
+                
+                # Create chain event for LLM call start
+                chain_event = dds.DynamicData(self.chain_event_type)
+                chain_event["chain_id"] = chain_id
+                call_id = str(uuid.uuid4())  # New call ID for this call
+                chain_event["call_id"] = call_id
+                chain_event["interface_id"] = str(self.app.participant.instance_handle)
+                chain_event["primary_agent_id"] = ""
+                chain_event["specialized_agent_ids"] = ""
+                chain_event["function_id"] = f"openai.{self.model_name}"
+                chain_event["query_id"] = str(uuid.uuid4())
+                chain_event["timestamp"] = int(time.time() * 1000)
+                chain_event["event_type"] = "LLM_CALL_START"
+                chain_event["source_id"] = str(self.app.participant.instance_handle)
+                chain_event["target_id"] = "OpenAI"
+                chain_event["status"] = 0
+                
+                self.chain_event_writer.write(chain_event)
+                self.chain_event_writer.flush()
+                
+                # Process with general conversation
+                response = self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "system", "content": self.general_system_prompt},
+                        {"role": "user", "content": user_message}
+                    ]
+                )
+                
+                # Create chain event for LLM call completion
+                chain_event = dds.DynamicData(self.chain_event_type)
+                chain_event["chain_id"] = chain_id
+                chain_event["call_id"] = call_id
+                chain_event["interface_id"] = str(self.app.participant.instance_handle)
+                chain_event["primary_agent_id"] = ""
+                chain_event["specialized_agent_ids"] = ""
+                chain_event["function_id"] = f"openai.{self.model_name}"
+                chain_event["query_id"] = str(uuid.uuid4())
+                chain_event["timestamp"] = int(time.time() * 1000)
+                chain_event["event_type"] = "LLM_CALL_COMPLETE"
+                chain_event["source_id"] = "OpenAI"
+                chain_event["target_id"] = str(self.app.participant.instance_handle)
+                chain_event["status"] = 0
+                
+                self.chain_event_writer.write(chain_event)
+                self.chain_event_writer.flush()
+                
+                return {
+                    "message": response.choices[0].message.content,
+                    "status": 0
                 }
-                return response
             
             # Phase 1: Function Classification
             # Create chain event for classification LLM call start
