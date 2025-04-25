@@ -135,6 +135,7 @@ cleanup() {
     pkill -f "python.*simple_client" || true
     pkill -f "python.*openai_chat_agent" || true
     pkill -f "python.*interface_cli" || true
+    pkill -f "python.*example_agent1" || true
     [ "$DEBUG" = "true" ] && echo "Cleanup complete"
 }
 
@@ -157,6 +158,9 @@ run_with_timeout "run_simple_agent.sh" 60 || { echo "Test failed: run_simple_age
 
 # Simple client test
 run_with_timeout "run_simple_client.sh" 60 || { echo "Test failed: run_simple_client.sh"; exit 1; }
+
+# Example agent test
+DEBUG=true run_with_timeout "run_example_agent1.sh" 60 || { echo "Test failed: run_example_agent1.sh"; exit 1; }
 
 # Services and agent test
 run_with_timeout "start_services_and_agent.py" 90 || { echo "Test failed: start_services_and_agent.py"; exit 1; }

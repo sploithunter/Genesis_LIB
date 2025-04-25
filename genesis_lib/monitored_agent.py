@@ -16,6 +16,7 @@ from genesis_lib.utils import get_datamodel_path
 from .agent import GenesisAgent
 import traceback
 import asyncio
+from datetime import datetime
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -50,7 +51,8 @@ class MonitoredAgent(GenesisAgent):
     Extends GenesisAgent to add standardized monitoring.
     """
     
-    def __init__(self, agent_name: str, service_name: str, agent_type: str = "AGENT", agent_id: str = None):
+    def __init__(self, agent_name: str, service_name: str, agent_type: str = "AGENT", agent_id: str = None,
+                 description: str = None, domain_id: int = 0):
         """
         Initialize the monitored agent.
         
@@ -59,16 +61,30 @@ class MonitoredAgent(GenesisAgent):
             service_name: Name of the service this agent provides
             agent_type: Type of agent (AGENT, SPECIALIZED_AGENT)
             agent_id: Optional UUID for the agent (if None, will generate one)
+            description: Optional description of the agent
+            domain_id: Optional DDS domain ID
         """
-        # Initialize base class with agent ID
+        # Initialize base class with only the parameters it accepts
         super().__init__(
-            agent_name=agent_name, 
+            agent_name=agent_name,
             service_name=service_name,
             agent_id=agent_id
         )
+        
+        # Store additional parameters as instance variables
         self.agent_type = agent_type
+        self.description = description or f"A {agent_type} providing {service_name} service"
+        self.domain_id = domain_id
         self.monitor = None
         self.subscription = None
+        
+        # Initialize agent capabilities
+        self.agent_capabilities = {
+            "agent_type": agent_type,
+            "service": service_name,
+            "functions": [],  # Will be populated during function discovery
+            "supported_tasks": []  # To be populated by subclasses
+        }
         
         # Get types from XML
         config_path = get_datamodel_path()
@@ -87,81 +103,123 @@ class MonitoredAgent(GenesisAgent):
         
         logger.info(f"Monitored agent {agent_name} initialized with type {agent_type}, agent_id={self.app.agent_id}, dds_guid={self.app.dds_guid}")
     
-    def _setup_monitoring(self):
-        """Set up DDS entities for monitoring"""
-        # Get types from XML
-        config_path = get_datamodel_path()
-        self.type_provider = dds.QosProvider(config_path)
-        self.monitoring_type = self.type_provider.type("genesis_lib", "MonitoringEvent")
-        
-        # Create monitoring topic
-        self.monitoring_topic = dds.DynamicData.Topic(
-            self.app.participant,
-            "MonitoringEvent",
-            self.monitoring_type
-        )
-        
-        # Reuse publisher from GenesisApp
-        self.monitoring_publisher = self.app.publisher
-        
-        # Create monitoring writer with QoS
-        writer_qos = dds.QosProvider.default.datawriter_qos
-        writer_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
-        writer_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
-        self.monitoring_writer = dds.DynamicData.DataWriter(
-            pub=self.monitoring_publisher,
-            topic=self.monitoring_topic,
-            qos=writer_qos
-        )
+    def _setup_monitoring(self) -> None:
+        """
+        Set up monitoring resources and initialize state.
+        """
+        try:
+            # Get monitoring type from XML
+            self.monitoring_type = self.type_provider.type("genesis_lib", "MonitoringEvent")
+            
+            # Create monitoring topic
+            self.monitoring_topic = dds.DynamicData.Topic(
+                self.app.participant,
+                "MonitoringEvent",
+                self.monitoring_type
+            )
+            
+            # Create monitoring publisher with QoS
+            publisher_qos = dds.QosProvider.default.publisher_qos
+            publisher_qos.partition.name = [""]  # Default partition
+            self.monitoring_publisher = dds.Publisher(
+                participant=self.app.participant,
+                qos=publisher_qos
+            )
+            
+            # Create monitoring writer with QoS
+            writer_qos = dds.QosProvider.default.datawriter_qos
+            writer_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
+            writer_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
+            self.monitoring_writer = dds.DynamicData.DataWriter(
+                pub=self.monitoring_publisher,
+                topic=self.monitoring_topic,
+                qos=writer_qos
+            )
 
-        # Set up enhanced monitoring (V2)
-        # Create topics for new monitoring types
-        self.component_lifecycle_type = self.type_provider.type("genesis_lib", "ComponentLifecycleEvent")
-        self.chain_event_type = self.type_provider.type("genesis_lib", "ChainEvent")
-        self.liveliness_type = self.type_provider.type("genesis_lib", "LivelinessUpdate")
+            # Set up enhanced monitoring (V2)
+            # Create topics for new monitoring types
+            self.component_lifecycle_type = self.type_provider.type("genesis_lib", "ComponentLifecycleEvent")
+            self.chain_event_type = self.type_provider.type("genesis_lib", "ChainEvent")
+            self.liveliness_type = self.type_provider.type("genesis_lib", "LivelinessUpdate")
 
-        # Create topics
-        self.component_lifecycle_topic = dds.DynamicData.Topic(
-            self.app.participant,
-            "ComponentLifecycleEvent",
-            self.component_lifecycle_type
-        )
-        self.chain_event_topic = dds.DynamicData.Topic(
-            self.app.participant,
-            "ChainEvent",
-            self.chain_event_type
-        )
-        self.liveliness_topic = dds.DynamicData.Topic(
-            self.app.participant,
-            "LivelinessUpdate",
-            self.liveliness_type
-        )
+            # Create topics
+            self.component_lifecycle_topic = dds.DynamicData.Topic(
+                self.app.participant,
+                "ComponentLifecycleEvent",
+                self.component_lifecycle_type
+            )
+            self.chain_event_topic = dds.DynamicData.Topic(
+                self.app.participant,
+                "ChainEvent",
+                self.chain_event_type
+            )
+            self.liveliness_topic = dds.DynamicData.Topic(
+                self.app.participant,
+                "LivelinessUpdate",
+                self.liveliness_type
+            )
 
-        # Create writers with QoS
-        writer_qos = dds.QosProvider.default.datawriter_qos
-        writer_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
-        writer_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
+            # Create writers with QoS
+            writer_qos = dds.QosProvider.default.datawriter_qos
+            writer_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
+            writer_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
 
-        # Create writers for each monitoring type using the same publisher
-        self.component_lifecycle_writer = dds.DynamicData.DataWriter(
-            pub=self.monitoring_publisher,
-            topic=self.component_lifecycle_topic,
-            qos=writer_qos
-        )
-        self.chain_event_writer = dds.DynamicData.DataWriter(
-            pub=self.monitoring_publisher,
-            topic=self.chain_event_topic,
-            qos=writer_qos
-        )
-        self.liveliness_writer = dds.DynamicData.DataWriter(
-            pub=self.monitoring_publisher,
-            topic=self.liveliness_topic,
-            qos=writer_qos
-        )
-        
-        # Initialize storage for function requester GUID
-        self.function_requester_guid = None
-        self.function_provider_guids = set()
+            # Create writers for each monitoring type using the same publisher
+            self.component_lifecycle_writer = dds.DynamicData.DataWriter(
+                pub=self.monitoring_publisher,
+                topic=self.component_lifecycle_topic,
+                qos=writer_qos
+            )
+            self.chain_event_writer = dds.DynamicData.DataWriter(
+                pub=self.monitoring_publisher,
+                topic=self.chain_event_topic,
+                qos=writer_qos
+            )
+            self.liveliness_writer = dds.DynamicData.DataWriter(
+                pub=self.monitoring_publisher,
+                topic=self.liveliness_topic,
+                qos=writer_qos
+            )
+            
+            # Initialize state tracking
+            self.current_state = "OFFLINE"
+            self.last_state_change = datetime.now()
+            self.state_history = []
+            self.event_correlation = {}
+            
+            # Publish initial state
+            self.publish_component_lifecycle_event(
+                category="STATE_CHANGE",
+                message="Initializing monitoring",
+                previous_state="OFFLINE",
+                new_state="INITIALIZING",
+                source_id=self.app.agent_id,
+                target_id=self.app.agent_id
+            )
+            self.current_state = "INITIALIZING"
+            
+            # Set up event correlation tracking
+            self.event_correlation = {
+                "monitoring_events": {},
+                "lifecycle_events": {},
+                "chain_events": {}
+            }
+            
+            # Transition to READY state
+            self.publish_component_lifecycle_event(
+                category="STATE_CHANGE",
+                message="Monitoring initialized successfully",
+                previous_state="INITIALIZING",
+                new_state="READY",
+                source_id=self.app.agent_id,
+                target_id=self.app.agent_id
+            )
+            self.current_state = "READY"
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize monitoring: {e}")
+            self.current_state = "DEGRADED"
+            raise
     
     def _setup_subscription_listener(self):
         """Set up a listener to track subscription matches"""
@@ -209,44 +267,38 @@ class MonitoredAgent(GenesisAgent):
         
         # First publish node discovery event with new explicit categorization
         self.publish_component_lifecycle_event(
-            previous_state="DISCOVERING",
-            new_state="DISCOVERING",
-            reason=f"Agent {self.agent_name} discovered ({self.app.agent_id})",
+            category="NODE_DISCOVERY",
+            message=f"Agent {self.agent_name} discovered ({self.app.agent_id})",
             capabilities=json.dumps({
                 "agent_type": self.agent_type,
                 "service": self.service_name,
                 "agent_id": self.app.agent_id  # Include agent UUID in capabilities
             }),
-            event_category="NODE_DISCOVERY",  # New explicit categorization
             source_id=self.app.agent_id,  # Set source_id for node discovery
             target_id=self.app.agent_id   # Set target_id for node discovery
         )
 
         # Initial join event
         self.publish_component_lifecycle_event(
-            previous_state="OFFLINE",
-            new_state="JOINING",
-            reason=f"Agent {self.agent_name} initialization started",
+            category="AGENT_INIT",
+            message=f"Agent {self.agent_name} initialization started",
             capabilities=json.dumps({
                 "agent_type": self.agent_type,
                 "service": self.service_name,
                 "agent_id": self.app.agent_id
             }),
-            event_category="AGENT_INIT",  # Use new category
             source_id=self.app.agent_id
         )
 
         # Transition to discovering state
         self.publish_component_lifecycle_event(
-            previous_state="JOINING",
-            new_state="DISCOVERING",
-            reason=f"Agent {self.agent_name} discovering services",
+            category="STATE_CHANGE",
+            message=f"Agent {self.agent_name} discovering services",
             capabilities=json.dumps({
                 "agent_type": self.agent_type,
                 "service": self.service_name,
                 "agent_id": self.app.agent_id
             }),
-            event_category="STATE_CHANGE",  # Use state change category
             source_id=self.app.agent_id,  # Set source_id for state change
             target_id=self.app.agent_id  # For state changes, target is self
         )
@@ -260,15 +312,13 @@ class MonitoredAgent(GenesisAgent):
 
         # Transition to ready state
         self.publish_component_lifecycle_event(
-            previous_state="DISCOVERING",
-            new_state="READY",
-            reason=f"Agent {self.agent_name} ready for requests",
+            category="AGENT_READY",
+            message=f"Agent {self.agent_name} ready for requests",
             capabilities=json.dumps({
                 "agent_type": self.agent_type,
                 "service": self.service_name,
                 "agent_id": self.app.agent_id
             }),
-            event_category="AGENT_READY",  # Use new category
             source_id=self.app.agent_id,
             target_id=self.app.agent_id
         )
@@ -320,32 +370,40 @@ class MonitoredAgent(GenesisAgent):
             logger.error(traceback.format_exc())
     
     def publish_component_lifecycle_event(self, 
-                                       previous_state: str,
-                                       new_state: str,
-                                       reason: str = "",
-                                       capabilities: str = "",
-                                       chain_id: str = "",
-                                       call_id: str = "",
-                                       event_category: str = None,
-                                       source_id: str = "",
-                                       target_id: str = "",
-                                       connection_type: str = ""):
+                                       category: str,
+                                       message: str = None,
+                                       previous_state: str = None,
+                                       new_state: str = None,
+                                       reason: str = None,
+                                       capabilities: str = None,
+                                       component_id: str = None,
+                                       source_id: str = None,
+                                       target_id: str = None,
+                                       connection_type: str = None):
         """
         Publish a component lifecycle event for the agent.
         
         Args:
-            previous_state: Previous state of the agent (JOINING, DISCOVERING, READY, etc.)
-            new_state: New state of the agent
+            category: Event category (e.g., EDGE_DISCOVERY, EDGE_READY)
+            message: Optional message to include with the event
+            previous_state: Previous state of the component
+            new_state: New state of the component
             reason: Reason for the state change
-            capabilities: Agent capabilities as JSON string
-            chain_id: ID of the chain this event belongs to (if any)
-            call_id: Call ID (if any)
-            event_category: Type of event (NODE_DISCOVERY, EDGE_DISCOVERY, STATE_CHANGE, AGENT_INIT, AGENT_READY)
-            source_id: Source ID for node discovery events
-            target_id: Target ID for node discovery events
-            connection_type: Connection type for edge discovery events
+            capabilities: JSON string of component capabilities
+            component_id: ID of the component
+            source_id: Source ID for edge events
+            target_id: Target ID for edge events
+            connection_type: Type of connection for edge events
         """
         try:
+            if not hasattr(self, 'component_lifecycle_type') or not self.component_lifecycle_type:
+                logger.debug(f"Component lifecycle monitoring not initialized, skipping event: {category}")
+                return
+            
+            if not hasattr(self, 'component_lifecycle_writer') or not self.component_lifecycle_writer:
+                logger.debug(f"Component lifecycle writer not initialized, skipping event: {category}")
+                return
+
             # Map state strings to enum values
             states = {
                 "JOINING": 0,
@@ -355,52 +413,81 @@ class MonitoredAgent(GenesisAgent):
                 "DEGRADED": 4,
                 "OFFLINE": 5
             }
-            
-            # Create the event
+
+            # Map event categories to enum values
+            event_categories = {
+                "NODE_DISCOVERY": 0,
+                "EDGE_DISCOVERY": 1,
+                "STATE_CHANGE": 2,
+                "AGENT_INIT": 3,
+                "AGENT_READY": 4,
+                "AGENT_SHUTDOWN": 5,
+                "DDS_ENDPOINT": 6
+            }
+
+            # Create event
             event = dds.DynamicData(self.component_lifecycle_type)
-            event["component_id"] = self.app.agent_id  # Use agent UUID as primary identifier
-            event["component_type"] = AGENT_TYPE_MAP.get(self.agent_type, 1)  # Default to PRIMARY_AGENT
-            event["previous_state"] = states[previous_state]
-            event["new_state"] = states[new_state]
-            event["timestamp"] = int(time.time() * 1000)
-            event["reason"] = reason
-
-            # Include all DDS GUIDs in capabilities
-            capabilities_dict = json.loads(capabilities) if capabilities else {}
-            capabilities_dict.update({
-                "agent_type": self.agent_type,
-                "service": self.service_name,
-                "agent_id": self.app.agent_id,  # Include agent UUID in capabilities
-                "dds_connections": {
-                    "primary": self.app.dds_guid  # Primary DDS connection
-                }
-            })
-            event["capabilities"] = json.dumps(capabilities_dict)
             
-            event["chain_id"] = chain_id
-            event["call_id"] = call_id
-
-            # Add event categorization
-            if event_category:
-                event["event_category"] = EVENT_CATEGORY_MAP.get(event_category, EVENT_CATEGORY_MAP["STATE_CHANGE"])
-                if event_category == "NODE_DISCOVERY":
-                    event["source_id"] = source_id
-                    event["connection_type"] = ""  # No connection type for node discovery
-                elif event_category == "EDGE_DISCOVERY":
-                    event["source_id"] = source_id
-                    event["target_id"] = target_id
-                    event["connection_type"] = connection_type
+            # Set component ID (use provided ID or agent name)
+            event["component_id"] = component_id if component_id else self.agent_name
+            
+            # Set component type (AGENT for agent)
+            event["component_type"] = 2
+            
+            # Set states based on category or provided states
+            if previous_state and new_state:
+                event["previous_state"] = states.get(previous_state, states["DISCOVERING"])
+                event["new_state"] = states.get(new_state, states["DISCOVERING"])
+            else:
+                if category == "NODE_DISCOVERY":
+                    event["previous_state"] = states["DISCOVERING"]
+                    event["new_state"] = states["DISCOVERING"]
+                elif category == "AGENT_INIT":
+                    event["previous_state"] = states["OFFLINE"]
+                    event["new_state"] = states["JOINING"]
+                elif category == "AGENT_READY":
+                    event["previous_state"] = states["DISCOVERING"]
+                    event["new_state"] = states["READY"]
+                elif category == "BUSY":
+                    event["previous_state"] = states["READY"]
+                    event["new_state"] = states["BUSY"]
+                elif category == "READY":
+                    event["previous_state"] = states["BUSY"]
+                    event["new_state"] = states["READY"]
+                elif category == "DEGRADED":
+                    event["previous_state"] = states["BUSY"]
+                    event["new_state"] = states["DEGRADED"]
                 else:
-                    event["source_id"] = self.app.agent_id
-                    event["target_id"] = self.app.agent_id
+                    event["previous_state"] = states["DISCOVERING"]
+                    event["new_state"] = states["DISCOVERING"]
             
-            # Write the event
+            # Set other fields
+            event["timestamp"] = int(time.time() * 1000)
+            event["reason"] = reason if reason else (message if message else "")
+            event["capabilities"] = capabilities if capabilities else json.dumps(self.agent_capabilities)
+            
+            # Set event category
+            if category in event_categories:
+                event["event_category"] = event_categories[category]
+            else:
+                event["event_category"] = event_categories["NODE_DISCOVERY"]
+            
+            # Set source and target IDs
+            event["source_id"] = source_id if source_id else self.agent_id
+            if category == "EDGE_DISCOVERY":
+                # For edge discovery, target is the function being discovered
+                event["target_id"] = target_id if target_id else self.agent_id
+                event["connection_type"] = connection_type if connection_type else "function_connection"
+            else:
+                # For other events, source and target are the same
+                event["target_id"] = target_id if target_id else self.agent_id
+                event["connection_type"] = connection_type if connection_type else ""
+
             self.component_lifecycle_writer.write(event)
             self.component_lifecycle_writer.flush()
-            
         except Exception as e:
-            logger.error(f"Error publishing component lifecycle event: {str(e)}")
-            logger.error(traceback.format_exc())
+            logger.error(f"Error publishing component lifecycle event: {e}")
+            logger.error(f"Event category was: {category}")
     
     def process_request(self, request: Any) -> Dict[str, Any]:
         """
@@ -420,14 +507,28 @@ class MonitoredAgent(GenesisAgent):
         call_id = str(uuid.uuid4())
 
         try:
+            # Ensure we're in READY state before processing
+            if self.current_state != "READY":
+                self.publish_component_lifecycle_event(
+                    category="STATE_CHANGE",
+                    message=f"Transitioning to READY state before processing request",
+                    previous_state=self.current_state,
+                    new_state="READY",
+                    source_id=self.app.agent_id,
+                    target_id=self.app.agent_id
+                )
+                self.current_state = "READY"
+
             # Transition to BUSY state
             self.publish_component_lifecycle_event(
+                category="STATE_CHANGE",
+                message=f"Processing request: {str(request)}",
                 previous_state="READY",
                 new_state="BUSY",
-                reason=f"Processing request: {str(request)}",
-                chain_id=chain_id,
-                call_id=call_id
+                source_id=self.app.agent_id,
+                target_id=self.app.agent_id
             )
+            self.current_state = "BUSY"
 
             # Publish legacy request received event
             self.publish_monitoring_event(
@@ -457,12 +558,14 @@ class MonitoredAgent(GenesisAgent):
 
             # Transition back to READY state
             self.publish_component_lifecycle_event(
+                category="STATE_CHANGE",
+                message=f"Request processed successfully: {str(result)}",
                 previous_state="BUSY",
                 new_state="READY",
-                reason=f"Request processed successfully: {str(result)}",
-                chain_id=chain_id,
-                call_id=call_id
+                source_id=self.app.agent_id,
+                target_id=self.app.agent_id
             )
+            self.current_state = "READY"
             
             return result
             
@@ -481,12 +584,29 @@ class MonitoredAgent(GenesisAgent):
 
             # Transition to DEGRADED state on error
             self.publish_component_lifecycle_event(
-                previous_state="BUSY",
+                category="STATE_CHANGE",
+                message=f"Error processing request: {str(e)}",
+                previous_state=self.current_state,
                 new_state="DEGRADED",
-                reason=f"Error processing request: {str(e)}",
-                chain_id=chain_id,
-                call_id=call_id
+                source_id=self.app.agent_id,
+                target_id=self.app.agent_id
             )
+            self.current_state = "DEGRADED"
+            
+            # Attempt recovery by transitioning back to READY
+            try:
+                self.publish_component_lifecycle_event(
+                    category="STATE_CHANGE",
+                    message="Attempting recovery to READY state",
+                    previous_state="DEGRADED",
+                    new_state="READY",
+                    source_id=self.app.agent_id,
+                    target_id=self.app.agent_id
+                )
+                self.current_state = "READY"
+            except Exception as recovery_error:
+                logger.error(f"Failed to recover from DEGRADED state: {recovery_error}")
+            
             raise
     
     def _process_request(self, request: Any) -> Dict[str, Any]:
@@ -503,55 +623,55 @@ class MonitoredAgent(GenesisAgent):
         """
         raise NotImplementedError("Concrete agents must implement _process_request")
     
-    async def close(self):
-        """Clean up resources"""
+    async def close(self) -> None:
+        """
+        Close monitoring resources and transition to OFFLINE state.
+        """
         try:
-            # First transition to BUSY state for shutdown
+            # Transition to OFFLINE state
             self.publish_component_lifecycle_event(
-                previous_state="READY",
-                new_state="BUSY",
-                reason=f"Agent {self.agent_name} preparing for shutdown"
-            )
-
-            # Add a small delay to ensure events are distinguishable
-            await asyncio.sleep(0.1)
-
-            # Then transition to OFFLINE
-            self.publish_component_lifecycle_event(
-                previous_state="BUSY",
+                category="STATE_CHANGE",
+                message="Shutting down monitoring",
+                previous_state=self.current_state,
                 new_state="OFFLINE",
-                reason=f"Agent {self.agent_name} shutting down"
-            )
-
-            # Publish legacy offline status
-            self.publish_monitoring_event(
-                "AGENT_STATUS",
-                status_data={"status": "offline"},
-                metadata={"service": self.service_name}
+                source_id=self.app.agent_id,
+                target_id=self.app.agent_id
             )
             
-            # Close monitoring resources if they exist
-            if hasattr(self, 'monitoring_writer') and self.monitoring_writer is not None:
+            # Clean up monitoring resources
+            if hasattr(self, 'monitoring_writer'):
                 self.monitoring_writer.close()
-            if hasattr(self, 'monitoring_publisher') and self.monitoring_publisher is not None:
+            if hasattr(self, 'monitoring_publisher'):
                 self.monitoring_publisher.close()
-            if hasattr(self, 'monitoring_topic') and self.monitoring_topic is not None:
+            if hasattr(self, 'monitoring_topic'):
                 self.monitoring_topic.close()
-            if hasattr(self, 'component_lifecycle_writer') and self.component_lifecycle_writer is not None:
+            if hasattr(self, 'component_lifecycle_writer'):
                 self.component_lifecycle_writer.close()
-            if hasattr(self, 'chain_event_writer') and self.chain_event_writer is not None:
+            if hasattr(self, 'chain_event_writer'):
                 self.chain_event_writer.close()
-            if hasattr(self, 'liveliness_writer') and self.liveliness_writer is not None:
+            if hasattr(self, 'liveliness_writer'):
                 self.liveliness_writer.close()
+            if hasattr(self, 'component_lifecycle_topic'):
+                self.component_lifecycle_topic.close()
+            if hasattr(self, 'chain_event_topic'):
+                self.chain_event_topic.close()
+            if hasattr(self, 'liveliness_topic'):
+                self.liveliness_topic.close()
             
-            # Close base class resources
-            if hasattr(self, 'app') and self.app is not None:
-                await super().close()
+            # Clear state tracking
+            self.current_state = "OFFLINE"
+            self.last_state_change = datetime.now()
+            self.state_history = []
+            self.event_correlation = {}
             
-            logger.info(f"MonitoredAgent {self.agent_name} closed successfully")
+            # Call parent class cleanup
+            if hasattr(self, 'app'):
+                await self.app.close()
+            
         except Exception as e:
-            logger.error(f"Error closing monitored agent: {str(e)}")
-            logger.error(traceback.format_exc())
+            logger.error(f"Error during monitoring shutdown: {e}")
+            self.current_state = "DEGRADED"
+            raise
 
     def wait_for_agent(self) -> bool:
         """
@@ -583,9 +703,8 @@ class MonitoredAgent(GenesisAgent):
 
                         # Publish edge discovery event while in DISCOVERING state
                         self.publish_component_lifecycle_event(
-                            previous_state="DISCOVERING",
-                            new_state="DISCOVERING",
-                            reason=reason,
+                            category="EDGE_DISCOVERY",
+                            message=reason,
                             capabilities=json.dumps({
                                 "agent_type": self.agent_type,
                                 "service": self.service_name,
@@ -593,7 +712,9 @@ class MonitoredAgent(GenesisAgent):
                                 "provider_id": provider_id,
                                 "client_id": client_id,
                                 "function_id": function_id
-                            })
+                            }),
+                            source_id=self.app.agent_id,
+                            target_id=self.app.agent_id
                         )
                         logger.info("Published edge discovery event")
 
@@ -606,9 +727,10 @@ class MonitoredAgent(GenesisAgent):
             logger.error(f"Error in wait_for_agent: {str(e)}")
             # Transition to degraded state on error
             self.publish_component_lifecycle_event(
-                previous_state="DISCOVERING",
-                new_state="DEGRADED",
-                reason=f"Error discovering functions: {str(e)}"
+                category="DEGRADED",
+                message=f"Error discovering functions: {str(e)}",
+                source_id=self.app.agent_id,
+                target_id=self.app.agent_id
             )
             return False
 
@@ -662,9 +784,8 @@ class MonitoredAgent(GenesisAgent):
                     
                     # Publish direct edge discovery event
                     self.publish_component_lifecycle_event(
-                        previous_state="DISCOVERING",
-                        new_state="DISCOVERING",
-                        reason=f"Direct connection: {guid} -> {provider_guid}",
+                        category="EDGE_DISCOVERY",
+                        message=f"Direct connection: {guid} -> {provider_guid}",
                         capabilities=json.dumps({
                             "edge_type": "direct_connection",
                             "requester_guid": guid,
@@ -673,7 +794,6 @@ class MonitoredAgent(GenesisAgent):
                             "agent_name": self.agent_name,
                             "service_name": self.service_name
                         }),
-                        event_category="EDGE_DISCOVERY",
                         source_id=guid,
                         target_id=provider_guid,
                         connection_type="CONNECTS_TO"
@@ -708,9 +828,8 @@ class MonitoredAgent(GenesisAgent):
                 
                 # Publish direct edge discovery event
                 self.publish_component_lifecycle_event(
-                    previous_state="DISCOVERING",
-                    new_state="DISCOVERING",
-                    reason=f"Direct connection: {self.function_requester_guid} -> {guid}",
+                    category="EDGE_DISCOVERY",
+                    message=f"Direct connection: {self.function_requester_guid} -> {guid}",
                     capabilities=json.dumps({
                         "edge_type": "direct_connection",
                         "requester_guid": self.function_requester_guid,
@@ -719,7 +838,6 @@ class MonitoredAgent(GenesisAgent):
                         "agent_name": self.agent_name,
                         "service_name": self.service_name
                     }),
-                    event_category="EDGE_DISCOVERY",
                     source_id=self.function_requester_guid,
                     target_id=guid,
                     connection_type="CONNECTS_TO"
@@ -789,9 +907,8 @@ class MonitoredAgent(GenesisAgent):
             
             # Publish as a component lifecycle event
             self.publish_component_lifecycle_event(
-                previous_state="DISCOVERING",
-                new_state="DISCOVERING",
-                reason=f"Function discovered: {function_name} ({function_id})",
+                category="NODE_DISCOVERY",
+                message=f"Function discovered: {function_name} ({function_id})",
                 capabilities=json.dumps({
                     "function_id": function_id,
                     "function_name": function_name,
@@ -800,7 +917,6 @@ class MonitoredAgent(GenesisAgent):
                     "provider_id": provider_id,
                     "provider_name": func.get('provider_name', '')
                 }),
-                event_category="NODE_DISCOVERY",
                 source_id=self.app.agent_id,
                 target_id=function_id,
                 connection_type="FUNCTION"
@@ -808,15 +924,13 @@ class MonitoredAgent(GenesisAgent):
             
             # Also publish an edge discovery event connecting the agent to the function
             self.publish_component_lifecycle_event(
-                previous_state="DISCOVERING",
-                new_state="DISCOVERING",
-                reason=f"Agent {self.agent_name} can call function {function_name}",
+                category="EDGE_DISCOVERY",
+                message=f"Agent {self.agent_name} can call function {function_name}",
                 capabilities=json.dumps({
                     "edge_type": "agent_function",
                     "function_id": function_id,
                     "function_name": function_name
                 }),
-                event_category="EDGE_DISCOVERY",
                 source_id=self.app.agent_id,
                 target_id=function_id,
                 connection_type="CALLS"
@@ -851,9 +965,8 @@ class MonitoredAgent(GenesisAgent):
                         
                         # Publish edge discovery event
                         self.publish_component_lifecycle_event(
-                            previous_state="DISCOVERING",
-                            new_state="DISCOVERING",
-                            reason=f"Function requester connects to provider: {function_requester_guid} -> {provider_guid}",
+                            category="EDGE_DISCOVERY",
+                            message=f"Function requester connects to provider: {function_requester_guid} -> {provider_guid}",
                             capabilities=json.dumps({
                                 "edge_type": "requester_provider",
                                 "requester_guid": function_requester_guid,
@@ -861,7 +974,6 @@ class MonitoredAgent(GenesisAgent):
                                 "agent_id": self.app.agent_id,
                                 "agent_name": self.agent_name
                             }),
-                            event_category="EDGE_DISCOVERY",
                             source_id=function_requester_guid,
                             target_id=provider_guid,
                             connection_type="DISCOVERS"
@@ -881,9 +993,8 @@ class MonitoredAgent(GenesisAgent):
                 
                 # Publish direct edge discovery event
                 self.publish_component_lifecycle_event(
-                    previous_state="DISCOVERING",
-                    new_state="DISCOVERING",
-                    reason=f"Direct connection: {function_requester_guid} -> {function_provider_guid}",
+                    category="EDGE_DISCOVERY",
+                    message=f"Direct connection: {function_requester_guid} -> {function_provider_guid}",
                     capabilities=json.dumps({
                         "edge_type": "direct_connection",
                         "requester_guid": function_requester_guid,
@@ -892,7 +1003,6 @@ class MonitoredAgent(GenesisAgent):
                         "agent_name": self.agent_name,
                         "service_name": self.service_name
                     }),
-                    event_category="EDGE_DISCOVERY",
                     source_id=function_requester_guid,
                     target_id=function_provider_guid,
                     connection_type="CONNECTS_TO"
@@ -911,15 +1021,16 @@ class MonitoredAgent(GenesisAgent):
         
         # Transition to READY state after discovering functions
         self.publish_component_lifecycle_event(
-            previous_state="DISCOVERING",
-            new_state="READY",
-            reason=f"Agent {self.agent_name} discovered {len(functions)} functions and is ready",
+            category="READY",
+            message=f"Agent {self.agent_name} discovered {len(functions)} functions and is ready",
             capabilities=json.dumps({
                 "agent_type": self.agent_type,
                 "service": self.service_name,
                 "discovered_functions": len(functions),
                 "function_names": function_names
-            })
+            }),
+            source_id=self.app.agent_id,
+            target_id=self.app.agent_id
         )
 
     def create_requester_provider_edge(self, requester_guid: str, provider_guid: str):
@@ -938,9 +1049,8 @@ class MonitoredAgent(GenesisAgent):
             
             # Publish direct edge discovery event
             self.publish_component_lifecycle_event(
-                previous_state="DISCOVERING",
-                new_state="DISCOVERING",
-                reason=f"Explicit connection: {requester_guid} -> {provider_guid}",
+                category="EDGE_DISCOVERY",
+                message=f"Explicit connection: {requester_guid} -> {provider_guid}",
                 capabilities=json.dumps({
                     "edge_type": "explicit_connection",
                     "requester_guid": requester_guid,
@@ -949,7 +1059,6 @@ class MonitoredAgent(GenesisAgent):
                     "agent_name": self.agent_name,
                     "service_name": self.service_name
                 }),
-                event_category="EDGE_DISCOVERY",
                 source_id=requester_guid,
                 target_id=provider_guid,
                 connection_type="CONNECTS_TO"
@@ -1007,4 +1116,27 @@ class MonitoredAgent(GenesisAgent):
         try:
             loop.run_until_complete(self.close())
         finally:
-            loop.close() 
+            loop.close()
+
+    def set_agent_capabilities(self, supported_tasks: list[str] = None, additional_capabilities: dict = None):
+        """
+        Set or update agent capabilities in a user-friendly way.
+        
+        Args:
+            supported_tasks: List of tasks this agent can perform
+            additional_capabilities: Dictionary of additional capability metadata
+        """
+        if supported_tasks:
+            self.agent_capabilities["supported_tasks"] = supported_tasks
+            
+        if additional_capabilities:
+            self.agent_capabilities.update(additional_capabilities)
+            
+        # Publish updated capabilities
+        self.publish_component_lifecycle_event(
+            category="STATE_CHANGE",
+            message="Agent capabilities updated",
+            capabilities=json.dumps(self.agent_capabilities),
+            source_id=self.app.agent_id,
+            target_id=self.app.agent_id
+        ) 

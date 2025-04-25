@@ -32,18 +32,29 @@ logger = logging.getLogger("openai_genesis_agent")
 class OpenAIGenesisAgent(MonitoredAgent):
     """An agent that uses OpenAI API with Genesis function calls"""
     
-    def __init__(self, model_name="gpt-4o", classifier_model_name="gpt-4o", domain_id: int = 0,
-                 agent_name: str = "OpenAIAgent", description: str = None):
+    def __init__(self, model_name="gpt-4o", classifier_model_name="gpt-4o-mini", domain_id: int = 0,
+                 agent_name: str = "OpenAIAgent", description: str = None, enable_tracing: bool = False):
         """Initialize the agent with the specified models
         
         Args:
             model_name: OpenAI model to use (default: gpt-4o)
-            classifier_model_name: Model to use for function classification (default: gpt-4o)
+            classifier_model_name: Model to use for function classification (default: gpt-4o-mini)
             domain_id: DDS domain ID (default: 0)
             agent_name: Name of the agent (default: "OpenAIAgent")
             description: Optional description of the agent
+            enable_tracing: Whether to enable detailed tracing logs (default: False)
         """
-        logger.info(f"Initializing OpenAIGenesisAgent with model {model_name}")
+        # Store tracing configuration
+        self.enable_tracing = enable_tracing
+        
+        if self.enable_tracing:
+            logger.info(f"Initializing OpenAIGenesisAgent with model {model_name}")
+        
+        # Store model configuration
+        self.model_config = {
+            "model_name": model_name,
+            "classifier_model_name": classifier_model_name
+        }
         
         # Initialize monitored agent base class
         super().__init__(
@@ -61,8 +72,6 @@ class OpenAIGenesisAgent(MonitoredAgent):
         
         # Initialize OpenAI client
         self.client = OpenAI(api_key=self.api_key)
-        self.model_name = model_name
-        self.classifier_model_name = classifier_model_name
         
         # Initialize generic client for function discovery
         self.generic_client = GenericFunctionClient()
@@ -89,7 +98,14 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
         # Start with general prompt, will switch to function-based if functions are discovered
         self.system_prompt = self.general_system_prompt
         
-        logger.info("OpenAIGenesisAgent initialized successfully")
+        # Set OpenAI-specific capabilities
+        self.set_agent_capabilities(
+            supported_tasks=["text_generation", "conversation"],
+            additional_capabilities=self.model_config
+        )
+        
+        if self.enable_tracing:
+            logger.info("OpenAIGenesisAgent initialized successfully")
     
     async def _ensure_functions_discovered(self):
         """Ensure functions are discovered before use"""
@@ -228,7 +244,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 chain_event["interface_id"] = str(self.app.participant.instance_handle)
                 chain_event["primary_agent_id"] = ""
                 chain_event["specialized_agent_ids"] = ""
-                chain_event["function_id"] = f"openai.{self.model_name}"
+                chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
                 chain_event["query_id"] = str(uuid.uuid4())
                 chain_event["timestamp"] = int(time.time() * 1000)
                 chain_event["event_type"] = "LLM_CALL_START"
@@ -241,7 +257,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 
                 # Process with general conversation
                 response = self.client.chat.completions.create(
-                    model=self.model_name,
+                    model=self.model_config['model_name'],
                     messages=[
                         {"role": "system", "content": self.general_system_prompt},
                         {"role": "user", "content": user_message}
@@ -255,7 +271,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 chain_event["interface_id"] = str(self.app.participant.instance_handle)
                 chain_event["primary_agent_id"] = ""
                 chain_event["specialized_agent_ids"] = ""
-                chain_event["function_id"] = f"openai.{self.model_name}"
+                chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
                 chain_event["query_id"] = str(uuid.uuid4())
                 chain_event["timestamp"] = int(time.time() * 1000)
                 chain_event["event_type"] = "LLM_CALL_COMPLETE"
@@ -279,7 +295,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             chain_event["interface_id"] = str(self.app.participant.instance_handle)
             chain_event["primary_agent_id"] = ""
             chain_event["specialized_agent_ids"] = ""
-            chain_event["function_id"] = f"openai.{self.classifier_model_name}.classifier"
+            chain_event["function_id"] = f"openai.{self.model_config['classifier_model_name']}.classifier"
             chain_event["query_id"] = str(uuid.uuid4())
             chain_event["timestamp"] = int(time.time() * 1000)
             chain_event["event_type"] = "LLM_CALL_START"
@@ -305,7 +321,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             relevant_functions = self.function_classifier.classify_functions(
                 user_message,
                 available_functions,
-                self.classifier_model_name
+                self.model_config['classifier_model_name']
             )
             
             # Create chain event for classification LLM call completion
@@ -315,7 +331,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             chain_event["interface_id"] = str(self.app.participant.instance_handle)
             chain_event["primary_agent_id"] = ""
             chain_event["specialized_agent_ids"] = ""
-            chain_event["function_id"] = f"openai.{self.classifier_model_name}.classifier"
+            chain_event["function_id"] = f"openai.{self.model_config['classifier_model_name']}.classifier"
             chain_event["query_id"] = str(uuid.uuid4())
             chain_event["timestamp"] = int(time.time() * 1000)
             chain_event["event_type"] = "LLM_CALL_COMPLETE"
@@ -348,6 +364,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 
                 # Create component lifecycle event for function classification
                 self.publish_component_lifecycle_event(
+                    category="STATE_CHANGE",
                     previous_state="READY",
                     new_state="BUSY",
                     reason=f"CLASSIFICATION.RELEVANT: Function '{func['name']}' for query: {user_message[:100]}",
@@ -373,7 +390,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 chain_event["interface_id"] = str(self.app.participant.instance_handle)
                 chain_event["primary_agent_id"] = ""
                 chain_event["specialized_agent_ids"] = ""
-                chain_event["function_id"] = f"openai.{self.model_name}"
+                chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
                 chain_event["query_id"] = str(uuid.uuid4())
                 chain_event["timestamp"] = int(time.time() * 1000)
                 chain_event["event_type"] = "LLM_CALL_START"
@@ -386,7 +403,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 
                 # Process without functions
                 response = self.client.chat.completions.create(
-                    model=self.model_name,
+                    model=self.model_config['model_name'],
                     messages=[
                         {"role": "system", "content": self.system_prompt},
                         {"role": "user", "content": user_message}
@@ -400,7 +417,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 chain_event["interface_id"] = str(self.app.participant.instance_handle)
                 chain_event["primary_agent_id"] = ""
                 chain_event["specialized_agent_ids"] = ""
-                chain_event["function_id"] = f"openai.{self.model_name}"
+                chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
                 chain_event["query_id"] = str(uuid.uuid4())
                 chain_event["timestamp"] = int(time.time() * 1000)
                 chain_event["event_type"] = "LLM_CALL_COMPLETE"
@@ -427,7 +444,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             chain_event["interface_id"] = str(self.app.participant.instance_handle)
             chain_event["primary_agent_id"] = ""
             chain_event["specialized_agent_ids"] = ""
-            chain_event["function_id"] = f"openai.{self.model_name}"
+            chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
             chain_event["query_id"] = str(uuid.uuid4())
             chain_event["timestamp"] = int(time.time() * 1000)
             chain_event["event_type"] = "LLM_CALL_START"
@@ -439,7 +456,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             self.chain_event_writer.flush()
             
             response = self.client.chat.completions.create(
-                model=self.model_name,
+                model=self.model_config['model_name'],
                 messages=[
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": user_message}
@@ -457,7 +474,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             chain_event["interface_id"] = str(self.app.participant.instance_handle)
             chain_event["primary_agent_id"] = ""
             chain_event["specialized_agent_ids"] = ""
-            chain_event["function_id"] = f"openai.{self.model_name}"
+            chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
             chain_event["query_id"] = str(uuid.uuid4())
             chain_event["timestamp"] = int(time.time() * 1000)
             chain_event["event_type"] = "LLM_CALL_COMPLETE"
@@ -515,7 +532,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                     chain_event["interface_id"] = str(self.app.participant.instance_handle)
                     chain_event["primary_agent_id"] = ""
                     chain_event["specialized_agent_ids"] = ""
-                    chain_event["function_id"] = f"openai.{self.model_name}"
+                    chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
                     chain_event["query_id"] = str(uuid.uuid4())
                     chain_event["timestamp"] = int(time.time() * 1000)
                     chain_event["event_type"] = "LLM_CALL_START"
@@ -527,7 +544,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                     self.chain_event_writer.flush()
                     
                     second_response = self.client.chat.completions.create(
-                        model=self.model_name,
+                        model=self.model_config['model_name'],
                         messages=[
                             {"role": "system", "content": self.system_prompt},
                             {"role": "user", "content": user_message},
@@ -543,7 +560,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                     chain_event["interface_id"] = str(self.app.participant.instance_handle)
                     chain_event["primary_agent_id"] = ""
                     chain_event["specialized_agent_ids"] = ""
-                    chain_event["function_id"] = f"openai.{self.model_name}"
+                    chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
                     chain_event["query_id"] = str(uuid.uuid4())
                     chain_event["timestamp"] = int(time.time() * 1000)
                     chain_event["event_type"] = "LLM_CALL_COMPLETE"
@@ -586,6 +603,37 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
         except Exception as e:
             logger.error(f"Error closing OpenAIGenesisAgent: {str(e)}")
             logger.error(traceback.format_exc())
+
+    async def process_message(self, message: str) -> str:
+        """
+        Process a message using OpenAI and return the response.
+        This method is monitored by the Genesis framework.
+        
+        Args:
+            message: The message to process
+            
+        Returns:
+            The agent's response to the message
+        """
+        try:
+            # Process the message using OpenAI's process_request method
+            response = await self.process_request({"message": message})
+            
+            # Publish a monitoring event for the successful response
+            self.publish_monitoring_event(
+                event_type="AGENT_RESPONSE",
+                result_data={"response": response}
+            )
+            
+            return response.get("message", "No response generated")
+            
+        except Exception as e:
+            # Publish a monitoring event for the error
+            self.publish_monitoring_event(
+                event_type="AGENT_STATUS",
+                status_data={"error": str(e)}
+            )
+            raise
 
 async def run_test():
     """Test the OpenAIGenesisAgent"""

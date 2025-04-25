@@ -26,15 +26,27 @@ logger = logging.getLogger("openai_agent_with_genesis_functions")
 class OpenAIAgentWithGenesisFunctions(MonitoredAgent):
     """An agent that uses OpenAI API with Genesis function calls"""
     
-    def __init__(self, model_name="gpt-3.5-turbo", classifier_model_name="gpt-3.5-turbo"):
-        """Initialize the agent with the specified models"""
+    def __init__(self, model_name="gpt-4o", classifier_model_name="gpt-4o", domain_id: int = 0,
+                 agent_name: str = "OpenAIAgent", service_name: str = "ChatGPT"):
+        """Initialize the agent with the specified models
+        
+        Args:
+            model_name: OpenAI model to use (default: gpt-4o)
+            classifier_model_name: Model to use for function classification (default: gpt-4o)
+            domain_id: DDS domain ID (default: 0)
+            agent_name: Name of the agent (default: "OpenAIAgent")
+            service_name: Name of the service (default: "ChatGPT")
+        """
         logger.info(f"Initializing OpenAIAgentWithGenesisFunctions with model {model_name}")
+        
+        # Create DDS participant
+        participant = dds.DomainParticipant(domain_id)
         
         # Initialize monitored agent base class
         super().__init__(
-            agent_name="OpenAIAgent",
-            service_name="ChatGPT",
-            agent_type="SPECIALIZED_AGENT"  # This is a specialized AI agent
+            agent_name=agent_name,
+            service_name=service_name,
+            agent_id=str(uuid.uuid4())
         )
         
         # Get API key from environment

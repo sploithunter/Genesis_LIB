@@ -76,6 +76,16 @@
       <member name="last_seen" type="int64"/>
     </struct>
 
+    <!-- Agent Discovery and Advertisement -->
+    <struct name="AgentCapability">
+      <member name="agent_id" type="string" key="true" stringMaxLength="128"/>
+      <member name="name" type="string" stringMaxLength="256"/>
+      <member name="description" type="string" stringMaxLength="2048"/>
+      <member name="agent_type" type="string" stringMaxLength="128"/>
+      <member name="service_name" type="string" stringMaxLength="128"/>
+      <member name="last_seen" type="int64"/>
+    </struct>
+
     <!-- Function Execution Request/Reply -->
     <struct name="FunctionExecutionRequest">
       <member name="request_id" type="string" stringMaxLength="128"/>
