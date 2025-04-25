@@ -136,6 +136,7 @@ cleanup() {
     pkill -f "python.*openai_chat_agent" || true
     pkill -f "python.*interface_cli" || true
     pkill -f "python.*example_agent1" || true
+    pkill -f "python.*test_agent" || true
     [ "$DEBUG" = "true" ] && echo "Cleanup complete"
 }
 
@@ -170,6 +171,9 @@ run_with_timeout "start_services_and_cli.sh" 90 || { echo "Test failed: start_se
 
 # Genesis framework test
 run_with_timeout "test_genesis_framework.sh" 120 || { echo "Test failed: test_genesis_framework.sh"; exit 1; }
+
+# Monitoring test
+run_with_timeout "test_monitoring.sh" 60 || { echo "Test failed: test_monitoring.sh"; exit 1; }
 
 echo "=================================================="
 echo "All tests completed successfully!"
