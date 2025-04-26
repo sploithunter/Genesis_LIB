@@ -121,32 +121,6 @@ class EnhancedServiceBase(GenesisRPCService):
         # Store service name as instance variable
         self.service_name = service_name
         
-        # Now we can auto-register decorated functions
-        self._auto_register_decorated_functions()
-        
-        # Get DDS instance handle for consistent identification - will be set after registry is initialized
-        self.app_guid = None  # Will be set after capability writer is created
-        
-        # Initialize the function registry and store reference to self
-        self.registry = registry if registry is not None else FunctionRegistry(participant=participant, domain_id=domain_id)
-        self.registry.service_base = self  # Set this instance as the service base
-
-        # Create and set our enhanced listener
-        self.capability_listener = EnhancedFunctionCapabilityListener(self.registry, self)
-        self.registry.capability_reader.listener = self.capability_listener
-        
-        # Now set app_guid using the capability writer's instance handle
-        self.app_guid = str(self.registry.capability_writer.instance_handle)
-        
-        # Store service capabilities
-        self.service_capabilities = capabilities
-        
-        # Flag to track if functions have been advertised
-        self._functions_advertised = False
-
-        # Track call IDs for correlation between calls and results
-        self._call_ids = {}
-
         # Create DDS participant if not provided
         if participant is None:
             participant = dds.DomainParticipant(domain_id)
@@ -194,7 +168,7 @@ class EnhancedServiceBase(GenesisRPCService):
             qos=writer_qos
         )
         
-        # Set up enhanced monitoring (V2)
+        # Set up enhanced monitoring (V2) - MOVED UP before registry initialization
         # Create topics for new monitoring types
         self.component_lifecycle_type = self.type_provider.type("genesis_lib", "ComponentLifecycleEvent")
         self.chain_event_type = self.type_provider.type("genesis_lib", "ChainEvent")
@@ -238,6 +212,32 @@ class EnhancedServiceBase(GenesisRPCService):
             topic=self.liveliness_topic,
             qos=writer_qos
         )
+        
+        # Now we can auto-register decorated functions
+        self._auto_register_decorated_functions()
+        
+        # Get DDS instance handle for consistent identification - will be set after registry is initialized
+        self.app_guid = None  # Will be set after capability writer is created
+        
+        # Initialize the function registry and store reference to self
+        self.registry = registry if registry is not None else FunctionRegistry(participant=participant, domain_id=domain_id)
+        self.registry.service_base = self  # Set this instance as the service base
+
+        # Create and set our enhanced listener
+        self.capability_listener = EnhancedFunctionCapabilityListener(self.registry, self)
+        self.registry.capability_reader.listener = self.capability_listener
+        
+        # Now set app_guid using the capability writer's instance handle
+        self.app_guid = str(self.registry.capability_writer.instance_handle)
+        
+        # Store service capabilities
+        self.service_capabilities = capabilities
+        
+        # Flag to track if functions have been advertised
+        self._functions_advertised = False
+
+        # Track call IDs for correlation between calls and results
+        self._call_ids = {}
 
         # Initialize logger
         self.logger = logging.getLogger("enhanced_service_base")
@@ -279,7 +279,7 @@ class EnhancedServiceBase(GenesisRPCService):
         Args:
             func: The function to register
             description: A description of what the function does
-            parameters: JSON schema for the function parameters
+            parameters: JSON schema for the function parameters (either a dict or JSON string)
             operation_type: Type of operation (e.g., "calculation", "transformation")
             common_patterns: Common validation patterns used by this function
             
@@ -297,6 +297,14 @@ class EnhancedServiceBase(GenesisRPCService):
                        "operation_type": operation_type,
                        "has_common_patterns": bool(common_patterns)
                    })
+        
+        # Convert parameters to dict if it's a JSON string
+        if isinstance(parameters, str):
+            try:
+                parameters = json.loads(parameters)
+            except json.JSONDecodeError:
+                logger.error(f"Invalid JSON schema string for function '{func_name}'")
+                raise
         
         # Log function metadata
         logger.debug(f"Function metadata for '{func_name}'",
@@ -321,7 +329,7 @@ class EnhancedServiceBase(GenesisRPCService):
             result = self.register_function(
                 func=wrapped_func,  # Register the wrapped function
                 description=description,
-                parameters=parameters,
+                parameters=parameters,  # Pass as dict, register_function will handle serialization
                 operation_type=operation_type,
                 common_patterns=common_patterns
             )
