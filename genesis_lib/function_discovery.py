@@ -617,6 +617,13 @@ class FunctionRegistry:
         capability['classification'] = json.dumps(function_info.classification or {})
         capability['last_seen'] = int(time.time() * 1000)
         
+        # Add the service name from the service_base reference
+        if self.service_base and hasattr(self.service_base, 'service_name'):
+            capability['service_name'] = self.service_base.service_name
+        else:
+            logger.warning(f"Could not determine service_name when advertising function {function_info.name}")
+            capability['service_name'] = "UnknownService" # Default if service name is not found
+        
         self.capability_writer.write(capability)
         self.capability_writer.flush()
     

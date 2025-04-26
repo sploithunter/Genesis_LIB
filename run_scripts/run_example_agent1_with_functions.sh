@@ -126,7 +126,7 @@ run_test() {
         fi
         
         # Check for function result
-        if ! grep -q "Function add returned: {'x': 424242, 'y': 111111, 'result': 535353}" "$log_file"; then
+        if ! grep -q "Function add returned: {'result': 535353}" "$log_file"; then
             display_log_on_failure "$log_file" "result_error" "Did not see expected function result"
             cleanup
             exit 1

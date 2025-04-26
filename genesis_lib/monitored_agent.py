@@ -638,6 +638,11 @@ class MonitoredAgent(GenesisAgent):
                 target_id=self.app.agent_id
             )
             
+            # Detach listener first to potentially resolve waitset issues
+            if hasattr(self, 'component_lifecycle_reader'):
+                self.component_lifecycle_reader.set_listener(None, dds.StatusMask.NONE)
+                self.component_lifecycle_reader.close() # Also close the reader itself
+
             # Clean up monitoring resources
             if hasattr(self, 'monitoring_writer'):
                 self.monitoring_writer.close()

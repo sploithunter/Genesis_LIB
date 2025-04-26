@@ -32,8 +32,13 @@ class GenericFunctionClient:
         """
         logger.info("Initializing GenericFunctionClient")
         
-        # Use provided registry or create new one
-        self.function_registry = function_registry or FunctionRegistry()
+        # Track if we created the registry
+        self._created_registry = False
+        if function_registry is None:
+            self.function_registry = FunctionRegistry()
+            self._created_registry = True
+        else:
+            self.function_registry = function_registry
         
         # Store discovered functions
         self.discovered_functions = {}
@@ -54,30 +59,10 @@ class GenericFunctionClient:
         logger.info("Discovering all available functions")
         start_time = time.time()
         
-        # Keep checking until we find all types of functions or timeout
-        calculator_found = False
-        letter_counter_found = False
-        text_processor_found = False
-        
         while time.time() - start_time < timeout_seconds:
             # Update discovered functions
             self.discovered_functions = self.function_registry.discovered_functions.copy()
             
-            # Check if we've found all the functions we're looking for
-            for func_id, func_info in self.discovered_functions.items():
-                if isinstance(func_info, dict):
-                    name = func_info.get('name', '').lower()
-                    if 'calculator' in name:
-                        calculator_found = True
-                    elif 'letter' in name and 'counter' in name:
-                        letter_counter_found = True
-                    elif 'text' in name and 'processor' in name:
-                        text_processor_found = True
-            
-            # If we've found all functions, break early
-            if calculator_found and letter_counter_found and text_processor_found:
-                break
-                
             # Wait a bit before checking again
             await asyncio.sleep(0.5)
         
@@ -139,28 +124,36 @@ class GenericFunctionClient:
         if isinstance(func_info, dict):
             function_name = func_info.get('name')
             provider_id = func_info.get('provider_id')
+            capability = func_info.get('capability') # Get the stored capability object
         else:
             raise RuntimeError(f"Invalid function info format for {function_id}")
         
         if not function_name:
             raise RuntimeError(f"Function name not found for {function_id}")
         
-        # Determine the service name based on the function name or provider ID
-        service_name = "CalculatorService"  # Default service
+        # Determine the service name dynamically from the capability object
+        service_name = None
+        if capability:
+            try:
+                # Attempt to get service_name directly from the capability object
+                # Access using dictionary syntax for dds.DynamicData
+                if 'service_name' in capability:
+                    service_name = capability['service_name']
+                else:
+                    logger.warning(f"'service_name' field missing in capability for {function_id}")
+            except TypeError:
+                logger.warning(f"Capability object for {function_id} is not dictionary-like or does not contain 'service_name'. Type: {type(capability)}")
+            except KeyError:
+                 logger.warning(f"'service_name' field not found in capability for {function_id}")
+            except Exception as e:
+                logger.warning(f"Error accessing service_name from capability for {function_id}: {e}")
         
-        # Map function names to their respective services
-        if function_name in ['count_letter', 'count_multiple_letters', 'get_letter_frequency']:
-            service_name = "LetterCounterService"
-        elif function_name in ['transform_case', 'analyze_text', 'generate_text']:
-            service_name = "TextProcessorService"
+        if not service_name:
+            # If service_name couldn't be determined, raise an error
+            logger.error(f"Could not determine service name for function {function_id} (provider: {provider_id})")
+            raise RuntimeError(f"Service name not found for function {function_id}")
         
-        # If we have a provider ID, use it to determine the service name more accurately
-        if provider_id:
-            # Extract service name from provider ID if possible
-            # This is a more reliable method if the provider ID contains service information
-            logger.info(f"Using provider ID to determine service: {provider_id}")
-        
-        logger.info(f"Using service name: {service_name} for function: {function_name}")
+        logger.info(f"Using discovered service name: {service_name} for function: {function_name} (provider: {provider_id})")
         
         # Get or create a client for this service
         client = self.get_service_client(service_name)
@@ -209,20 +202,31 @@ class GenericFunctionClient:
             if isinstance(func_info, dict):
                 # Get the schema directly from the function info
                 schema = func_info.get('schema', {})
-                
-                # Determine the service name based on the function name
-                service_name = "CalculatorService"  # Default service
                 function_name = func_info.get('name', func_id)
-                
-                if function_name in ['count_letter', 'count_multiple_letters', 'get_letter_frequency']:
-                    service_name = "LetterCounterService"
-                elif function_name in ['transform_case', 'analyze_text', 'generate_text']:
-                    service_name = "TextProcessorService"
-                
-                # If we have a provider ID, it might contain service information
                 provider_id = func_info.get('provider_id')
-                if provider_id:
-                    logger.debug(f"Provider ID for {function_name}: {provider_id}")
+                capability = func_info.get('capability')
+
+                # Determine the service name dynamically
+                service_name = None
+                if capability:
+                    try:
+                        # Attempt to get service_name directly from the capability object
+                        # Access using dictionary syntax for dds.DynamicData
+                        if 'service_name' in capability:
+                            service_name = capability['service_name']
+                        else:
+                            logger.warning(f"'service_name' field missing in capability for {func_id}")
+                    except TypeError:
+                         logger.warning(f"Capability object for {func_id} is not dictionary-like or does not contain 'service_name'. Type: {type(capability)}")
+                    except KeyError:
+                         logger.warning(f"'service_name' field not found in capability for {func_id}")
+                    except Exception as e:
+                        logger.warning(f"Error accessing service_name from capability for {func_id}: {e}")
+                
+                if not service_name:
+                    # Fallback or default if service name cannot be determined
+                    logger.warning(f"Could not determine service name for function {func_id} (provider: {provider_id}), using 'UnknownService'")
+                    service_name = "UnknownService" 
                 
                 result.append({
                     "function_id": func_id,
@@ -243,11 +247,19 @@ class GenericFunctionClient:
         return result
     
     def close(self):
-        """Close all client resources"""
-        logger.info("Cleaning up client resources...")
+        """Close all client resources, including the FunctionRegistry if created by this instance"""
+        logger.info("Cleaning up GenericFunctionClient resources...")
+        # Close service-specific clients
         for client in self.service_clients.values():
             client.close()
-        logger.info("Client cleanup complete.")
+            
+        # Close the FunctionRegistry if this client created it
+        if self._created_registry and hasattr(self, 'function_registry') and self.function_registry:
+            logger.info("Closing FunctionRegistry created by GenericFunctionClient...")
+            self.function_registry.close()
+            self.function_registry = None # Clear reference
+            
+        logger.info("GenericFunctionClient cleanup complete.")
 
 async def run_generic_client_test():
     """

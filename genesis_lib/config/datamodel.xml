@@ -74,6 +74,7 @@
       <member name="security_requirements" type="string" stringMaxLength="2048"/>
       <member name="classification" type="string" stringMaxLength="2048"/>
       <member name="last_seen" type="int64"/>
+      <member name="service_name" type="string" stringMaxLength="256"/>
     </struct>
 
     <!-- Agent Discovery and Advertisement -->
