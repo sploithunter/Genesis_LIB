@@ -1,0 +1,24 @@
+# Known Issues
+
+## Service Name Propagation Timing Issue
+
+### Description
+There is a known timing issue with service name propagation in the function discovery system. The `FunctionCapabilityListener` occasionally reports errors about `NoneType` objects not being subscriptable when processing function capabilities. However, the service name is eventually correctly propagated to the `GenericFunctionClient`, suggesting this is a race condition or timing issue in the discovery process.
+
+### Symptoms
+- Error messages in logs: `Error processing function capability: 'NoneType' object is not subscriptable`
+- These errors appear multiple times during function discovery
+- Despite the errors, the service name is eventually correctly discovered and used by the `GenericFunctionClient`
+
+### Affected Components
+- `FunctionCapabilityListener`
+- `FunctionRegistry`
+- `GenericFunctionClient`
+
+### Workaround
+The system continues to function correctly despite these errors, as the service name is eventually properly propagated. However, these errors should be addressed to improve the robustness of the function discovery process.
+
+### Status
+- **Priority**: Medium
+- **Status**: Known issue, under investigation
+- **Impact**: Non-blocking (system continues to function) 
