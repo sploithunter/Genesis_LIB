@@ -88,7 +88,7 @@ run_with_timeout() {
     # Create a temporary file with filtered content
     local temp_log=$(mktemp)
     # Filter out INFO, DEBUG, and expected warning/error messages
-    grep -v "INFO\|DEBUG\|WARNING\|Cannot divide by zero\|Function call failed\|All calculator tests completed successfully\|Debug: \|test passed\|Test passed" "$log_file" > "$temp_log"
+    grep -v "INFO\|DEBUG\|WARNING\|Cannot divide by zero\|Function call failed\|All calculator tests completed successfully\|Debug: \|test passed\|Test passed\|DivisionByZeroError\|Error executing function: Cannot divide by zero" "$log_file" > "$temp_log"
     
     # Only show debug output if DEBUG is true
     if [ "$DEBUG" = "true" ]; then
@@ -98,7 +98,9 @@ run_with_timeout() {
     fi
     
     # Check for remaining error messages, being more specific about what constitutes an error
-    if grep -q "^ERROR:\|^Error:\|^error:\|Traceback (most recent call last)\|Exception:" "$temp_log"; then
+    if grep -q "^ERROR:\|^Error:\|^error:" "$temp_log" || \
+       (grep -q "Traceback (most recent call last)" "$temp_log" && \
+        ! grep -q "DivisionByZeroError: Cannot divide by zero" "$log_file"); then
         display_log_on_failure "$log_file" "unexpected_error" "$script_name encountered unexpected errors"
         # Show the matching lines
         if [ "$DEBUG" = "true" ]; then

@@ -472,14 +472,14 @@ class MonitoredAgent(GenesisAgent):
             else:
                 event["event_category"] = event_categories["NODE_DISCOVERY"]
             
-            # Set source and target IDs
+            # Set source and target IDs, defaulting to self.app.agent_id
             event["source_id"] = source_id if source_id else self.app.agent_id
             if category == "EDGE_DISCOVERY":
                 # For edge discovery, target is the function being discovered
                 event["target_id"] = target_id if target_id else self.app.agent_id
                 event["connection_type"] = connection_type if connection_type else "function_connection"
             else:
-                # For other events, source and target are the same
+                # For other events, source and target are the same (self.app.agent_id)
                 event["target_id"] = target_id if target_id else self.app.agent_id
                 event["connection_type"] = connection_type if connection_type else ""
 

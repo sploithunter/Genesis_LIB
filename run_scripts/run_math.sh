@@ -27,7 +27,7 @@ trap cleanup SIGINT SIGTERM EXIT
 
 # Start the calculator service in the background
 echo "Starting calculator service..."
-python -m test_functions.calculator_service > /dev/null 2>&1 &
+python -m test_functions.calculator_service &
 CALC_PID=$!
 pids+=("$CALC_PID")
 
