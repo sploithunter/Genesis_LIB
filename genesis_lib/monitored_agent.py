@@ -17,6 +17,7 @@ from .agent import GenesisAgent
 import traceback
 import asyncio
 from datetime import datetime
+from genesis_lib.genesis_monitoring import MonitoringSubscriber
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -1075,53 +1076,6 @@ class MonitoredAgent(GenesisAgent):
             logger.error(f"===== TRACING: Error publishing explicit requester-to-provider edge: {e} =====")
             logger.error(traceback.format_exc())
             return False
-
-    async def setup_monitoring(self):
-        """Set up monitoring for this agent"""
-        if self.monitor is None:
-            self.monitor = Monitor(self.app.participant)
-            self.subscription = self.monitor.subscribe(
-                "genesis_lib.DiscoveryEvent",
-                self.on_subscription_match
-            )
-            
-    async def on_subscription_match(self, data_reader, info):
-        """Handle subscription matches"""
-        samples = data_reader.take()
-        for sample, info in samples:
-            if sample is None or info.state.instance_state != dds.InstanceState.ALIVE:
-                continue
-                
-            logger.info(f"Received discovery event: {sample}")
-            
-            # Process the discovery event
-            await self.process_discovery_event(sample)
-            
-    async def process_discovery_event(self, event):
-        """Process a discovery event"""
-        # This method can be overridden by subclasses to handle discovery events
-        pass
-        
-    async def publish_discovery_event(self, event_data: Dict[str, Any]):
-        """Publish a discovery event"""
-        if self.monitor is None:
-            await self.setup_monitoring()
-            
-        event = dds.DynamicData(self.monitor.get_type("genesis_lib.DiscoveryEvent"))
-        for key, value in event_data.items():
-            event[key] = value
-            
-        self.monitor.write(event)
-        
-    # Sync version of close for backward compatibility
-    def close_sync(self):
-        """Synchronous version of close for backward compatibility"""
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            loop.run_until_complete(self.close())
-        finally:
-            loop.close()
 
     def set_agent_capabilities(self, supported_tasks: list[str] = None, additional_capabilities: dict = None):
         """
