@@ -9,13 +9,24 @@ set -e
 
 # Configuration
 TIMEOUT=120  # Default timeout in seconds
-LOG_DIR="../logs"
 DEBUG=${DEBUG:-false}  # Set to true to show debug output
+
+# Get the script directory and project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
+
+# If we're not in the run_scripts directory, cd to it
+if [ "$(basename "$PWD")" != "run_scripts" ]; then
+    cd "$SCRIPT_DIR"
+fi
+
+# Set up log directory
+LOG_DIR="$PROJECT_ROOT/logs"
 mkdir -p "$LOG_DIR"
 
-# Get the project root directory
-PROJECT_ROOT=$(dirname $(dirname $(realpath $0)))
 [ "$DEBUG" = "true" ] && echo "Project root: $PROJECT_ROOT"
+[ "$DEBUG" = "true" ] && echo "Script directory: $SCRIPT_DIR"
+[ "$DEBUG" = "true" ] && echo "Log directory: $LOG_DIR"
 
 # Function to display log content on failure
 display_log_on_failure() {
@@ -38,7 +49,8 @@ display_log_on_failure() {
 run_with_timeout() {
     local script_name=$1
     local timeout=$2
-    local log_file="$LOG_DIR/${script_name%.*}.log"
+    local script_basename=$(basename "$script_name")
+    local log_file="$LOG_DIR/${script_basename%.*}.log"
     
     echo "=================================================="
     echo "Running $script_name with ${timeout}s timeout..."
@@ -137,7 +149,6 @@ cleanup() {
     pkill -f "python.*simple_client" || true
     pkill -f "python.*openai_chat_agent" || true
     pkill -f "python.*interface_cli" || true
-    pkill -f "python.*example_agent1" || true
     pkill -f "python.*test_agent" || true
     [ "$DEBUG" = "true" ] && echo "Cleanup complete"
 }
@@ -163,7 +174,7 @@ run_with_timeout "run_simple_agent.sh" 60 || { echo "Test failed: run_simple_age
 run_with_timeout "run_simple_client.sh" 60 || { echo "Test failed: run_simple_client.sh"; exit 1; }
 
 # Example agent test
-DEBUG=true run_with_timeout "run_example_agent1.sh" 60 || { echo "Test failed: run_example_agent1.sh"; exit 1; }
+DEBUG=true run_with_timeout "run_test_agent_with_functions.sh" 60 || { echo "Test failed: run_test_agent_with_functions.sh"; exit 1; }
 
 # Services and agent test
 run_with_timeout "start_services_and_agent.py" 90 || { echo "Test failed: start_services_and_agent.py"; exit 1; }

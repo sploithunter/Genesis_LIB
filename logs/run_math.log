@@ -5,19 +5,161 @@
                            RTI Connext DDS 7.3.0                       
 
 ###############################################################################
-Warning: ANTHROPIC_API_KEY not found in environment, .bash_profile, or .env file
 Setup complete. RTI Connext DDS environment configured.
-Python Version: 3.11
-PYTHONPATH: /Applications/rti_connext_dds-7.3.0//lib/python3.11::/Users/jason/Documents/Genesis-LIB
+Python Version: 3.10
+PYTHONPATH: /Applications/rti_connext_dds-7.3.0//lib/python3.10::/Users/jason/Documents/Genesis_LIB
 LD_LIBRARY_PATH: /Applications/rti_connext_dds-7.3.0//lib:
 DYLD_LIBRARY_PATH: /Applications/rti_connext_dds-7.3.0/lib/arm64Darwin20clang12.0:/Applications/rti_connext_dds-7.3.0/third_party/openssl-3.0.12/arm64Darwin20clang12.0/release/lib:/Applications/rti_connext_dds-7.3.0/third_party/openssl-/arm64Darwin20clang12.0/release/lib:/Applications/rti_connext_dds-7.3.0/third_party/civetweb-/arm64Darwin20clang12.0/release/lib:/Applications/rti_connext_dds-7.3.0//lib:
-ANTHROPIC_API_KEY is not set
+ANTHROPIC_API_KEY is set
 OPENAI_API_KEY is set
 Starting calculator service...
 Waiting for service to start...
+2025-04-28 07:50:40,318 - calculator_service - INFO - SERVICE: Starting calculator service
+2025-04-28 07:50:40,319 - GenesisRPCService - INFO - Initializing DDS Domain Participant...
+2025-04-28 07:50:40,350 - GenesisRPCService - INFO - Creating RPC Replier...
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Starting enhanced function registration for 'add'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Function metadata for 'add'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Creating function wrapper for 'add'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Successfully created wrapper for 'add'
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Registering wrapped function 'add' with base class
+2025-04-28 07:50:40,369 - GenesisRPCService - INFO - Registering function: add
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Successfully registered enhanced function 'add'
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Starting enhanced function registration for 'divide'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Function metadata for 'divide'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Creating function wrapper for 'divide'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Successfully created wrapper for 'divide'
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Registering wrapped function 'divide' with base class
+2025-04-28 07:50:40,369 - GenesisRPCService - INFO - Registering function: divide
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Successfully registered enhanced function 'divide'
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Starting enhanced function registration for 'multiply'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Function metadata for 'multiply'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Creating function wrapper for 'multiply'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Successfully created wrapper for 'multiply'
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Registering wrapped function 'multiply' with base class
+2025-04-28 07:50:40,369 - GenesisRPCService - INFO - Registering function: multiply
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Successfully registered enhanced function 'multiply'
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Starting enhanced function registration for 'subtract'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Function metadata for 'subtract'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Creating function wrapper for 'subtract'
+2025-04-28 07:50:40,369 - enhanced_service_base - DEBUG - Successfully created wrapper for 'subtract'
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Registering wrapped function 'subtract' with base class
+2025-04-28 07:50:40,369 - GenesisRPCService - INFO - Registering function: subtract
+2025-04-28 07:50:40,369 - enhanced_service_base - INFO - Successfully registered enhanced function 'subtract'
+2025-04-28 07:50:40,382 - calculator_service - INFO - CalculatorService initialized
+2025-04-28 07:50:40,382 - enhanced_service_base - INFO - Advertising functions to the registry
+2025-04-28 07:50:40,383 - function_discovery - INFO - Starting function registration in FunctionRegistry
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Detailed function registration information
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Creating FunctionInfo object for 'add'
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Storing function info for 'add' in registry
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Updating category index for 'add'
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Added function 'add' to category 'calculator'
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Added function 'add' to category 'math'
+2025-04-28 07:50:40,383 - function_discovery - INFO - Advertising function capability for 'add'
+2025-04-28 07:50:40,383 - function_discovery - INFO - Successfully registered function 'add'
+2025-04-28 07:50:40,383 - enhanced_service_base - INFO - Advertised function: add
+2025-04-28 07:50:40,383 - enhanced_service_base - INFO - CalculatorService connected to DDS
+2025-04-28 07:50:40,383 - function_discovery - INFO - Starting function registration in FunctionRegistry
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Detailed function registration information
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Creating FunctionInfo object for 'divide'
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Storing function info for 'divide' in registry
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Updating category index for 'divide'
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Added function 'divide' to category 'calculator'
+2025-04-28 07:50:40,383 - function_discovery - DEBUG - Added function 'divide' to category 'math'
+2025-04-28 07:50:40,384 - function_discovery - INFO - Advertising function capability for 'divide'
+2025-04-28 07:50:40,384 - function_discovery - INFO - Successfully registered function 'divide'
+2025-04-28 07:50:40,384 - enhanced_service_base - INFO - Advertised function: divide
+2025-04-28 07:50:40,385 - function_discovery - INFO - Starting function registration in FunctionRegistry
+2025-04-28 07:50:40,385 - function_discovery - DEBUG - Detailed function registration information
+2025-04-28 07:50:40,385 - function_discovery - DEBUG - Creating FunctionInfo object for 'multiply'
+2025-04-28 07:50:40,385 - function_discovery - DEBUG - Storing function info for 'multiply' in registry
+2025-04-28 07:50:40,385 - function_discovery - DEBUG - Updating category index for 'multiply'
+2025-04-28 07:50:40,385 - function_discovery - DEBUG - Added function 'multiply' to category 'calculator'
+2025-04-28 07:50:40,385 - function_discovery - DEBUG - Added function 'multiply' to category 'math'
+2025-04-28 07:50:40,385 - function_discovery - INFO - Advertising function capability for 'multiply'
+2025-04-28 07:50:40,385 - function_discovery - INFO - Successfully registered function 'multiply'
+2025-04-28 07:50:40,385 - enhanced_service_base - INFO - Advertised function: multiply
+2025-04-28 07:50:40,386 - function_discovery - INFO - Starting function registration in FunctionRegistry
+2025-04-28 07:50:40,386 - function_discovery - DEBUG - Detailed function registration information
+2025-04-28 07:50:40,386 - function_discovery - DEBUG - Creating FunctionInfo object for 'subtract'
+2025-04-28 07:50:40,386 - function_discovery - DEBUG - Storing function info for 'subtract' in registry
+2025-04-28 07:50:40,386 - function_discovery - DEBUG - Updating category index for 'subtract'
+2025-04-28 07:50:40,386 - function_discovery - DEBUG - Added function 'subtract' to category 'calculator'
+2025-04-28 07:50:40,386 - function_discovery - DEBUG - Added function 'subtract' to category 'math'
+2025-04-28 07:50:40,386 - function_discovery - INFO - Advertising function capability for 'subtract'
+2025-04-28 07:50:40,387 - function_discovery - INFO - Successfully registered function 'subtract'
+2025-04-28 07:50:40,387 - enhanced_service_base - INFO - Advertised function: subtract
+2025-04-28 07:50:40,387 - enhanced_service_base - INFO - All CalculatorService functions published
+2025-04-28 07:50:40,387 - calculator_service - INFO - Functions advertised
+2025-04-28 07:50:40,387 - asyncio - DEBUG - Using selector: KqueueSelector
+2025-04-28 07:50:40,387 - GenesisRPCService - INFO - Service running with 4 registered functions.
+2025-04-28 07:50:40,387 - GenesisRPCService - INFO - Available functions: add, divide, multiply, subtract
+2025-04-28 07:50:40,387 - GenesisRPCService - INFO - Waiting for requests...
+2025-04-28 07:50:40,387 - GenesisRPCService - DEBUG - Waiting for next request...
 Running test client...
+2025-04-28 07:50:45,327 - GenesisRPCClient - INFO - Initializing DDS Domain Participant...
+2025-04-28 07:50:45,357 - GenesisRPCClient - INFO - Creating RPC Requester for service: CalculatorService...
+2025-04-28 07:50:45,365 - GenesisRPCClient - INFO - Waiting for service discovery...
+2025-04-28 07:50:45,366 - GenesisRPCClient - INFO - Service discovered! Matched replier count: 1
+2025-04-28 07:50:45,366 - GenesisRPCClient - INFO - Calling remote function: add
+2025-04-28 07:50:45,366 - GenesisRPCService - INFO - Received request: id=call_31895c9c, function=add, args={"x": 5, "y": 3}
+2025-04-28 07:50:45,367 - GenesisRPCService - DEBUG - Calling add with args={'x': 5, 'y': 3}
+2025-04-28 07:50:45,368 - calculator_service - INFO - Received add request: x=5, y=3
+2025-04-28 07:50:45,368 - calculator_service - INFO - Add result: 8
+2025-04-28 07:50:45,368 - GenesisRPCService - INFO - Function add returned: {"result": 8}
+2025-04-28 07:50:45,368 - GenesisRPCService - INFO - Sending reply: success=True
+2025-04-28 07:50:45,368 - GenesisRPCService - DEBUG - Waiting for next request...
+2025-04-28 07:50:45,377 - GenesisRPCClient - INFO - Function add returned: {'result': 8}
+2025-04-28 07:50:45,377 - GenesisRPCClient - INFO - Calling remote function: subtract
+2025-04-28 07:50:45,377 - GenesisRPCService - INFO - Received request: id=call_75f4cbfe, function=subtract, args={"x": 10, "y": 4}
+2025-04-28 07:50:45,378 - GenesisRPCService - DEBUG - Calling subtract with args={'x': 10, 'y': 4}
+2025-04-28 07:50:45,378 - calculator_service - INFO - Received subtract request: x=10, y=4
+2025-04-28 07:50:45,378 - calculator_service - INFO - Subtract result: 6
+2025-04-28 07:50:45,378 - GenesisRPCService - INFO - Function subtract returned: {"result": 6}
+2025-04-28 07:50:45,378 - GenesisRPCService - INFO - Sending reply: success=True
+2025-04-28 07:50:45,378 - GenesisRPCService - DEBUG - Waiting for next request...
+2025-04-28 07:50:45,387 - GenesisRPCClient - INFO - Function subtract returned: {'result': 6}
+2025-04-28 07:50:45,387 - GenesisRPCClient - INFO - Calling remote function: multiply
+2025-04-28 07:50:45,387 - GenesisRPCService - INFO - Received request: id=call_64af7a54, function=multiply, args={"x": 7, "y": 6}
+2025-04-28 07:50:45,388 - GenesisRPCService - DEBUG - Calling multiply with args={'x': 7, 'y': 6}
+2025-04-28 07:50:45,389 - calculator_service - INFO - Received multiply request: x=7, y=6
+2025-04-28 07:50:45,389 - calculator_service - INFO - Multiply result: 42
+2025-04-28 07:50:45,389 - GenesisRPCService - INFO - Function multiply returned: {"result": 42}
+2025-04-28 07:50:45,389 - GenesisRPCService - INFO - Sending reply: success=True
+2025-04-28 07:50:45,389 - GenesisRPCService - DEBUG - Waiting for next request...
+2025-04-28 07:50:45,398 - GenesisRPCClient - INFO - Function multiply returned: {'result': 42}
+2025-04-28 07:50:45,398 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-28 07:50:45,398 - GenesisRPCService - INFO - Received request: id=call_3f9bf6e6, function=divide, args={"x": 20, "y": 5}
+2025-04-28 07:50:45,399 - GenesisRPCService - DEBUG - Calling divide with args={'x': 20, 'y': 5}
+2025-04-28 07:50:45,399 - calculator_service - INFO - Received divide request: x=20, y=5
+2025-04-28 07:50:45,399 - calculator_service - INFO - Divide result: 4.0
+2025-04-28 07:50:45,399 - GenesisRPCService - INFO - Function divide returned: {"result": 4.0}
+2025-04-28 07:50:45,399 - GenesisRPCService - INFO - Sending reply: success=True
+2025-04-28 07:50:45,399 - GenesisRPCService - DEBUG - Waiting for next request...
+2025-04-28 07:50:45,408 - GenesisRPCClient - INFO - Function divide returned: {'result': 4.0}
+2025-04-28 07:50:45,408 - GenesisRPCClient - INFO - Calling remote function: divide
+2025-04-28 07:50:45,408 - GenesisRPCService - INFO - Received request: id=call_d99f6c44, function=divide, args={"x": 10, "y": 0}
+2025-04-28 07:50:45,409 - GenesisRPCService - DEBUG - Calling divide with args={'x': 10, 'y': 0}
+2025-04-28 07:50:45,409 - calculator_service - INFO - Received divide request: x=10, y=0
+2025-04-28 07:50:45,409 - calculator_service - ERROR - Attempted division by zero
+2025-04-28 07:50:45,409 - GenesisRPCService - ERROR - Error executing function: Cannot divide by zero
 Traceback (most recent call last):
-  File "<string>", line 4, in <module>
-ImportError: cannot import name 'RPCClient' from 'genesis_lib.rpc_client' (/Users/jason/Documents/Genesis-LIB/genesis_lib/rpc_client.py)
-Stopping calculator service...
-Test completed.
+  File "/Users/jason/Documents/Genesis_LIB/genesis_lib/rpc_service.py", line 178, in run
+    result = await result
+  File "/Users/jason/Documents/Genesis_LIB/test_functions/calculator_service.py", line 164, in divide
+    raise DivisionByZeroError("Cannot divide by zero")
+DivisionByZeroError: Cannot divide by zero
+2025-04-28 07:50:45,410 - GenesisRPCService - INFO - Sending reply: success=False
+2025-04-28 07:50:45,410 - GenesisRPCService - DEBUG - Waiting for next request...
+2025-04-28 07:50:45,418 - GenesisRPCClient - WARNING - Function call failed: Error executing function: Cannot divide by zero
+Debug: Setting success to True
+Debug: Final success value: True
+Waiting for calculator service to be available...
+Addition test passed: 5 + 3 = 8
+Subtraction test passed: 10 - 4 = 6
+Multiplication test passed: 7 * 6 = 42
+Division test passed: 20 / 5 = 4.0
+Division by zero test passed: error handled correctly
+All calculator tests completed successfully
+Debug: Script exit code: 0
+Cleaning up processes...
+Cleaning up processes...

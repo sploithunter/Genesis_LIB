@@ -19,9 +19,6 @@ async def main():
     agent = TestAgent()
     
     try:
-        # Announce agent presence
-        agent.app.announce_self()
-        
         # Give some time for initialization
         await asyncio.sleep(2)  # Use async sleep instead of time.sleep
         
