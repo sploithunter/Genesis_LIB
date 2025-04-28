@@ -12,26 +12,6 @@
       <member name="instance_id" type="string" key="true" stringMaxLength="128"/>
     </struct>
 
-    <!-- Echo service interface -->
-    <struct name="EchoRequest">
-      <member name="message" type="string" stringMaxLength="2048"/>
-    </struct>
-
-    <struct name="EchoReply">
-      <member name="message" type="string" stringMaxLength="2048"/>
-      <member name="status" type="int32"/>
-    </struct>
-
-    <!-- Chat service interface -->
-    <struct name="ChatRequest">
-      <member name="message" type="string" stringMaxLength="8192"/>
-      <member name="conversation_id" type="string" stringMaxLength="128"/>
-    </struct>
-
-    <struct name="ChatReply">
-      <member name="response" type="string" stringMaxLength="8192"/>
-      <member name="status" type="int32"/>
-    </struct>
 
     <!-- ChatGPT service interface -->
     <struct name="ChatGPTRequest">
