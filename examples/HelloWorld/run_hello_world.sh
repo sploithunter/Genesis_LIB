@@ -34,6 +34,16 @@ if [ $AGENT_EXIT -eq 0 ]; then
     echo "✅ Test completed successfully"
     echo "Agent response:"
     grep "Agent response:" logs/hello_world_agent.log
+    
+    # Check for function call result
+    echo "Checking for function call result..."
+    if grep -q "{'result':" logs/hello_world_agent.log; then
+        echo "✅ Function call detected"
+        grep "{'result':" logs/hello_world_agent.log
+    else
+        echo "❌ No function call detected - test failed"
+        exit 1
+    fi
 else
     echo "❌ Test failed with exit code $AGENT_EXIT"
     echo "Check logs/hello_world_agent.log for details"

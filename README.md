@@ -4,6 +4,87 @@
 
 GENESIS (Generative Networked System for Intelligent Services) is a Python library designed for building complex, distributed AI agent networks. It facilitates seamless communication, dynamic function discovery, and collaboration between heterogeneous AI agents, leveraging the power of **RTI Connext DDS** for real-time, reliable, and scalable interactions.
 
+## Quick Start
+
+### Prerequisites
+
+Before setting up Genesis LIB, ensure you have:
+
+1. **Python 3.10**
+   - We recommend using `pyenv` to manage Python versions
+   - Installation instructions for pyenv:
+     ```bash
+     # macOS
+     brew install pyenv
+     
+     # Linux
+     curl https://pyenv.run | bash
+     
+     # Add to your shell configuration
+     echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
+     echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
+     echo 'eval "$(pyenv init -)"' >> ~/.bash_profile
+     
+     # Install Python 3.10
+     pyenv install 3.10.0
+     pyenv global 3.10.0
+     ```
+
+2. **RTI Connext DDS 7.3.0 or greater**
+   - Download from [RTI's website](https://support.rti.com/downloads)
+   - Install in one of the following locations:
+     - macOS: `/Applications/rti_connext_dds-7.3.0`
+     - Linux: `/opt/rti_connext_dds-7.3.0` or `$HOME/rti_connext_dds-7.3.0`
+     - Windows: `C:\Program Files\rti_connext_dds-7.3.0` or `C:\Program Files (x86)\rti_connext_dds-7.3.0`
+
+3. **API Keys**
+   - OpenAI API Key (for GPT models)
+   - Anthropic API Key (for Claude models)
+   - Store these in your environment or `.env` file:
+     ```bash
+     export OPENAI_API_KEY="your_openai_api_key"
+     export ANTHROPIC_API_KEY="your_anthropic_api_key"
+     ```
+
+### Quick Setup
+
+The easiest way to set up Genesis LIB is to use the provided setup script:
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/Genesis_LIB.git
+cd Genesis_LIB
+
+# Run the setup script
+./setup.sh
+```
+
+The setup script will:
+1. Create a Python virtual environment
+2. Install all required dependencies
+3. Configure RTI Connext DDS environment
+4. Set up API keys
+5. Install the package in development mode
+
+### Try the Hello World Example
+
+After setup, run the Hello World example to verify your installation:
+
+```bash
+# Run the Hello World example
+cd examples/HelloWorld
+./run_hello_world.sh
+```
+
+This will start a simple calculator service and agent that can perform basic arithmetic operations.
+
+### Next Steps
+
+Once you've verified your installation with the Hello World example, you can:
+1. Explore the examples directory for more complex use cases
+2. Read the detailed documentation below
+3. Start building your own agents and services
+
 The core purpose of GENESIS is to enable the creation of sophisticated multi-agent systems where different agents, potentially built using various AI frameworks (like LangChain, OpenAI's API, or native Python), can work together to solve problems that are beyond the capability of any single agent.
 
 ## Why an Agent-to-Agent Framework like GENESIS?
@@ -484,3 +565,147 @@ Key areas for enhancement:
 * **Error Recovery Frameworks:** Standard patterns for circuit breakers, graceful degradation.  
 * **Standardized Metrics Collection:** Define comprehensive metrics for analysis.  
 * **Multi-Framework Interoperability:** Standard layer for connecting with agents from other frameworks (AutoGPT, etc.).
+
+# Genesis LIB
+
+Genesis LIB is a framework for building intelligent agents and services using RTI Connext DDS and modern AI capabilities.
+
+## Prerequisites
+
+Before setting up Genesis LIB, ensure you have the following installed:
+
+1. **Python 3.10**
+   - We recommend using `pyenv` to manage Python versions
+   - Installation instructions for pyenv:
+     ```bash
+     # macOS
+     brew install pyenv
+     
+     # Linux
+     curl https://pyenv.run | bash
+     
+     # Add to your shell configuration
+     echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
+     echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
+     echo 'eval "$(pyenv init -)"' >> ~/.bash_profile
+     
+     # Install Python 3.10
+     pyenv install 3.10.0
+     pyenv global 3.10.0
+     ```
+
+2. **RTI Connext DDS 7.3.0 or greater**
+   - Download from [RTI's website](https://www.rti.com/downloads)
+   - Install in one of the following locations:
+     - macOS: `/Applications/rti_connext_dds-7.3.0`
+     - Linux: `/opt/rti_connext_dds-7.3.0` or `$HOME/rti_connext_dds-7.3.0`
+     - Windows: `C:\Program Files\rti_connext_dds-7.3.0` or `C:\Program Files (x86)\rti_connext_dds-7.3.0`
+
+3. **API Keys**
+   - OpenAI API Key (for GPT models)
+   - Anthropic API Key (for Claude models)
+   - Store these in your environment or `.env` file:
+     ```bash
+     export OPENAI_API_KEY="your_openai_api_key"
+     export ANTHROPIC_API_KEY="your_anthropic_api_key"
+     ```
+
+## Quick Setup
+
+The easiest way to set up Genesis LIB is to use the provided setup script:
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/Genesis_LIB.git
+cd Genesis_LIB
+
+# Run the setup script
+./setup.sh
+```
+
+The setup script will:
+1. Create a Python virtual environment
+2. Install all required dependencies
+3. Configure RTI Connext DDS environment
+4. Set up API keys
+5. Install the package in development mode
+
+## Manual Setup
+
+If you prefer to set up manually:
+
+```bash
+# Create and activate virtual environment
+python3.10 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install in development mode
+pip install -e .
+
+# Set up RTI Connext DDS environment
+# The setup script will help you with this, or you can manually:
+export NDDSHOME="/path/to/rti_connext_dds-7.3.0"
+source $NDDSHOME/resource/scripts/rtisetenv_<arch>.bash
+```
+
+## Environment Variables
+
+The following environment variables are important for Genesis LIB:
+
+- `NDDSHOME`: Path to RTI Connext DDS installation
+- `PYTHONPATH`: Should include RTI Connext DDS Python libraries
+- `OPENAI_API_KEY`: Your OpenAI API key
+- `ANTHROPIC_API_KEY`: Your Anthropic API key
+
+## Running Examples
+
+After setup, you can run the examples:
+
+```bash
+# Run the Hello World example
+cd examples/HelloWorld
+./run_hello_world.sh
+```
+
+## Development
+
+For development, we recommend:
+
+1. Using `pyenv` to manage Python versions
+2. Using a virtual environment
+3. Installing in development mode (`pip install -e .`)
+4. Running tests with pytest:
+   ```bash
+   pytest tests/
+   ```
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **RTI Connext DDS not found**
+   - Ensure RTI Connext DDS 7.3.0 or greater is installed
+   - Verify the installation path is correct
+   - Check that the environment script exists
+
+2. **Python version issues**
+   - Use `pyenv` to manage Python versions
+   - Ensure Python 3.10 is installed and active
+
+3. **API Key issues**
+   - Verify API keys are set in environment or `.env` file
+   - Check for any placeholder values
+
+## Support
+
+For support, please:
+1. Check the troubleshooting section
+2. Review the documentation
+3. Open an issue on GitHub
+
+## License
+
+[Your License Here]
