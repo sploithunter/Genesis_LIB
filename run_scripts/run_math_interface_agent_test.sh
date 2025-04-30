@@ -16,6 +16,12 @@ cd "$SCRIPT_DIR"
 LOG_DIR="$PROJECT_ROOT/logs"
 mkdir -p "$LOG_DIR"
 
+# Clear existing log files
+echo "🧹 TRACE: Clearing existing log files..."
+rm -f "$LOG_DIR/rtiddsspy_math.log"
+rm -f "$LOG_DIR/math_test_agent.log"
+rm -f "$LOG_DIR/math_test_interface_*.log"
+
 # Define script and log file names
 AGENT_SCRIPT="$PROJECT_ROOT/run_scripts/math_test_agent.py"
 INTERFACE_SCRIPT="$PROJECT_ROOT/run_scripts/math_test_interface.py"
