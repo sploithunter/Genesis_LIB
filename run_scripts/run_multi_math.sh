@@ -3,7 +3,8 @@
 # Script to run multiple calculator services and test them
 
 # Source the setup script to set up the environment
-source ../setup.sh
+# Temporarily disabled as it's not needed for current testing
+# source ../setup.sh
 
 # Add the project root to PYTHONPATH
 export PYTHONPATH=$PYTHONPATH:$(dirname $(dirname $(realpath $0)))

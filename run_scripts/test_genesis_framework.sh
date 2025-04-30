@@ -7,8 +7,8 @@
 PROJECT_ROOT=$(dirname $(dirname $(realpath $0)))
 
 # Source the setup script to set environment variables
-echo "===== Sourcing setup.sh ====="
-source "${PROJECT_ROOT}/setup.sh"
+# Temporarily disabled as it's not needed for current testing
+# source "${PROJECT_ROOT}/setup.sh"
 
 # Set PYTHONPATH to include project root
 export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH}"

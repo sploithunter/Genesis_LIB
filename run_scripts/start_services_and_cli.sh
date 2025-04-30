@@ -5,8 +5,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Source the setup script to set environment variables
-echo "===== Sourcing setup.sh ====="
-source "$PROJECT_ROOT/setup.sh"
+# Temporarily disabled as it's not needed for current testing
+# source "$PROJECT_ROOT/setup.sh"
 
 # Add the project root to PYTHONPATH
 export PYTHONPATH=$PYTHONPATH:$PROJECT_ROOT
