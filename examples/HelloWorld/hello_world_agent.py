@@ -35,9 +35,6 @@ async def main():
         agent = HelloWorldAgent()
         logger.info("Agent started successfully")
         
-        # Announce agent presence
-        agent.app.announce_self()
-        
         # Give some time for initialization
         await asyncio.sleep(2)
         
