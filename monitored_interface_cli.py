@@ -58,9 +58,9 @@ class TracingMonitoredEchoInterface(TracingMonitoredInterface):
         super().__init__(interface_name="InterfaceCLI", service_name="Echo")
 
 class TracingMonitoredChatGPTInterface(TracingMonitoredInterface):
-    def __init__(self):
-        logger.info("Creating ChatGPT interface")
-        super().__init__(interface_name="ChatGPTInterfaceCLI", service_name="ChatGPT")
+    def __init__(self, service_name="ChatGPT"):
+        logger.info("Creating ChatGPT interface for service %s", service_name)
+        super().__init__(interface_name="ChatGPTInterfaceCLI", service_name=service_name)
 
 def main():
     logger.info("Interface main() starting - PID: %d", os.getpid())

@@ -74,6 +74,31 @@ class FunctionReply:
     success: bool = False  # Whether the function executed successfully
     error_message: str = ""  # Error message if the function failed
 
+@idl.struct
+class SessionRequest:
+    """Request for session management operations"""
+    operation: str  # "CREATE", "JOIN", "LEAVE", "CLOSE"
+    session_id: str  # UUID for the session
+    client_id: str  # UUID of the client making the request
+    metadata: str  # JSON string containing additional session metadata
+
+@idl.struct
+class SessionReply:
+    """Reply to session management operations"""
+    success: bool
+    session_id: str  # UUID for the session
+    error_message: str  # Empty if success is True
+    metadata: str  # JSON string containing session state/metadata
+
+@idl.struct
+class SessionEvent:
+    """Event published when session state changes"""
+    event_type: str  # "CREATED", "JOINED", "LEFT", "CLOSED"
+    session_id: str  # UUID for the session
+    client_id: str  # UUID of the client involved
+    timestamp: int  # Unix timestamp in milliseconds
+    metadata: str  # JSON string containing event details
+
 def validate_schema(schema: Dict[str, Any]) -> bool:
     """
     Validate that a schema follows OpenAI's function schema format.
