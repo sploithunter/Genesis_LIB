@@ -490,7 +490,7 @@ class MonitoredAgent(GenesisAgent):
             logger.error(f"Error publishing component lifecycle event: {e}")
             logger.error(f"Event category was: {category}")
     
-    def process_request(self, request: Any) -> Dict[str, Any]:
+    async def process_request(self, request: Any) -> Dict[str, Any]:
         """
         Process a request with monitoring.
         
@@ -543,7 +543,7 @@ class MonitoredAgent(GenesisAgent):
             )
             
             # Process request using concrete implementation
-            result = self._process_request(request)
+            result = await self._process_request(request)
             
             # Publish successful response event
             self.publish_monitoring_event(

@@ -41,17 +41,73 @@ class GenesisAgent(ABC):
         self.request_type = self.type_provider.type("genesis_lib", f"{service_name}Request")
         self.reply_type = self.type_provider.type("genesis_lib", f"{service_name}Reply")
         
-        # Create replier
+        # Create event loop for async operations
+        self.loop = asyncio.get_event_loop()
+        
+        # Create replier with data available listener
+        class RequestListener(dds.DynamicData.DataReaderListener):
+            def __init__(self, agent):
+                super().__init__()  # Call parent class __init__
+                self.agent = agent
+                
+            def on_data_available(self, reader):
+                # Get all available samples
+                samples = self.agent.replier.take_requests()
+                for request, info in samples:
+                    if request is None or info.state.instance_state != dds.InstanceState.ALIVE:
+                        continue
+                        
+                    logger.info(f"Received request: {request}")
+                    
+                    try:
+                        # Create task to process request asynchronously
+                        asyncio.run_coroutine_threadsafe(self._process_request(request, info), self.agent.loop)
+                    except Exception as e:
+                        logger.error(f"Error creating request processing task: {e}")
+                        logger.error(traceback.format_exc())
+                        
+            async def _process_request(self, request, info):
+                try:
+                    # Get reply data from concrete implementation
+                    reply_data = await self.agent.process_request(request)
+                    
+                    # Create reply
+                    reply = dds.DynamicData(self.agent.reply_type)
+                    for key, value in reply_data.items():
+                        reply[key] = value
+                        
+                    # Send reply
+                    self.agent.replier.send_reply(reply, info)
+                    logger.info(f"Sent reply: {reply}")
+                except Exception as e:
+                    logger.error(f"Error processing request: {e}")
+                    logger.error(traceback.format_exc())
+                    # Send error reply
+                    reply = dds.DynamicData(self.agent.reply_type)
+                    reply["status"] = 1  # Error status
+                    reply["message"] = f"Error: {str(e)}"
+                    self.agent.replier.send_reply(reply, info)
+        
+        # Create replier with listener
         self.replier = rpc.Replier(
             request_type=self.request_type,
             reply_type=self.reply_type,
             participant=self.app.participant,
-            service_name=self.service_name,
-            on_request_available=self.on_request
+            service_name=self.service_name
         )
+        
+        # Set listener on replier's DataReader with status mask for data available
+        self.request_listener = RequestListener(self)
+        mask = dds.StatusMask.DATA_AVAILABLE
+        self.replier.request_datareader.set_listener(self.request_listener, mask)
         
         # Store discovered functions
         self.discovered_functions = []
+
+    @abstractmethod
+    async def process_request(self, request: Any) -> Dict[str, Any]:
+        """Process the request and return reply data as a dictionary"""
+        pass
 
     async def discover_functions(self, function_client, max_retries: int = 5) -> List[Dict[str, Any]]:
         """
@@ -105,42 +161,16 @@ class GenesisAgent(ABC):
             
         return available_functions
 
-    @abstractmethod
-    async def process_request(self, request: Any) -> Dict[str, Any]:
-        """Process the request and return reply data as a dictionary"""
-        pass
-
-    async def on_request(self, replier):
-        """Handle incoming requests"""
-        samples = replier.take_requests()
-        for request, info in samples:
-            if request is None or info.state.instance_state != dds.InstanceState.ALIVE:
-                continue
-                
-            logger.info(f"Received request: {request}")
-            
-            # Get reply data from concrete implementation
-            reply_data = await self.process_request(request)
-            
-            # Create reply
-            reply = dds.DynamicData(self.reply_type)
-            for key, value in reply_data.items():
-                reply[key] = value
-                
-            # Send reply
-            replier.send_reply(reply, info)
-            logger.info(f"Sent reply: {reply}")
-
     async def run(self):
         """Main agent loop"""
         try:
             # Announce presence
             self.app.announce_self()
             
-            # Main loop - process requests
+            # Main loop - just keep the event loop running
             logger.info(f"{self.agent_name} listening for requests (Ctrl+C to exit)...")
-            while True:
-                await asyncio.sleep(0.1)
+            shutdown_event = asyncio.Event()
+            await shutdown_event.wait()
                 
         except KeyboardInterrupt:
             logger.info(f"\nShutting down {self.agent_name}...")
