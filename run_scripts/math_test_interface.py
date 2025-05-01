@@ -13,7 +13,7 @@ import json
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, project_root)
 
-from genesis_lib.interface import GenesisInterface
+from genesis_lib.monitored_interface import MonitoredInterface
 
 # Configure logging with detailed format
 log_file = os.path.join(project_root, 'logs', 'math_test_interface.log')
@@ -28,7 +28,7 @@ logger.addHandler(file_handler)
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s')
 
-class TracingGenesisInterface(GenesisInterface):
+class TracingGenesisInterface(MonitoredInterface):
     def __init__(self, interface_name: str, service_name: str):
         logger.info("Initializing %s interface for service %s", interface_name, service_name)
         super().__init__(interface_name=interface_name, service_name=service_name)
