@@ -56,22 +56,27 @@ class GenesisInterface(ABC):
         if self.requester.matched_replier_count > 0:
             # Get the DDS participant GUIDs
             provider_id = str(self.app.participant.instance_handle)  # Interface's GUID
-            print("Requester Attributes:")
-            print(dir(self.requester))
+            # print("Requester Attributes:")
+            # print(dir(self.requester))
+            logger.debug("Requester Attributes: %s", dir(self.requester))
             
             # Original method using builtin subscriber
             reply_datareader = self.requester.reply_datareader
-            print("Reply Datareader Attributes:")
-            print(dir(reply_datareader))
+            # print("Reply Datareader Attributes:")
+            # print(dir(reply_datareader))
+            logger.debug("Reply Datareader Attributes: %s", dir(reply_datareader))
+            
             builtin_subscriber = reply_datareader.subscriber.participant.builtin_subscriber
-            print("Builtin Subscriber Attributes:")
-            print(dir(builtin_subscriber))
+            # print("Builtin Subscriber Attributes:")
+            # print(dir(builtin_subscriber))
+            logger.debug("Builtin Subscriber Attributes: %s", dir(builtin_subscriber))
+            
             # Correctly access the DCPSPublications built-in topic reader
             replier_guids = self.requester.reply_datareader.matched_publications
             first_replier_guid = replier_guids[0]
-            print(f"First replier GUID: {first_replier_guid}")
-            # I am stuck here.
-    
+            # print(f"First replier GUID: {first_replier_guid}")
+            logger.debug("First replier GUID: %s", first_replier_guid)
+            
             # Get the replier's handle from the request info
             
             client_id = str(first_replier_guid)

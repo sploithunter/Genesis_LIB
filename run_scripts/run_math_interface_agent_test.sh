@@ -38,25 +38,25 @@ SPY_PID=""
 
 # Cleanup function to ensure processes are killed
 cleanup() {
-    echo "🧹 TRACE: Cleaning up..."
+    echo "🧹 TRACE: Starting cleanup process..."
     if [ -n "$AGENT_PID" ]; then
-        echo "🔫 TRACE: Killing agent process $AGENT_PID..."
+        echo "🔫 TRACE: Stopping agent process $AGENT_PID..."
         kill $AGENT_PID 2>/dev/null || true
         wait $AGENT_PID 2>/dev/null || true
     fi
     for pid in "${INTERFACE_PIDS[@]}"; do
         if [ -n "$pid" ]; then
-            echo "🔫 TRACE: Killing interface process $pid..."
+            echo "🔫 TRACE: Stopping interface process $pid..."
             kill $pid 2>/dev/null || true
             wait $pid 2>/dev/null || true
         fi
     done
     if [ -n "$SPY_PID" ]; then
-        echo "🔫 TRACE: Killing RTI DDS Spy process $SPY_PID..."
+        echo "🔫 TRACE: Stopping RTI DDS Spy process $SPY_PID..."
         kill $SPY_PID 2>/dev/null || true
         wait $SPY_PID 2>/dev/null || true
     fi
-    echo "✅ TRACE: Cleanup finished."
+    echo "✅ TRACE: Cleanup completed successfully"
 }
 
 # Set trap for cleanup on exit

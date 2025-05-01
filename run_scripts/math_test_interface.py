@@ -13,7 +13,7 @@ import json
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, project_root)
 
-from monitored_interface_cli import TracingMonitoredChatGPTInterface
+from genesis_lib.interface import GenesisInterface
 
 # Configure logging with detailed format
 log_file = os.path.join(project_root, 'logs', 'math_test_interface.log')
@@ -21,12 +21,49 @@ file_handler = logging.FileHandler(log_file)
 file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'))
 
 logger = logging.getLogger("MathTestInterface")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 logger.addHandler(file_handler)
 
 # Also configure root logger to show output in console
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s')
+
+class TracingGenesisInterface(GenesisInterface):
+    def __init__(self, interface_name: str, service_name: str):
+        logger.info("Initializing %s interface for service %s", interface_name, service_name)
+        super().__init__(interface_name=interface_name, service_name=service_name)
+        logger.info("Interface initialization complete")
+        
+    def wait_for_agent(self) -> bool:
+        """Override wait_for_agent to add tracing"""
+        logger.info("Starting agent discovery wait")
+        logger.debug("Interface DDS Domain ID from env: %s", os.getenv('ROS_DOMAIN_ID', 'Not Set'))
+        logger.debug("Interface service name: %s", self.service_name)
+        
+        # Log participant info if available
+        if hasattr(self.app, 'participant'):
+            logger.debug("Interface DDS participant initialized")
+            logger.debug("Interface DDS domain ID: %d", self.app.participant.domain_id)
+        else:
+            logger.warning("Interface participant not initialized")
+        
+        result = super().wait_for_agent()
+        if result:
+            logger.info("Successfully discovered agent")
+        else:
+            logger.warning("Failed to discover agent within timeout")
+        return result
+        
+    def send_request(self, request: dict) -> dict:
+        """Override send_request to add tracing"""
+        logger.info("Sending request to agent: %s", request)
+        try:
+            reply = super().send_request(request)
+            logger.info("Received reply from agent: %s", reply)
+            return reply
+        except Exception as e:
+            logger.error("Error sending request: %s", str(e), exc_info=True)
+            return None
 
 class MathTestInterface:
     def __init__(self, interface_id):
@@ -38,8 +75,8 @@ class MathTestInterface:
     async def run(self):
         try:
             logger.info("🏗️ TRACE: Creating MathService interface...")
-            # Use the same interface class as the CLI for consistency
-            interface = TracingMonitoredChatGPTInterface()
+            # Create interface with tracing
+            interface = TracingGenesisInterface(interface_name="MathTestInterface", service_name="ChatGPT")
 
             logger.info(f"🔍 TRACE: Waiting for agent discovery...")
             # Run wait_for_agent in a thread pool since it's not async
