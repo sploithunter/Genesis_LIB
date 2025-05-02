@@ -85,29 +85,6 @@ class GenesisApp:
         writer_qos.liveliness.lease_duration = dds.Duration(seconds=2)
         writer_qos.ownership.kind = dds.OwnershipKind.SHARED
         
-        # Create registration writer
-        self.registration_writer = dds.DynamicData.DataWriter(
-            pub=self.publisher,
-            topic=self.registration_topic,
-            qos=writer_qos
-        )
-
-        # Create DataReader with QoS
-        reader_qos = dds.QosProvider.default.datareader_qos
-        reader_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
-        reader_qos.history.kind = dds.HistoryKind.KEEP_LAST
-        reader_qos.history.depth = 500
-        reader_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
-        reader_qos.liveliness.kind = dds.LivelinessKind.AUTOMATIC
-        reader_qos.liveliness.lease_duration = dds.Duration(seconds=2)
-        reader_qos.ownership.kind = dds.OwnershipKind.SHARED
-
-        self.registration_reader = dds.DynamicData.DataReader(
-            subscriber=self.subscriber,
-            topic=self.registration_topic,
-            qos=reader_qos
-        )
-        
         # Initialize function registry and pattern registry
         self.function_registry = FunctionRegistry(self.participant, domain_id)
         self.pattern_registry = pattern_registry
@@ -117,23 +94,6 @@ class GenesisApp:
         
         logger.info(f"GenesisApp initialized with agent_id={self.agent_id}, dds_guid={self.dds_guid}")
 
-    def announce_self(self):
-        """Publish registration announcement"""
-        logger.info("===== TRACING: announce_self called =====")
-        announcement = dds.DynamicData(self.registration_type)
-        announcement['message'] = f"Agent {self.preferred_name} announcing presence"
-        announcement['prefered_name'] = self.preferred_name
-        announcement['default_capable'] = 1
-        announcement['instance_id'] = self.agent_id  # Use agent_id instead of instance_id
-        
-        # Write announcement immediately - don't wait for subscribers
-        logger.info(f"Publishing announcement: {announcement['message']}")
-        self.registration_writer.write(announcement)
-        self.registration_writer.flush()
-
-        # Give time for discovery
-        time.sleep(0.2)
-
     async def close(self):
         """Close all DDS entities and cleanup resources"""
         if hasattr(self, '_closed') and self._closed:
@@ -141,9 +101,12 @@ class GenesisApp:
             return
 
         try:
-            # Close DDS entities in reverse order of creation
-            for resource in ['function_registry', 'registration_reader', 'registration_writer', 
-                           'registration_topic', 'publisher', 'subscriber', 'participant']:
+            # Close DDS entities in reverse order of creation, but keep registration writer until last
+            resources_to_close = ['function_registry', 'registration_reader', 'registration_topic', 
+                                'publisher', 'subscriber', 'participant']
+            
+            # First close everything except registration writer
+            for resource in resources_to_close:
                 if hasattr(self, resource):
                     try:
                         resource_obj = getattr(self, resource)
@@ -156,7 +119,7 @@ class GenesisApp:
                         # Only log as warning if the error is not about being already closed
                         if "already closed" not in str(e).lower():
                             logger.warning(f"Error closing {resource}: {str(e)}")
-                
+            
             # Mark as closed
             self._closed = True
             logger.info(f"GenesisApp {self.agent_id} closed successfully")
