@@ -155,9 +155,9 @@ class GenesisInterface(ABC):
             logger.error(f"Error sending request: {e}")
             return None
 
-    def close(self):
+    async def close(self):
         """Clean up resources"""
         if hasattr(self, 'requester'):
             self.requester.close()
         if hasattr(self, 'app'):
-            self.app.close() 
+            await self.app.close() 

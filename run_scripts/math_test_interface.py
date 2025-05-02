@@ -140,7 +140,7 @@ class MathTestInterface:
         finally:
             if interface:
                 logger.info("🧹 TRACE: Cleaning up interface")
-                interface.close()
+                await interface.close()
             logger.info(f"🏁 TRACE: MathTestInterface {self.interface_id} ending")
 
     def _calculate_expected_result(self, x, y, operation):

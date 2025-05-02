@@ -13,6 +13,7 @@ from typing import Any, Dict, Optional
 import rti.connextdds as dds
 from .interface import GenesisInterface
 from genesis_lib.utils import get_datamodel_path
+import asyncio
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -643,7 +644,7 @@ class MonitoredInterface(GenesisInterface):
             )
             raise
     
-    def close(self):
+    async def close(self):
         """Clean up resources"""
         try:
             # First transition to BUSY state for shutdown
@@ -654,7 +655,7 @@ class MonitoredInterface(GenesisInterface):
             )
 
             # Add a small delay to ensure events are distinguishable
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
 
             # Then transition to OFFLINE
             self.publish_component_lifecycle_event(
@@ -685,7 +686,7 @@ class MonitoredInterface(GenesisInterface):
                 self.liveliness_writer.close()
             
             # Close base class resources
-            super().close()
+            await super().close()
             
         except Exception as e:
             logger.error(f"Error closing monitored interface: {str(e)}") 
