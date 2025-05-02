@@ -166,7 +166,7 @@ class GenesisAgent(ABC):
         try:
             # Announce presence
             logger.info("Announcing agent presence...")
-            self.app.announce_self()
+            await self.app.announce_self()
             
             # Main loop - just keep the event loop running
             logger.info(f"{self.agent_name} listening for requests (Ctrl+C to exit)...")
@@ -181,11 +181,11 @@ class GenesisAgent(ABC):
     async def close(self):
         """Clean up resources"""
         try:
-            # Close replier
+            # Close replier first
             if hasattr(self, 'replier') and not getattr(self.replier, '_closed', False):
                 self.replier.close()
                 
-            # Close app if it exists and hasn't been closed
+            # Close app last since it handles registration
             if hasattr(self, 'app') and self.app is not None and not getattr(self.app, '_closed', False):
                 await self.app.close()
                 

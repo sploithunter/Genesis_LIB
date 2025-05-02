@@ -338,311 +338,65 @@ class MonitoredInterface(GenesisInterface):
             logger.error(f"Error publishing component lifecycle event: {e}")
             logger.error(f"Event category was: {event_category}")
     
-    def wait_for_agent(self, timeout_seconds: int = 30) -> bool:
-        """Wait for agent to be discovered with monitoring"""
-        # Generate chain and call IDs for tracking
-        chain_id = str(uuid.uuid4())
-        call_id = str(uuid.uuid4())
-        interface_id = str(self.app.participant.instance_handle)
+    async def wait_for_agent(self, timeout_seconds: int = 30) -> bool:
+        """Override wait_for_agent to add tracing"""
+        logger.info("Starting agent discovery wait")
+        logger.debug("Interface DDS Domain ID from env: %s", os.getenv('ROS_DOMAIN_ID', 'Not Set'))
+        logger.debug("Interface service name: %s", self.service_name)
         
-        # Transition to BUSY state
-        self.publish_component_lifecycle_event(
-            previous_state="READY",
-            new_state="BUSY",
-            reason=f"{interface_id} READY -> BUSY",
-            chain_id=chain_id,
-            call_id=call_id,
-            event_category="STATE_CHANGE",
-            source_id=interface_id
-        )
+        # Log participant info if available
+        if hasattr(self.app, 'participant'):
+            logger.debug("Interface DDS participant initialized")
+            logger.debug("Interface DDS domain ID: %d", self.app.participant.domain_id)
+        else:
+            logger.warning("Interface participant not initialized")
         
-        # Publish legacy request event
-        self.publish_monitoring_event(
-            "INTERFACE_REQUEST",
-            metadata={
-                "service": self.service_name,
-                "chain_id": chain_id,
-                "call_id": call_id
-            }
-        )
+        result = await super().wait_for_agent(timeout_seconds)
+        if result:
+            logger.info("Successfully discovered agent")
+        else:
+            logger.warning("Failed to discover agent within timeout")
+        return result
         
+    async def send_request(self, request_data: Dict[str, Any], timeout_seconds: float = 10.0) -> Optional[Dict[str, Any]]:
+        """Override send_request to add tracing and monitoring"""
+        logger.info("Sending request to agent: %s", request_data)
         try:
-            # Call parent method which will handle edge discovery
-            result = super().wait_for_agent(timeout_seconds)
+            # Publish request monitoring event
+            self.publish_monitoring_event(
+                "INTERFACE_REQUEST",
+                metadata={
+                    "interface_name": self.interface_name,
+                    "service_name": self.service_name,
+                    "provider_id": str(self.app.participant.instance_handle)
+                },
+                call_data=request_data
+            )
             
-            if result and hasattr(self, 'agent_info'):
-                # Get the agent's ID from agent_info
-                provider_id = self.agent_info.get('instance_handle')
-                client_id = interface_id
-                agent_id = self.agent_info['agent_id']
-                
-                # Format the edge discovery reason string exactly as expected by the monitor
-                reason = f"AGENT Connection: {client_id} -> {provider_id}"
-                
-                # Publish edge discovery event for the connection
-                self.publish_component_lifecycle_event(
-                    previous_state="DISCOVERING",
-                    new_state="DISCOVERING",
-                    reason=reason,
-                    capabilities=json.dumps({
-                        "agent_type": "INTERFACE",
-                        "service": self.service_name,
-                        "edge_type": "agent_connection",
-                        "entity_type": "AGENT",
-                        "component_type": "AGENT",
-                        "provider_id": provider_id,
-                        "client_id": client_id,
-                        "agent_id": agent_id
-                    }),
-                    chain_id=chain_id,
-                    call_id=call_id,
-                    event_category="EDGE_DISCOVERY",  # This is definitely an edge discovery
-                    source_id=client_id,
-                    target_id=provider_id,
-                    connection_type="agent_connection"
-                )
-                
-                # Publish successful response event
+            # Send request using parent method
+            reply = await super().send_request(request_data, timeout_seconds)
+            
+            if reply:
+                # Publish response monitoring event
                 self.publish_monitoring_event(
                     "INTERFACE_RESPONSE",
                     metadata={
-                        "service": self.service_name,
-                        "status": "success",
-                        "chain_id": chain_id,
-                        "call_id": call_id
-                    }
+                        "interface_name": self.interface_name,
+                        "service_name": self.service_name,
+                        "provider_id": str(self.app.participant.instance_handle)
+                    },
+                    result_data=reply
                 )
                 
-                # Transition back to READY state
-                self.publish_component_lifecycle_event(
-                    previous_state="BUSY",
-                    new_state="READY",
-                    reason=f"{interface_id} BUSY -> READY",
-                    chain_id=chain_id,
-                    call_id=call_id,
-                    event_category="STATE_CHANGE",
-                    source_id=interface_id
-                )
+                logger.info("Received reply from agent: %s", reply)
+                return reply
             else:
-                # Publish error event
-                self.publish_monitoring_event(
-                    "INTERFACE_STATUS",
-                    status_data={"error": "Timeout waiting for agent"},
-                    metadata={
-                        "service": self.service_name,
-                        "status": "error",
-                        "chain_id": chain_id,
-                        "call_id": call_id
-                    }
-                )
+                logger.error("No reply received")
+                return None
                 
-                # Transition to DEGRADED state
-                self.publish_component_lifecycle_event(
-                    previous_state="BUSY",
-                    new_state="DEGRADED",
-                    reason=f"{interface_id} BUSY -> DEGRADED",
-                    chain_id=chain_id,
-                    call_id=call_id,
-                    event_category="STATE_CHANGE",
-                    source_id=interface_id
-                )
-            
-            return result
-            
         except Exception as e:
-            # Publish error event
-            self.publish_monitoring_event(
-                "INTERFACE_STATUS",
-                status_data={"error": str(e)},
-                metadata={
-                    "service": self.service_name,
-                    "status": "error",
-                    "chain_id": chain_id,
-                    "call_id": call_id
-                }
-            )
-            
-            # Transition to DEGRADED state
-            self.publish_component_lifecycle_event(
-                previous_state="BUSY",
-                new_state="DEGRADED",
-                reason=f"{interface_id} BUSY -> DEGRADED",
-                chain_id=chain_id,
-                call_id=call_id,
-                event_category="STATE_CHANGE",
-                source_id=interface_id
-            )
-            raise
-    
-    def send_request(self, request_data: Dict[str, Any], timeout_seconds: int = 15) -> Optional[Any]:
-        """Send request to agent and wait for reply with monitoring"""
-        # Generate chain and call IDs for tracking
-        chain_id = str(uuid.uuid4())
-        call_id = str(uuid.uuid4())
-        
-        # Transition to BUSY state
-        self.publish_component_lifecycle_event(
-            previous_state="READY",
-            new_state="BUSY",
-            reason=f"Sending request to {self.service_name}",
-            chain_id=chain_id,
-            call_id=call_id
-        )
-        
-        # Create and publish chain event for request start
-        chain_event = dds.DynamicData(self.chain_event_type)
-        chain_event["chain_id"] = chain_id
-        chain_event["call_id"] = call_id
-        chain_event["interface_id"] = str(self.app.participant.instance_handle)
-        chain_event["primary_agent_id"] = ""  # Will be set when agent is discovered
-        chain_event["specialized_agent_ids"] = ""
-        chain_event["function_id"] = self.service_name
-        chain_event["query_id"] = str(uuid.uuid4())
-        chain_event["timestamp"] = int(time.time() * 1000)
-        chain_event["event_type"] = "CALL_START"
-        chain_event["source_id"] = str(self.app.participant.instance_handle)
-        chain_event["target_id"] = "unknown"  # Will be set when agent is discovered
-        chain_event["status"] = 0  # Started
-        
-        self.chain_event_writer.write(chain_event)
-        self.chain_event_writer.flush()
-        
-        # Publish legacy request event
-        self.publish_monitoring_event(
-            "INTERFACE_REQUEST",
-            call_data={"request": request_data},
-            metadata={
-                "service": self.service_name,
-                "chain_id": chain_id,
-                "call_id": call_id
-            }
-        )
-        
-        try:
-            # Call parent method
-            result = super().send_request(request_data, timeout_seconds)
-            
-            if result:
-                # Create and publish chain event for request completion
-                chain_event = dds.DynamicData(self.chain_event_type)
-                chain_event["chain_id"] = chain_id
-                chain_event["call_id"] = call_id
-                chain_event["interface_id"] = str(self.app.participant.instance_handle)
-                chain_event["primary_agent_id"] = ""  # Will be set when agent is discovered
-                chain_event["specialized_agent_ids"] = ""
-                chain_event["function_id"] = self.service_name
-                chain_event["query_id"] = str(uuid.uuid4())
-                chain_event["timestamp"] = int(time.time() * 1000)
-                chain_event["event_type"] = "CALL_COMPLETE"
-                chain_event["source_id"] = "unknown"  # Will be set when agent is discovered
-                chain_event["target_id"] = str(self.app.participant.instance_handle)
-                chain_event["status"] = 1  # Completed
-                
-                self.chain_event_writer.write(chain_event)
-                self.chain_event_writer.flush()
-                
-                # Publish successful response event
-                self.publish_monitoring_event(
-                    "INTERFACE_RESPONSE",
-                    result_data={"response": result},
-                    metadata={
-                        "service": self.service_name,
-                        "status": "success",
-                        "chain_id": chain_id,
-                        "call_id": call_id
-                    }
-                )
-                
-                # Transition back to READY state
-                self.publish_component_lifecycle_event(
-                    previous_state="BUSY",
-                    new_state="READY",
-                    reason=f"Request completed successfully",
-                    chain_id=chain_id,
-                    call_id=call_id
-                )
-            else:
-                # Create and publish chain event for request error
-                chain_event = dds.DynamicData(self.chain_event_type)
-                chain_event["chain_id"] = chain_id
-                chain_event["call_id"] = call_id
-                chain_event["interface_id"] = str(self.app.participant.instance_handle)
-                chain_event["primary_agent_id"] = ""  # Will be set when agent is discovered
-                chain_event["specialized_agent_ids"] = ""
-                chain_event["function_id"] = self.service_name
-                chain_event["query_id"] = str(uuid.uuid4())
-                chain_event["timestamp"] = int(time.time() * 1000)
-                chain_event["event_type"] = "CALL_ERROR"
-                chain_event["source_id"] = "unknown"  # Will be set when agent is discovered
-                chain_event["target_id"] = str(self.app.participant.instance_handle)
-                chain_event["status"] = 2  # Error
-                
-                self.chain_event_writer.write(chain_event)
-                self.chain_event_writer.flush()
-                
-                # Publish error event
-                self.publish_monitoring_event(
-                    "INTERFACE_STATUS",
-                    status_data={"error": "No response received"},
-                    metadata={
-                        "service": self.service_name,
-                        "status": "error",
-                        "chain_id": chain_id,
-                        "call_id": call_id
-                    }
-                )
-                
-                # Transition to DEGRADED state
-                self.publish_component_lifecycle_event(
-                    previous_state="BUSY",
-                    new_state="DEGRADED",
-                    reason=f"No response received from {self.service_name}",
-                    chain_id=chain_id,
-                    call_id=call_id
-                )
-            
-            return result
-            
-        except Exception as e:
-            # Create and publish chain event for request error
-            chain_event = dds.DynamicData(self.chain_event_type)
-            chain_event["chain_id"] = chain_id
-            chain_event["call_id"] = call_id
-            chain_event["interface_id"] = str(self.app.participant.instance_handle)
-            chain_event["primary_agent_id"] = ""  # Will be set when agent is discovered
-            chain_event["specialized_agent_ids"] = ""
-            chain_event["function_id"] = self.service_name
-            chain_event["query_id"] = str(uuid.uuid4())
-            chain_event["timestamp"] = int(time.time() * 1000)
-            chain_event["event_type"] = "CALL_ERROR"
-            chain_event["source_id"] = "unknown"  # Will be set when agent is discovered
-            chain_event["target_id"] = str(self.app.participant.instance_handle)
-            chain_event["status"] = 2  # Error
-            
-            self.chain_event_writer.write(chain_event)
-            self.chain_event_writer.flush()
-            
-            # Publish error event
-            self.publish_monitoring_event(
-                "INTERFACE_STATUS",
-                status_data={"error": str(e)},
-                metadata={
-                    "service": self.service_name,
-                    "status": "error",
-                    "chain_id": chain_id,
-                    "call_id": call_id
-                }
-            )
-            
-            # Transition to DEGRADED state
-            self.publish_component_lifecycle_event(
-                previous_state="BUSY",
-                new_state="DEGRADED",
-                reason=f"Error sending request to {self.service_name}: {str(e)}",
-                chain_id=chain_id,
-                call_id=call_id
-            )
-            raise
+            logger.error("Error sending request: %s", str(e), exc_info=True)
+            return None
     
     async def close(self):
         """Clean up resources"""

@@ -34,7 +34,7 @@ class TracingGenesisInterface(MonitoredInterface):
         super().__init__(interface_name=interface_name, service_name=service_name)
         logger.info("Interface initialization complete")
         
-    def wait_for_agent(self) -> bool:
+    async def wait_for_agent(self, timeout_seconds: int = 30) -> bool:
         """Override wait_for_agent to add tracing"""
         logger.info("Starting agent discovery wait")
         logger.debug("Interface DDS Domain ID from env: %s", os.getenv('ROS_DOMAIN_ID', 'Not Set'))
@@ -47,18 +47,18 @@ class TracingGenesisInterface(MonitoredInterface):
         else:
             logger.warning("Interface participant not initialized")
         
-        result = super().wait_for_agent()
+        result = await super().wait_for_agent(timeout_seconds)
         if result:
             logger.info("Successfully discovered agent")
         else:
             logger.warning("Failed to discover agent within timeout")
         return result
         
-    def send_request(self, request: dict) -> dict:
+    async def send_request(self, request: dict, timeout_seconds: float = 10.0) -> dict:
         """Override send_request to add tracing"""
         logger.info("Sending request to agent: %s", request)
         try:
-            reply = super().send_request(request)
+            reply = await super().send_request(request, timeout_seconds)
             logger.info("Received reply from agent: %s", reply)
             return reply
         except Exception as e:
@@ -79,9 +79,7 @@ class MathTestInterface:
             interface = TracingGenesisInterface(interface_name="MathTestInterface", service_name="ChatGPT")
 
             logger.info(f"🔍 TRACE: Waiting for agent discovery...")
-            # Run wait_for_agent in a thread pool since it's not async
-            loop = asyncio.get_event_loop()
-            if not await loop.run_in_executor(None, interface.wait_for_agent):
+            if not await interface.wait_for_agent():
                 logger.error(f"❌ TRACE: No agent found, exiting")
                 return 1
 
@@ -107,8 +105,7 @@ class MathTestInterface:
             logger.info(f"📤 TRACE: Sending math request: {test_request}")
 
             # Send the request using the existing interface method
-            # Run send_request in a thread pool since it's not async
-            reply = await loop.run_in_executor(None, interface.send_request, test_request)
+            reply = await interface.send_request(test_request)
             
             if reply:
                 logger.info(f"📥 TRACE: Received reply: {reply}")

@@ -110,6 +110,24 @@ cat "$INTERFACE_LOG"
 
 # Check for registration announcement in DDS Spy logs
 echo "🔍 TRACE: Checking for registration announcement in DDS Spy logs..."
+
+# Debug: Show what we're looking for
+echo "🔍 TRACE: Looking for GenesisRegistration topic entries..."
+grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" || echo "No GenesisRegistration entries found"
+
+echo "🔍 TRACE: Looking for agent announcement message..."
+grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | grep "message:" || echo "No agent announcement message found"
+
+echo "🔍 TRACE: Looking for preferred name..."
+grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | grep "prefered_name:" || echo "No preferred name found"
+
+echo "🔍 TRACE: Looking for default_capable..."
+grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | grep "default_capable:" || echo "No default_capable found"
+
+echo "🔍 TRACE: Looking for instance_id..."
+grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | grep "instance_id:" || echo "No instance_id found"
+
+# Now do the actual check
 if grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | \
    grep -q "message: \"Agent MathTestAgent announcing presence\"" && \
    grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | \
