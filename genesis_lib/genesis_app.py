@@ -85,9 +85,10 @@ class GenesisApp:
         writer_qos.liveliness.lease_duration = dds.Duration(seconds=2)
         writer_qos.ownership.kind = dds.OwnershipKind.SHARED
         
+        # Create registration writer
         self.registration_writer = dds.DynamicData.DataWriter(
-            self.publisher,
-            self.registration_topic,
+            pub=self.publisher,
+            topic=self.registration_topic,
             qos=writer_qos
         )
 
@@ -118,6 +119,7 @@ class GenesisApp:
 
     def announce_self(self):
         """Publish registration announcement"""
+        logger.info("===== TRACING: announce_self called =====")
         announcement = dds.DynamicData(self.registration_type)
         announcement['message'] = f"Agent {self.preferred_name} announcing presence"
         announcement['prefered_name'] = self.preferred_name

@@ -97,12 +97,7 @@ async def main():
         agent = MathTestAgent()
         
         logger.info("🔄 TRACE: Starting agent event loop")
-        shutdown_event = asyncio.Event()
-        
-        # The agent's request handling runs via the Replier's listener mechanism,
-        # which is set up in the base class __init__. We just need to keep the event loop running.
-        logger.info("⏳ TRACE: Waiting for shutdown signal...")
-        await shutdown_event.wait() # Keep running until interrupted
+        await agent.run()  # Call run() instead of waiting on a shutdown event
         
     except KeyboardInterrupt:
         logger.info("👋 TRACE: KeyboardInterrupt received, shutting down.")

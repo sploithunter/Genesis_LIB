@@ -165,6 +165,7 @@ class GenesisAgent(ABC):
         """Main agent loop"""
         try:
             # Announce presence
+            logger.info("Announcing agent presence...")
             self.app.announce_self()
             
             # Main loop - just keep the event loop running
