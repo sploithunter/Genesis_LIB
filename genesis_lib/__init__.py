@@ -2,6 +2,12 @@
 GENESIS Library - A distributed function discovery and execution framework
 """
 
+import logging
+from .logging_config import configure_genesis_logging
+
+# Configure root logger for genesis_lib
+configure_genesis_logging("genesis_lib", "genesis_lib", logging.INFO)
+
 from .genesis_app import GenesisApp
 from .agent import GenesisAgent
 from .interface import GenesisInterface

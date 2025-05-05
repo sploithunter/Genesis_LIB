@@ -14,19 +14,10 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, project_root)
 
 from genesis_lib.monitored_interface import MonitoredInterface
+from genesis_lib.logging_config import configure_genesis_logging
 
-# Configure logging with detailed format
-log_file = os.path.join(project_root, 'logs', 'math_test_interface.log')
-file_handler = logging.FileHandler(log_file)
-file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'))
-
-logger = logging.getLogger("MathTestInterface")
-logger.setLevel(logging.INFO)
-logger.addHandler(file_handler)
-
-# Also configure root logger to show output in console
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s')
+# Configure logging using common configuration
+logger = configure_genesis_logging("MathTestInterface", "MathTestInterface", logging.INFO)
 
 class TracingGenesisInterface(MonitoredInterface):
     def __init__(self, interface_name: str, service_name: str):

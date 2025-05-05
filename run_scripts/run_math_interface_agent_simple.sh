@@ -106,12 +106,27 @@ else
     ANNOUNCEMENT_PASSED=false
 fi
 
+# Check interface logs for registration through listener
+echo "🔍 TRACE: Checking interface logs for registration through listener..."
+if grep -q "✅ TRACE: Found registration announcement through registration listener" "$INTERFACE_LOG"; then
+    echo "✅ TRACE: Interface successfully received registration through listener"
+    LISTENER_PASSED=true
+else
+    echo "⚠️ WARNING: Interface did not receive registration through listener"
+    LISTENER_PASSED=false
+fi
+
 # Clean up Test 1
 echo "🧹 TRACE: Cleaning up Test 1..."
 kill_process "$REGISTRATION_SPY_PID" "registration spy" true
 kill_process "$AGENT_PID" "agent" false
 
+# Report test results
 echo "✅ TRACE: Test 1 completed"
+echo "=============================================="
+echo "Test Results:"
+echo "Registration Announcement: ${ANNOUNCEMENT_PASSED}"
+echo "Registration Listener: ${LISTENER_PASSED}"
 echo "=============================================="
 
 echo "🔬 TRACE: Starting Test 2 - Interface Test"

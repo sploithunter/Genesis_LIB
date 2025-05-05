@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 class RegistrationListener(dds.DynamicData.NoOpDataReaderListener):
     """Listener for registration announcements"""
     def __init__(self, interface):
+        logger.info("🔧 TRACE: RegistrationListener class init calling now")
         super().__init__()
         self.interface = interface
         self.received_announcements = {}  # Track announcements by instance_id
@@ -31,35 +32,35 @@ class RegistrationListener(dds.DynamicData.NoOpDataReaderListener):
         
     def on_data_available(self, reader):
         """Handle new registration announcements"""
+        # print("🔔 IMMEDIATE PRINT: RegistrationListener.on_data_available called")  # Direct print for immediate feedback
+        logger.info("🔔 IMMEDIATE LOG: RegistrationListener.on_data_available called")
         try:
-            logger.info("📥 TRACE: Data available on registration reader")
-            # Get reader status before taking samples
-            status = reader.datareader_protocol_status
-            logger.info(f"📊 TRACE: Reader status - Received: {status.received_sample_count}, Lost: {status.sample_lost_count}")
-            
             samples = reader.take()
-            logger.info(f"📦 TRACE: Took {len(samples)} samples from reader")
+            # print(f"📦 IMMEDIATE PRINT: Took {len(samples)} samples from reader")  # Direct print
+            logger.info(f"📦 IMMEDIATE LOG: Took {len(samples)} samples from reader")
             
-            for sample, info in samples:
-                if sample is not None and info.valid:
-                    instance_id = sample['instance_id']
-                    logger.info(f"🔍 TRACE: Sample info - Valid: {info.valid}, State: {info.state.instance_state}, Gen: {info.generation_count}")
-                    self.received_announcements[instance_id] = {
-                        'message': sample['message'],
-                        'prefered_name': sample['prefered_name'],
-                        'default_capable': sample['default_capable'],
-                        'instance_id': instance_id,
-                        'timestamp': time.time()
-                    }
-                    logger.info("🔔 TRACE: Received registration announcement:")
-                    logger.info(f"   Message: {sample['message']}")
-                    logger.info(f"   Preferred Name: {sample['prefered_name']}")
-                    logger.info(f"   Default Capable: {sample['default_capable']}")
-                    logger.info(f"   Instance ID: {sample['instance_id']}")
-                    # Signal that we've received a registration
-                    self._registration_event.set()
-                else:
-                    logger.warning(f"⚠️ TRACE: Invalid or null sample. Valid: {info.valid}, State: {info.state.instance_state if info else 'Unknown'}")
+            for data, info in samples:
+                if data is None or info.state.instance_state != dds.InstanceState.ALIVE:
+                    logger.warning(f"⚠️ TRACE: Skipping sample - None or not alive. State: {info.state.instance_state if info else 'Unknown'}")
+                    continue
+                    
+                instance_id = data['instance_id']
+                logger.info("✨ TRACE: ====== REGISTRATION ANNOUNCEMENT RECEIVED ======")
+                logger.info(f"✨ TRACE: Message: {data['message']}")
+                logger.info(f"✨ TRACE: Preferred Name: {data['prefered_name']}")
+                logger.info(f"✨ TRACE: Default Capable: {data['default_capable']}")
+                logger.info(f"✨ TRACE: Instance ID: {data['instance_id']}")
+                logger.info(f"✨ TRACE: Instance State: {info.state.instance_state}")
+                logger.info("✨ TRACE: ============================================")
+                
+                self.received_announcements[instance_id] = {
+                    'message': data['message'],
+                    'prefered_name': data['prefered_name'],
+                    'default_capable': data['default_capable'],
+                    'instance_id': instance_id,
+                    'timestamp': time.time()
+                }
+                self._registration_event.set()
         except Exception as e:
             logger.error(f"❌ TRACE: Error processing registration announcement: {e}")
             logger.error(traceback.format_exc())
@@ -68,10 +69,6 @@ class RegistrationListener(dds.DynamicData.NoOpDataReaderListener):
         """Track when registration publishers are discovered"""
         logger.info(f"🤝 TRACE: Registration subscription matched event. Current count: {status.current_count}")
         self.subscription_matched = status.current_count > 0
-        
-        # Get matched publications count
-        matched_publications = reader.matched_publications
-        logger.info(f"📊 TRACE: Number of matched publications: {len(matched_publications)}")
         
         if status.current_count > 0:
             logger.info("✅ TRACE: Registration subscription successfully matched with publisher")
@@ -134,6 +131,8 @@ class GenesisInterface(ABC):
                 listener=self.registration_listener,
                 mask=dds.StatusMask.DATA_AVAILABLE | dds.StatusMask.SUBSCRIPTION_MATCHED
             )
+            # print(f"🔍 IMMEDIATE PRINT: Listener attached to reader: {id(self.app.registration_reader.listener)}")
+            # print(f"🔍 IMMEDIATE PRINT: Listener instance variable: {id(self.registration_listener)}")
             
             logger.info("✅ TRACE: Registration monitoring setup complete")
             
@@ -153,15 +152,9 @@ class GenesisInterface(ABC):
                 return False
             await asyncio.sleep(0.1)
             
-        # Wait for subscription to be matched
-        while not self.registration_listener.subscription_matched:
-            if time.time() - start_time > timeout_seconds:
-                logger.error(f"Timeout waiting for registration subscription to be matched")
-                return False
-            await asyncio.sleep(0.1)
-        
         try:
             # Wait for either registration announcement or RPC discovery
+            logger.info("⏳ TRACE: Waiting directly for registration event or RPC match...")
             registration_task = asyncio.create_task(
                 asyncio.wait_for(
                     self.registration_listener._registration_event.wait(),
