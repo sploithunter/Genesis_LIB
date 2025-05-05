@@ -134,6 +134,17 @@ class GenesisInterface(ABC):
 
     async def wait_for_agent(self, timeout_seconds: int = 30) -> bool:
         """Wait for agent to be discovered, store its service name, and create requester."""
+        logger.info("Starting agent discovery wait")
+        logger.debug("Interface DDS Domain ID from env: %s", os.getenv('ROS_DOMAIN_ID', 'Not Set'))
+        logger.debug("Interface service name: %s", self.service_name)
+        
+        # Log participant info if available
+        if hasattr(self.app, 'participant'):
+            logger.debug("Interface DDS participant initialized")
+            logger.debug("Interface DDS domain ID: %d", self.app.participant.domain_id)
+        else:
+            logger.warning("Interface participant not initialized")
+            
         start_time = time.time()
         
         # Wait for registration listener to be ready
@@ -171,7 +182,6 @@ class GenesisInterface(ABC):
                         timeout=timeout_seconds
                     )
                     # Event triggered, find the service name from the listener's cache
-                    # (Ideally, find the specific one that triggered the event, but taking the latest is simpler for now)
                     if self.registration_listener.received_announcements:
                          # Get the latest announcement based on timestamp or just the last added one
                          latest_announcement = list(self.registration_listener.received_announcements.values())[-1]

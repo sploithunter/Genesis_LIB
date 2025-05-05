@@ -9,11 +9,12 @@ import time
 import uuid
 import json
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Callable
 import rti.connextdds as dds
 from .interface import GenesisInterface
 from genesis_lib.utils import get_datamodel_path
 import asyncio
+import functools
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -25,6 +26,50 @@ EVENT_TYPE_MAP = {
     "INTERFACE_RESPONSE": 2,   # Response event
     "INTERFACE_STATUS": 3      # Status event
 }
+
+def monitor_method(event_type: str):
+    """
+    Decorator to add monitoring to interface methods.
+    
+    Args:
+        event_type: Type of event to publish (e.g., "INTERFACE_REQUEST", "INTERFACE_RESPONSE")
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        async def wrapper(self, *args, **kwargs):
+            # Get request data from args or kwargs
+            request_data = args[0] if args else kwargs.get('request_data', {})
+            
+            # Publish request monitoring event
+            self.publish_monitoring_event(
+                event_type,
+                metadata={
+                    "interface_name": self.interface_name,
+                    "service_name": self.service_name,
+                    "provider_id": str(self.app.participant.instance_handle)
+                },
+                call_data=request_data if event_type == "INTERFACE_REQUEST" else None,
+                result_data=request_data if event_type == "INTERFACE_RESPONSE" else None
+            )
+            
+            # Call the original method
+            result = await func(self, *args, **kwargs)
+            
+            # If this was a request and we got a response, publish response event
+            if event_type == "INTERFACE_REQUEST" and result:
+                self.publish_monitoring_event(
+                    "INTERFACE_RESPONSE",
+                    metadata={
+                        "interface_name": self.interface_name,
+                        "service_name": self.service_name,
+                        "provider_id": str(self.app.participant.instance_handle)
+                    },
+                    result_data=result
+                )
+            
+            return result
+        return wrapper
+    return decorator
 
 class MonitoredInterface(GenesisInterface):
     """
@@ -160,7 +205,6 @@ class MonitoredInterface(GenesisInterface):
             },
             status_data={"status": "available", "state": "ready"}
         )
-
 
         # Transition to discovering state
         self.publish_component_lifecycle_event(
@@ -338,65 +382,10 @@ class MonitoredInterface(GenesisInterface):
             logger.error(f"Error publishing component lifecycle event: {e}")
             logger.error(f"Event category was: {event_category}")
     
-    async def wait_for_agent(self, timeout_seconds: int = 30) -> bool:
-        """Override wait_for_agent to add tracing"""
-        logger.info("Starting agent discovery wait")
-        logger.debug("Interface DDS Domain ID from env: %s", os.getenv('ROS_DOMAIN_ID', 'Not Set'))
-        logger.debug("Interface service name: %s", self.service_name)
-        
-        # Log participant info if available
-        if hasattr(self.app, 'participant'):
-            logger.debug("Interface DDS participant initialized")
-            logger.debug("Interface DDS domain ID: %d", self.app.participant.domain_id)
-        else:
-            logger.warning("Interface participant not initialized")
-        
-        result = await super().wait_for_agent(timeout_seconds)
-        if result:
-            logger.info("Successfully discovered agent")
-        else:
-            logger.warning("Failed to discover agent within timeout")
-        return result
-        
+    @monitor_method("INTERFACE_REQUEST")
     async def send_request(self, request_data: Dict[str, Any], timeout_seconds: float = 10.0) -> Optional[Dict[str, Any]]:
-        """Override send_request to add tracing and monitoring"""
-        logger.info("Sending request to agent: %s", request_data)
-        try:
-            # Publish request monitoring event
-            self.publish_monitoring_event(
-                "INTERFACE_REQUEST",
-                metadata={
-                    "interface_name": self.interface_name,
-                    "service_name": self.service_name,
-                    "provider_id": str(self.app.participant.instance_handle)
-                },
-                call_data=request_data
-            )
-            
-            # Send request using parent method
-            reply = await super().send_request(request_data, timeout_seconds)
-            
-            if reply:
-                # Publish response monitoring event
-                self.publish_monitoring_event(
-                    "INTERFACE_RESPONSE",
-                    metadata={
-                        "interface_name": self.interface_name,
-                        "service_name": self.service_name,
-                        "provider_id": str(self.app.participant.instance_handle)
-                    },
-                    result_data=reply
-                )
-                
-                logger.info("Received reply from agent: %s", reply)
-                return reply
-            else:
-                logger.error("No reply received")
-                return None
-                
-        except Exception as e:
-            logger.error("Error sending request: %s", str(e), exc_info=True)
-            return None
+        """Send request to agent with monitoring"""
+        return await super().send_request(request_data, timeout_seconds)
     
     async def close(self):
         """Clean up resources"""
