@@ -19,43 +19,6 @@ from genesis_lib.logging_config import configure_genesis_logging
 # Configure logging using common configuration
 logger = configure_genesis_logging("MathTestInterface", "MathTestInterface", logging.INFO)
 
-class TracingGenesisInterface(MonitoredInterface):
-    def __init__(self, interface_name: str, service_name: str):
-        logger.info("Initializing %s interface for service %s", interface_name, service_name)
-        super().__init__(interface_name=interface_name, service_name=service_name)
-        logger.info("Interface initialization complete")
-        
-    async def wait_for_agent(self, timeout_seconds: int = 30) -> bool:
-        """Override wait_for_agent to add tracing"""
-        logger.info("Starting agent discovery wait")
-        logger.debug("Interface DDS Domain ID from env: %s", os.getenv('ROS_DOMAIN_ID', 'Not Set'))
-        logger.debug("Interface service name: %s", self.service_name)
-        
-        # Log participant info if available
-        if hasattr(self.app, 'participant'):
-            logger.debug("Interface DDS participant initialized")
-            logger.debug("Interface DDS domain ID: %d", self.app.participant.domain_id)
-        else:
-            logger.warning("Interface participant not initialized")
-        
-        result = await super().wait_for_agent(timeout_seconds)
-        if result:
-            logger.info("Successfully discovered agent")
-        else:
-            logger.warning("Failed to discover agent within timeout")
-        return result
-        
-    async def send_request(self, request: dict, timeout_seconds: float = 10.0) -> dict:
-        """Override send_request to add tracing"""
-        logger.info("Sending request to agent: %s", request)
-        try:
-            reply = await super().send_request(request, timeout_seconds)
-            logger.info("Received reply from agent: %s", reply)
-            return reply
-        except Exception as e:
-            logger.error("Error sending request: %s", str(e), exc_info=True)
-            return None
-
 class MathTestInterface:
     def __init__(self, interface_id):
         self.interface_id = interface_id
@@ -64,17 +27,40 @@ class MathTestInterface:
         logger.info(f"🚀 TRACE: MathTestInterface {interface_id} starting - Conversation ID: {self.conversation_id}")
 
     async def run(self):
+        interface = None # Ensure interface is defined in outer scope for finally block
         try:
             logger.info("🏗️ TRACE: Creating MathService interface...")
-            # Create interface with tracing
-            interface = TracingGenesisInterface(interface_name="MathTestInterface", service_name="ChatGPT")
+            # Create interface - now using MonitoredInterface directly
+            interface = MonitoredInterface(interface_name="MathTestInterface", service_name="ChatGPT")
 
-            logger.info(f"🔍 TRACE: Waiting for agent discovery...")
-            if not await interface.wait_for_agent():
-                logger.error(f"❌ TRACE: No agent found, exiting")
+            logger.info(f"🔍 TRACE: Waiting for agent discovery event...")
+            try:
+                await asyncio.wait_for(interface._agent_found_event.wait(), timeout=30.0)
+            except asyncio.TimeoutError:
+                logger.error(f"❌ TRACE: Timeout waiting for any agent to be discovered.")
+                if interface: await interface.close()
                 return 1
 
-            logger.info(f"✅ TRACE: Agent discovered successfully")
+            # Select the first agent discovered (simple strategy for testing)
+            chosen_agent = None
+            if interface.available_agents:
+                 chosen_agent = list(interface.available_agents.values())[0]
+                 logger.info(f"✅ TRACE: Agent discovered. Selecting first available: {chosen_agent['prefered_name']}")
+            else:
+                logger.error("❌ TRACE: Agent found event triggered, but no agents in available list?!")
+                if interface: await interface.close()
+                return 1
+                
+            # Connect to the chosen agent
+            logger.info(f"🔗 TRACE: Attempting to connect to service: {chosen_agent['service_name']}")
+            if not await interface.connect_to_agent(chosen_agent['service_name'], timeout_seconds=10.0):
+                logger.error(f"❌ TRACE: Failed to connect to agent service {chosen_agent['service_name']}")
+                if interface: await interface.close()
+                return 1
+                
+            # Store the ID of the connected agent for departure handling
+            interface._connected_agent_id = chosen_agent['instance_id']
+            logger.info(f"✅ TRACE: Successfully connected to agent: {chosen_agent['prefered_name']} (ID: {interface._connected_agent_id})")
             
             # Generate random math operation
             operations = ['add', 'subtract', 'multiply', 'divide']
@@ -118,18 +104,31 @@ class MathTestInterface:
                         logger.error(f"❌ TRACE: Math test failed - result={result}, expected={expected_result}")
                         return 1
             else:
-                logger.error("❌ TRACE: No reply received from agent")
+                # Check if the agent departed during the request
+                if interface and not interface._connected_agent_id:
+                    logger.error("❌ TRACE: No reply received, and the connected agent has departed.")
+                else:
+                    logger.error("❌ TRACE: No reply received from agent (agent might still be connected). Check agent logs.")
                 return 1
 
         except Exception as e:
             logger.error(f"❌ TRACE: Error in math test: {str(e)}")
             logger.error(traceback.format_exc())
-            return 1
-        finally:
+            # Ensure cleanup happens even on unexpected error
             if interface:
-                logger.info("🧹 TRACE: Cleaning up interface")
-                await interface.close()
-            logger.info(f"🏁 TRACE: MathTestInterface {self.interface_id} ending")
+                try:
+                    await interface.close()
+                except Exception as close_e:
+                    logger.error(f"❌ TRACE: Error during cleanup: {close_e}")
+            return 1 # Indicate failure
+        finally:
+            # Ensure interface is closed cleanly even if run completes successfully or errors out early
+            if interface: 
+                logger.info("🧹 TRACE: Cleaning up interface (finally block)")
+                try:
+                    await interface.close()
+                except Exception as final_close_e:
+                     logger.error(f"❌ TRACE: Error during final interface cleanup: {final_close_e}")
 
     def _calculate_expected_result(self, x, y, operation):
         if operation == 'add':
