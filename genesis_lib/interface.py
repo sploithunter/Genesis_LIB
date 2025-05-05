@@ -26,18 +26,15 @@ class RegistrationListener(dds.DynamicData.NoOpDataReaderListener):
         super().__init__()
         self.interface = interface
         self.received_announcements = {}  # Track announcements by instance_id
-        self.subscription_matched = False
         self._registration_event = asyncio.Event()
         logger.info("🔧 TRACE: Registration listener initialized")
         
     def on_data_available(self, reader):
         """Handle new registration announcements"""
-        # print("🔔 IMMEDIATE PRINT: RegistrationListener.on_data_available called")  # Direct print for immediate feedback
-        logger.info("🔔 IMMEDIATE LOG: RegistrationListener.on_data_available called")
+        logger.info("🔔 TRACE: RegistrationListener.on_data_available called")
         try:
-            samples = reader.take()
-            # print(f"📦 IMMEDIATE PRINT: Took {len(samples)} samples from reader")  # Direct print
-            logger.info(f"📦 IMMEDIATE LOG: Took {len(samples)} samples from reader")
+            samples = reader.read()
+            logger.info(f"📦 TRACE: Read {len(samples)} samples from reader")
             
             for data, info in samples:
                 if data is None or info.state.instance_state != dds.InstanceState.ALIVE:
@@ -61,19 +58,15 @@ class RegistrationListener(dds.DynamicData.NoOpDataReaderListener):
                     'timestamp': time.time()
                 }
                 self._registration_event.set()
+                logger.info("✅ TRACE: Registration event set")
         except Exception as e:
             logger.error(f"❌ TRACE: Error processing registration announcement: {e}")
             logger.error(traceback.format_exc())
-                    
+
     def on_subscription_matched(self, reader, status):
         """Track when registration publishers are discovered"""
         logger.info(f"🤝 TRACE: Registration subscription matched event. Current count: {status.current_count}")
-        self.subscription_matched = status.current_count > 0
-        
-        if status.current_count > 0:
-            logger.info("✅ TRACE: Registration subscription successfully matched with publisher")
-        else:
-            logger.warning("⚠️ TRACE: Registration subscription lost all publisher matches")
+        # We're not using this for discovery anymore, just logging for debugging
 
 class GenesisInterface(ABC):
     """Base class for all Genesis interfaces"""
@@ -153,43 +146,36 @@ class GenesisInterface(ABC):
             await asyncio.sleep(0.1)
             
         try:
-            # Wait for either registration announcement or RPC discovery
-            logger.info("⏳ TRACE: Waiting directly for registration event or RPC match...")
-            registration_task = asyncio.create_task(
-                asyncio.wait_for(
+            # First check if there are any registration announcements in the queue
+            logger.info("🔍 TRACE: Checking registration queue for existing announcements...")
+            samples = self.app.registration_reader.read()
+            if samples:
+                logger.info(f"📦 TRACE: Found {len(samples)} registration announcements in queue")
+                for data, info in samples:
+                    if data is not None and info.state.instance_state == dds.InstanceState.ALIVE:
+                        logger.info("✨ TRACE: ====== FOUND EXISTING REGISTRATION ANNOUNCEMENT ======")
+                        logger.info(f"✨ TRACE: Message: {data['message']}")
+                        logger.info(f"✨ TRACE: Preferred Name: {data['prefered_name']}")
+                        logger.info(f"✨ TRACE: Default Capable: {data['default_capable']}")
+                        logger.info(f"✨ TRACE: Instance ID: {data['instance_id']}")
+                        logger.info("✨ TRACE: ============================================")
+                        return True
+            
+            # If no existing announcements, wait for registration event
+            logger.info("⏳ TRACE: No existing announcements, waiting for registration event...")
+            try:
+                await asyncio.wait_for(
                     self.registration_listener._registration_event.wait(),
                     timeout=timeout_seconds
                 )
-            )
-            
-            rpc_discovery_task = asyncio.create_task(
-                self._wait_for_rpc_match()
-            )
-            
-            # Wait for either task to complete
-            done, pending = await asyncio.wait(
-                [registration_task, rpc_discovery_task],
-                return_when=asyncio.FIRST_COMPLETED,
-                timeout=timeout_seconds
-            )
-            
-            # Cancel pending task
-            for task in pending:
-                task.cancel()
-                
-            # Check which path succeeded
-            if registration_task in done:
                 logger.info("✅ TRACE: Found registration announcement while waiting for agent")
                 return True
-            elif rpc_discovery_task in done:
-                logger.warning("⚠️ TRACE: Agent discovered through RPC, not through registration announcement")
-                return True
-            else:
+            except asyncio.TimeoutError:
                 logger.error(f"Timeout waiting for {self.service_name} agent")
                 return False
                 
-        except asyncio.TimeoutError:
-            logger.error(f"Timeout waiting for {self.service_name} agent")
+        except Exception as e:
+            logger.error(f"Error waiting for agent: {e}")
             return False
             
     async def _wait_for_rpc_match(self):
