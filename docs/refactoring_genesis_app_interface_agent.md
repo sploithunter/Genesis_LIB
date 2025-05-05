@@ -49,49 +49,51 @@ This refactoring aims to address these points by clearly separating the responsi
 *   Removing `announce_self` subsequently also did *not* cause test failures in `run_all_tests.sh`. Investigation revealed that the key test involving an agent (`run_test_agent_with_functions.sh` executing `test_agent.py`) initializes an `OpenAIGenesisAgent` but **does not call the standard `agent.run()` method**. Instead, it calls `agent.process_message()` directly. Since `agent.run()` is where the (now removed) `self.app.announce_self()` was called, this specific test was unaffected.
 *   **Implication:** The current test suite doesn't fully cover the standard agent lifecycle startup, specifically the announcement part triggered by `agent.run()`. This is something to address later (perhaps in Step 3.5).
 
-### Step 3.2: Create/Modify `GenesisAgent` Base Class (e.g., `genesis_lib/agent.py`) - ⏳ IN PROGRESS
+### Step 3.2: Create/Modify `GenesisAgent` Base Class (e.g., `genesis_lib/agent.py`) - ✅ COMPLETE
+
+**Status:** Completed.
 
 **Action:** Create a base class for Agents that inherits from or composes `GenesisApp` and adds Agent-specific logic.
 
-**Next Immediate Action:**
-1.  Add the `registration_writer` creation logic back into `GenesisAgent.__init__`, using `self.app.publisher` and `self.app.registration_topic`. Define appropriate QoS (TRANSIENT_LOCAL durability, reliable, etc.).
-2.  Update the `GenesisAgent.close()` method to include closing this newly added `self.registration_writer`.
-3.  Run tests to ensure this addition doesn't break anything unexpectedly.
+**Outcome:**
+*   `GenesisAgent` (`genesis_lib/agent.py`) now correctly composes `GenesisApp` (`self.app = GenesisApp(...)`).
+*   Agent-specific logic (`announce_self` method) and resources (`registration_writer`) are implemented within `GenesisAgent`, separate from `GenesisApp`.
+*   The `registration_writer` is created in `GenesisAgent.__init__` using `self.app` resources.
+*   The `GenesisAgent.close()` method correctly handles the agent-specific resources.
+*   The planned self-verification polling step within `announce_self` was ultimately deemed unnecessary and was not implemented, simplifying the agent's announcement logic.
 
-**Subsequent Actions for this Step:**
-*   **Inheritance/Composition:** Confirm composition (`self.app = GenesisApp(...)`) is the desired approach (already implemented).
-*   **Add Agent Logic:**
-    *   Move (re-implement) the `announce_self()` method logic here.
-    *   **Self-Verification (Optional Polling):** If `announce_self` still requires polling-based verification:
-        *   Create the necessary `registration_reader` *within* the `GenesisAgent` class (perhaps locally within `announce_self`). Use `take()` for verification. This reader is now clearly Agent-specific.
-    *   **Replier Setup:** Verify the existing `Replier` setup in `GenesisAgent` is sufficient.
-    *   Update the `close()` method to handle all agent-specific resources (`registration_writer`, `Replier`).
+### Step 3.3: Modify `GenesisInterface` (`genesis_lib/interface.py`) - ✅ COMPLETE
 
-### Step 3.3: Modify `GenesisInterface` (`genesis_lib/interface.py`) - 📋 TO DO
+**Status:** Completed.
 
 **Action:** Ensure `GenesisInterface` correctly uses the refactored `GenesisApp` and retains its Interface-specific logic.
 
-*   **Adapt to `GenesisApp`:** Update the initialization (`__init__`) to work with the slimmer `GenesisApp`. It will still use `self.app` (composition).
-*   **Verify `Requester`:** Ensure the `rpc.Requester` is still created correctly using the `participant` from `self.app`.
-*   **Verify Registration Monitoring:** Confirm that `_setup_registration_monitoring` correctly creates the `registration_reader` using the `subscriber` and `registration_topic` from `self.app`.
-*   **Confirm Listener Usage:** Double-check that this reader is correctly configured with the `RegistrationListener` and uses `on_data_available` and `on_subscription_matched` for event-driven discovery. This part should already be correct based on our previous work but needs verification after the `GenesisApp` changes.
-*   Update the `close()` method if needed (though it primarily delegates to `self.app.close()` and closes its `requester`).
+**Outcome:**
+*   `GenesisInterface` uses the slimmed-down `GenesisApp` via composition (`self.app = GenesisApp(...)`).
+*   The `rpc.Requester` creation uses `self.app.participant`.
+*   `_setup_registration_monitoring` correctly creates the `registration_reader` using `self.app.subscriber` and `self.app.registration_topic`.
+*   The interface correctly uses the `RegistrationListener` for event-driven discovery via `on_data_available`.
 
-### Step 3.4: Update Agent Implementations - 📋 TO DO
+### Step 3.4: Update Agent Implementations - ✅ COMPLETE
+
+**Status:** Completed.
 
 **Action:** Modify specific agent implementations (like `MathTestAgent`) to inherit from/use the new `GenesisAgent` base class instead of directly using or replicating `GenesisApp` logic.
 
-*   Change inheritance or instantiation as needed.
-*   Ensure they correctly implement any abstract methods from `GenesisAgent` (e.g., for setting up the Replier).
-*   Remove any redundant DDS setup code now handled by `GenesisAgent` or `GenesisApp`.
+**Outcome:**
+*   Specific agent implementations like `MathTestAgent` (`run_scripts/math_test_agent.py`) now inherit from `MonitoredAgent`, which in turn inherits from the refactored `GenesisAgent`.
+*   Redundant DDS setup code has been removed from specific implementations.
 
-### Step 3.5: Update Test Scripts and Examples - 📋 TO DO
+### Step 3.5: Update Test Scripts and Examples - ✅ COMPLETE
+
+**Status:** Completed.
 
 **Action:** Modify test scripts and examples (`run_scripts/math_test_agent.py`, `run_scripts/math_test_interface.py`, `run_scripts/run_math_interface_agent_simple.sh`, etc.) to reflect the new class structure.
 
-*   Ensure agents and interfaces are instantiated correctly using their respective classes.
-*   Adjust any direct calls or assumptions based on the old `GenesisApp` structure.
-*   Consider adding a test that specifically exercises the `agent.run()` method to verify the announcement mechanism once it's moved to `GenesisAgent`.
+**Outcome:**
+*   Test scripts (`math_test_agent.py`, `math_test_interface.py`) instantiate agents and interfaces using the correct refactored classes (`MonitoredAgent`, `MonitoredInterface`).
+*   The `run_math_interface_agent_simple.sh` test script was significantly enhanced to reliably verify the interaction flow, including agent announcement via `agent.run()`, interface discovery via the listener, and successful RPC.
+*   The full test suite (`run_all_tests.sh`) passes, confirming the refactoring did not break existing functionality.
 
 ## 4. Testing Strategy
 
@@ -112,6 +114,14 @@ This refactoring aims to address these points by clearly separating the responsi
     *   New code should always have tracing statements to see where things are failing.
     *   Tracing statements are particularly important when a DDS message is sent and received.
     *   Use rtiddsspy -printSample if you're looking to see if a message is sent but not received.  RTIDDS spy subscribes to all messages so it is a good endpoint to try to debug sends.
-## 5. Conclusion
+## 5. Conclusion - ✅ COMPLETE
 
-This refactoring will result in a more robust, maintainable, and logically structured Genesis library. By clearly separating the roles of the core application, interfaces, and agents, and by prioritizing event-driven DDS patterns, the system will be easier to understand, extend, and debug. 
+This refactoring has successfully separated the concerns of `GenesisApp`, `GenesisAgent`, and `GenesisInterface`.
+
+*   `GenesisApp` now holds only the minimal shared DDS components.
+*   `GenesisAgent` encapsulates agent-specific logic like announcements (`announce_self`) and the registration writer.
+*   `GenesisInterface` correctly uses the shared `GenesisApp` components and maintains its listener-based approach for agent discovery.
+*   The code structure is cleaner, more aligned with component roles, and easier to maintain.
+*   The entire test suite passes, validating the correctness of the refactoring.
+
+This refactoring achieves the goals set out in Section 2, resulting in a more robust and logically structured Genesis library. 
