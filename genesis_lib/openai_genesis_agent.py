@@ -1,4 +1,14 @@
 #!/usr/bin/env python3
+"""
+OpenAI Genesis Agent Implementation
+
+This module defines the OpenAIGenesisAgent class, which extends the MonitoredAgent
+to provide an agent implementation specifically utilizing the OpenAI API.
+It integrates OpenAI's chat completion capabilities, including function calling,
+with the Genesis framework's monitoring and function discovery features.
+
+Copyright (c) 2025, RTI & Jason Upchurch
+"""
 
 """
 OpenAI Genesis agent with function calling capabilities.
@@ -238,23 +248,11 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 logger.info("===== TRACING: No functions available, proceeding with general conversation =====")
                 
                 # Create chain event for LLM call start
-                chain_event = dds.DynamicData(self.chain_event_type)
-                chain_event["chain_id"] = chain_id
-                call_id = str(uuid.uuid4())  # New call ID for this call
-                chain_event["call_id"] = call_id
-                chain_event["interface_id"] = str(self.app.participant.instance_handle)
-                chain_event["primary_agent_id"] = ""
-                chain_event["specialized_agent_ids"] = ""
-                chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
-                chain_event["query_id"] = str(uuid.uuid4())
-                chain_event["timestamp"] = int(time.time() * 1000)
-                chain_event["event_type"] = "LLM_CALL_START"
-                chain_event["source_id"] = str(self.app.participant.instance_handle)
-                chain_event["target_id"] = "OpenAI"
-                chain_event["status"] = 0
-                
-                self.chain_event_writer.write(chain_event)
-                self.chain_event_writer.flush()
+                self._publish_llm_call_start(
+                    chain_id=chain_id,
+                    call_id=call_id,
+                    model_identifier=f"openai.{self.model_config['model_name']}"
+                )
                 
                 # Process with general conversation
                 response = self.client.chat.completions.create(
@@ -266,22 +264,11 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 )
                 
                 # Create chain event for LLM call completion
-                chain_event = dds.DynamicData(self.chain_event_type)
-                chain_event["chain_id"] = chain_id
-                chain_event["call_id"] = call_id
-                chain_event["interface_id"] = str(self.app.participant.instance_handle)
-                chain_event["primary_agent_id"] = ""
-                chain_event["specialized_agent_ids"] = ""
-                chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
-                chain_event["query_id"] = str(uuid.uuid4())
-                chain_event["timestamp"] = int(time.time() * 1000)
-                chain_event["event_type"] = "LLM_CALL_COMPLETE"
-                chain_event["source_id"] = "OpenAI"
-                chain_event["target_id"] = str(self.app.participant.instance_handle)
-                chain_event["status"] = 0
-                
-                self.chain_event_writer.write(chain_event)
-                self.chain_event_writer.flush()
+                self._publish_llm_call_complete(
+                    chain_id=chain_id,
+                    call_id=call_id,
+                    model_identifier=f"openai.{self.model_config['model_name']}"
+                )
                 
                 return {
                     "message": response.choices[0].message.content,
@@ -290,22 +277,11 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             
             # Phase 1: Function Classification
             # Create chain event for classification LLM call start
-            chain_event = dds.DynamicData(self.chain_event_type)
-            chain_event["chain_id"] = chain_id
-            chain_event["call_id"] = call_id
-            chain_event["interface_id"] = str(self.app.participant.instance_handle)
-            chain_event["primary_agent_id"] = ""
-            chain_event["specialized_agent_ids"] = ""
-            chain_event["function_id"] = f"openai.{self.model_config['classifier_model_name']}.classifier"
-            chain_event["query_id"] = str(uuid.uuid4())
-            chain_event["timestamp"] = int(time.time() * 1000)
-            chain_event["event_type"] = "LLM_CALL_START"
-            chain_event["source_id"] = str(self.app.participant.instance_handle)
-            chain_event["target_id"] = "OpenAI"
-            chain_event["status"] = 0
-            
-            self.chain_event_writer.write(chain_event)
-            self.chain_event_writer.flush()
+            self._publish_llm_call_start(
+                chain_id=chain_id,
+                call_id=call_id,
+                model_identifier=f"openai.{self.model_config['classifier_model_name']}.classifier"
+            )
             
             # Get available functions
             available_functions = [
@@ -313,7 +289,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                     "name": name,
                     "description": info["description"],
                     "schema": info["schema"],
-                    "classification": info["classification"]
+                    "classification": info.get("classification", {})
                 }
                 for name, info in self.function_cache.items()
             ]
@@ -326,42 +302,21 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             )
             
             # Create chain event for classification LLM call completion
-            chain_event = dds.DynamicData(self.chain_event_type)
-            chain_event["chain_id"] = chain_id
-            chain_event["call_id"] = call_id
-            chain_event["interface_id"] = str(self.app.participant.instance_handle)
-            chain_event["primary_agent_id"] = ""
-            chain_event["specialized_agent_ids"] = ""
-            chain_event["function_id"] = f"openai.{self.model_config['classifier_model_name']}.classifier"
-            chain_event["query_id"] = str(uuid.uuid4())
-            chain_event["timestamp"] = int(time.time() * 1000)
-            chain_event["event_type"] = "LLM_CALL_COMPLETE"
-            chain_event["source_id"] = "OpenAI"
-            chain_event["target_id"] = str(self.app.participant.instance_handle)
-            chain_event["status"] = 0
-            
-            self.chain_event_writer.write(chain_event)
-            self.chain_event_writer.flush()
+            self._publish_llm_call_complete(
+                chain_id=chain_id,
+                call_id=call_id,
+                model_identifier=f"openai.{self.model_config['classifier_model_name']}.classifier"
+            )
             
             # Publish classification results for each relevant function
             for func in relevant_functions:
                 # Create chain event for classification result
-                chain_event = dds.DynamicData(self.chain_event_type)
-                chain_event["chain_id"] = chain_id
-                chain_event["call_id"] = call_id
-                chain_event["interface_id"] = str(self.app.participant.instance_handle)
-                chain_event["primary_agent_id"] = ""
-                chain_event["specialized_agent_ids"] = ""
-                chain_event["function_id"] = self.function_cache[func["name"]]["function_id"]
-                chain_event["query_id"] = str(uuid.uuid4())
-                chain_event["timestamp"] = int(time.time() * 1000)
-                chain_event["event_type"] = "CLASSIFICATION_RESULT"
-                chain_event["source_id"] = str(self.app.participant.instance_handle)
-                chain_event["target_id"] = func["name"]
-                chain_event["status"] = 0
-                
-                self.chain_event_writer.write(chain_event)
-                self.chain_event_writer.flush()
+                self._publish_classification_result(
+                    chain_id=chain_id,
+                    call_id=call_id,
+                    classified_function_name=func["name"],
+                    classified_function_id=self.function_cache[func["name"]]["function_id"]
+                )
                 
                 # Create component lifecycle event for function classification
                 self.publish_component_lifecycle_event(
@@ -384,23 +339,11 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 logger.warning("===== TRACING: No relevant functions found, processing without functions =====")
                 
                 # Create chain event for LLM call start
-                chain_event = dds.DynamicData(self.chain_event_type)
-                chain_event["chain_id"] = chain_id
-                call_id = str(uuid.uuid4())  # New call ID for this call
-                chain_event["call_id"] = call_id
-                chain_event["interface_id"] = str(self.app.participant.instance_handle)
-                chain_event["primary_agent_id"] = ""
-                chain_event["specialized_agent_ids"] = ""
-                chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
-                chain_event["query_id"] = str(uuid.uuid4())
-                chain_event["timestamp"] = int(time.time() * 1000)
-                chain_event["event_type"] = "LLM_CALL_START"
-                chain_event["source_id"] = str(self.app.participant.instance_handle)
-                chain_event["target_id"] = "OpenAI"
-                chain_event["status"] = 0
-                
-                self.chain_event_writer.write(chain_event)
-                self.chain_event_writer.flush()
+                self._publish_llm_call_start(
+                    chain_id=chain_id,
+                    call_id=call_id,
+                    model_identifier=f"openai.{self.model_config['model_name']}"
+                )
                 
                 # Process without functions
                 response = self.client.chat.completions.create(
@@ -412,22 +355,11 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 )
                 
                 # Create chain event for LLM call completion
-                chain_event = dds.DynamicData(self.chain_event_type)
-                chain_event["chain_id"] = chain_id
-                chain_event["call_id"] = call_id
-                chain_event["interface_id"] = str(self.app.participant.instance_handle)
-                chain_event["primary_agent_id"] = ""
-                chain_event["specialized_agent_ids"] = ""
-                chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
-                chain_event["query_id"] = str(uuid.uuid4())
-                chain_event["timestamp"] = int(time.time() * 1000)
-                chain_event["event_type"] = "LLM_CALL_COMPLETE"
-                chain_event["source_id"] = "OpenAI"
-                chain_event["target_id"] = str(self.app.participant.instance_handle)
-                chain_event["status"] = 0
-                
-                self.chain_event_writer.write(chain_event)
-                self.chain_event_writer.flush()
+                self._publish_llm_call_complete(
+                    chain_id=chain_id,
+                    call_id=call_id,
+                    model_identifier=f"openai.{self.model_config['model_name']}"
+                )
                 
                 return {
                     "message": response.choices[0].message.content,
@@ -438,23 +370,11 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             logger.info("===== TRACING: Calling OpenAI API with function schemas =====")
             
             # Create chain event for LLM call start
-            chain_event = dds.DynamicData(self.chain_event_type)
-            chain_event["chain_id"] = chain_id
-            call_id = str(uuid.uuid4())  # New call ID for this call
-            chain_event["call_id"] = call_id
-            chain_event["interface_id"] = str(self.app.participant.instance_handle)
-            chain_event["primary_agent_id"] = ""
-            chain_event["specialized_agent_ids"] = ""
-            chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
-            chain_event["query_id"] = str(uuid.uuid4())
-            chain_event["timestamp"] = int(time.time() * 1000)
-            chain_event["event_type"] = "LLM_CALL_START"
-            chain_event["source_id"] = str(self.app.participant.instance_handle)
-            chain_event["target_id"] = "OpenAI"
-            chain_event["status"] = 0
-            
-            self.chain_event_writer.write(chain_event)
-            self.chain_event_writer.flush()
+            self._publish_llm_call_start(
+                chain_id=chain_id,
+                call_id=call_id,
+                model_identifier=f"openai.{self.model_config['model_name']}"
+            )
             
             response = self.client.chat.completions.create(
                 model=self.model_config['model_name'],
@@ -469,22 +389,11 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             logger.info(f"=====!!!!! TRACING: OpenAI response: {response} !!!!!=====")
             
             # Create chain event for LLM call completion
-            chain_event = dds.DynamicData(self.chain_event_type)
-            chain_event["chain_id"] = chain_id
-            chain_event["call_id"] = call_id
-            chain_event["interface_id"] = str(self.app.participant.instance_handle)
-            chain_event["primary_agent_id"] = ""
-            chain_event["specialized_agent_ids"] = ""
-            chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
-            chain_event["query_id"] = str(uuid.uuid4())
-            chain_event["timestamp"] = int(time.time() * 1000)
-            chain_event["event_type"] = "LLM_CALL_COMPLETE"
-            chain_event["source_id"] = "OpenAI"
-            chain_event["target_id"] = str(self.app.participant.instance_handle)
-            chain_event["status"] = 0
-            
-            self.chain_event_writer.write(chain_event)
-            self.chain_event_writer.flush()
+            self._publish_llm_call_complete(
+                chain_id=chain_id,
+                call_id=call_id,
+                model_identifier=f"openai.{self.model_config['model_name']}"
+            )
             
             # Extract the response
             message = response.choices[0].message
@@ -503,7 +412,36 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                     
                     # Call the function
                     try:
+                        # Create chain event for function call start
+                        self._publish_function_call_start(
+                            chain_id=chain_id,
+                            call_id=call_id,
+                            function_name=function_name,
+                            function_id=self.function_cache[function_name]["function_id"],
+                            target_provider_id=self.function_cache[function_name].get("provider_id")
+                        )
+                        
+                        # Call the function through the generic client
+                        start_time = time.time()
                         function_result = await self._call_function(function_name, **function_args)
+                        end_time = time.time()
+                        
+                        # Create chain event for function call completion
+                        self._publish_function_call_complete(
+                            chain_id=chain_id,
+                            call_id=call_id,
+                            function_name=function_name,
+                            function_id=self.function_cache[function_name]["function_id"],
+                            source_provider_id=self.function_cache[function_name].get("provider_id")
+                        )
+                        
+                        logger.info(f"===== TRACING: Function call completed in {end_time - start_time:.2f} seconds =====")
+                        logger.info(f"===== TRACING: Function result: {function_result} =====")
+                        
+                        # Extract result value if in dict format
+                        if isinstance(function_result, dict) and "result" in function_result:
+                            function_result = function_result["result"]
+                            
                         function_responses.append({
                             "tool_call_id": tool_call.id,
                             "role": "tool",
@@ -526,23 +464,11 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                     logger.info("===== TRACING: Sending function responses back to OpenAI =====")
                     
                     # Create chain event for second LLM call start
-                    chain_event = dds.DynamicData(self.chain_event_type)
-                    chain_event["chain_id"] = chain_id  # Same chain_id to link the calls
-                    call_id = str(uuid.uuid4())  # New call_id for this specific call
-                    chain_event["call_id"] = call_id
-                    chain_event["interface_id"] = str(self.app.participant.instance_handle)
-                    chain_event["primary_agent_id"] = ""
-                    chain_event["specialized_agent_ids"] = ""
-                    chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
-                    chain_event["query_id"] = str(uuid.uuid4())
-                    chain_event["timestamp"] = int(time.time() * 1000)
-                    chain_event["event_type"] = "LLM_CALL_START"
-                    chain_event["source_id"] = str(self.app.participant.instance_handle)
-                    chain_event["target_id"] = "OpenAI"
-                    chain_event["status"] = 0
-                    
-                    self.chain_event_writer.write(chain_event)
-                    self.chain_event_writer.flush()
+                    self._publish_llm_call_start(
+                        chain_id=chain_id,
+                        call_id=call_id,
+                        model_identifier=f"openai.{self.model_config['model_name']}"
+                    )
                     
                     second_response = self.client.chat.completions.create(
                         model=self.model_config['model_name'],
@@ -555,22 +481,11 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                     )
                     
                     # Create chain event for second LLM call completion
-                    chain_event = dds.DynamicData(self.chain_event_type)
-                    chain_event["chain_id"] = chain_id
-                    chain_event["call_id"] = call_id
-                    chain_event["interface_id"] = str(self.app.participant.instance_handle)
-                    chain_event["primary_agent_id"] = ""
-                    chain_event["specialized_agent_ids"] = ""
-                    chain_event["function_id"] = f"openai.{self.model_config['model_name']}"
-                    chain_event["query_id"] = str(uuid.uuid4())
-                    chain_event["timestamp"] = int(time.time() * 1000)
-                    chain_event["event_type"] = "LLM_CALL_COMPLETE"
-                    chain_event["source_id"] = "OpenAI"
-                    chain_event["target_id"] = str(self.app.participant.instance_handle)
-                    chain_event["status"] = 0
-                    
-                    self.chain_event_writer.write(chain_event)
-                    self.chain_event_writer.flush()
+                    self._publish_llm_call_complete(
+                        chain_id=chain_id,
+                        call_id=call_id,
+                        model_identifier=f"openai.{self.model_config['model_name']}"
+                    )
                     
                     # Extract the final response
                     final_message = second_response.choices[0].message.content

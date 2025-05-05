@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """
-Monitored agent base class for the GENESIS library.
-Provides monitoring capabilities for all agents.
+MonitoredAgent Base Class for Genesis Agents
+
+This module defines the MonitoredAgent class, which extends the GenesisAgent
+base class to provide standardized monitoring capabilities for agents operating
+within the Genesis network. It handles the publishing of various monitoring events,
+including agent lifecycle, state changes, and function call chains, using DDS topics.
+
+Copyright (c) 2025, RTI & Jason Upchurch
 """
 
 import logging
@@ -14,6 +20,7 @@ import rti.connextdds as dds
 import rti.rpc as rpc
 from genesis_lib.utils import get_datamodel_path
 from .agent import GenesisAgent
+from genesis_lib.generic_function_client import GenericFunctionClient
 import traceback
 import asyncio
 from datetime import datetime
@@ -52,6 +59,9 @@ class MonitoredAgent(GenesisAgent):
     Extends GenesisAgent to add standardized monitoring.
     """
     
+    # Class attribute for function client (can be overridden in subclasses if needed)
+    _function_client_initialized = False
+    
     def __init__(self, agent_name: str, service_name: str, agent_type: str = "AGENT", agent_id: str = None,
                  description: str = None, domain_id: int = 0):
         """
@@ -79,6 +89,10 @@ class MonitoredAgent(GenesisAgent):
         self.domain_id = domain_id
         self.monitor = None
         self.subscription = None
+        
+        # Initialize function client and cache
+        self._initialize_function_client()
+        self.function_cache: Dict[str, Dict[str, Any]] = {}
         
         # Initialize agent capabilities
         self.agent_capabilities = {
@@ -134,6 +148,14 @@ class MonitoredAgent(GenesisAgent):
         
         logger.info(f"Monitored agent {agent_name} initialized with type {agent_type}, agent_id={self.app.agent_id}, dds_guid={self.app.dds_guid}")
     
+    def _initialize_function_client(self) -> None:
+        """Initialize the GenericFunctionClient if not already done."""
+        # Ensure participant is ready
+        if not self.app or not self.app.participant:
+            logger.error("Cannot initialize function client: DDS Participant not available.")
+            return
+        
+        # Use a class-level flag to prevent multiple initializations if needed,
     def _setup_monitoring(self) -> None:
         """
         Set up monitoring resources and initialize state.
@@ -1062,3 +1084,98 @@ class MonitoredAgent(GenesisAgent):
             source_id=self.app.agent_id,
             target_id=self.app.agent_id
         ) 
+
+    def _publish_llm_call_start(self, chain_id: str, call_id: str, model_identifier: str):
+        """Publish a chain event for LLM call start"""
+        chain_event = dds.DynamicData(self.chain_event_type)
+        chain_event["chain_id"] = chain_id
+        chain_event["call_id"] = call_id
+        chain_event["interface_id"] = str(self.app.participant.instance_handle)
+        chain_event["primary_agent_id"] = ""
+        chain_event["specialized_agent_ids"] = ""
+        chain_event["function_id"] = model_identifier
+        chain_event["query_id"] = str(uuid.uuid4())
+        chain_event["timestamp"] = int(time.time() * 1000)
+        chain_event["event_type"] = "LLM_CALL_START"
+        chain_event["source_id"] = str(self.app.participant.instance_handle)
+        chain_event["target_id"] = "OpenAI"
+        chain_event["status"] = 0
+        
+        self.chain_event_writer.write(chain_event)
+        self.chain_event_writer.flush()
+
+    def _publish_llm_call_complete(self, chain_id: str, call_id: str, model_identifier: str):
+        """Publish a chain event for LLM call completion"""
+        chain_event = dds.DynamicData(self.chain_event_type)
+        chain_event["chain_id"] = chain_id
+        chain_event["call_id"] = call_id
+        chain_event["interface_id"] = str(self.app.participant.instance_handle)
+        chain_event["primary_agent_id"] = ""
+        chain_event["specialized_agent_ids"] = ""
+        chain_event["function_id"] = model_identifier
+        chain_event["query_id"] = str(uuid.uuid4())
+        chain_event["timestamp"] = int(time.time() * 1000)
+        chain_event["event_type"] = "LLM_CALL_COMPLETE"
+        chain_event["source_id"] = "OpenAI"
+        chain_event["target_id"] = str(self.app.participant.instance_handle)
+        chain_event["status"] = 0
+        
+        self.chain_event_writer.write(chain_event)
+        self.chain_event_writer.flush()
+
+    def _publish_classification_result(self, chain_id: str, call_id: str, classified_function_name: str, classified_function_id: str):
+        """Publish a chain event for function classification result"""
+        chain_event = dds.DynamicData(self.chain_event_type)
+        chain_event["chain_id"] = chain_id
+        chain_event["call_id"] = call_id
+        chain_event["interface_id"] = str(self.app.participant.instance_handle)
+        chain_event["primary_agent_id"] = ""
+        chain_event["specialized_agent_ids"] = ""
+        chain_event["function_id"] = classified_function_id
+        chain_event["query_id"] = str(uuid.uuid4())
+        chain_event["timestamp"] = int(time.time() * 1000)
+        chain_event["event_type"] = "CLASSIFICATION_RESULT"
+        chain_event["source_id"] = str(self.app.participant.instance_handle)
+        chain_event["target_id"] = classified_function_name
+        chain_event["status"] = 0
+        
+        self.chain_event_writer.write(chain_event)
+        self.chain_event_writer.flush()
+
+    def _publish_function_call_start(self, chain_id: str, call_id: str, function_name: str, function_id: str, target_provider_id: str = None):
+        """Publish a chain event for function call start"""
+        chain_event = dds.DynamicData(self.chain_event_type)
+        chain_event["chain_id"] = chain_id
+        chain_event["call_id"] = call_id
+        chain_event["interface_id"] = str(self.app.participant.instance_handle)
+        chain_event["primary_agent_id"] = ""
+        chain_event["specialized_agent_ids"] = ""
+        chain_event["function_id"] = function_id
+        chain_event["query_id"] = str(uuid.uuid4())
+        chain_event["timestamp"] = int(time.time() * 1000)
+        chain_event["event_type"] = "FUNCTION_CALL_START"
+        chain_event["source_id"] = str(self.app.participant.instance_handle)
+        chain_event["target_id"] = target_provider_id if target_provider_id else function_name
+        chain_event["status"] = 0
+        
+        self.chain_event_writer.write(chain_event)
+        self.chain_event_writer.flush()
+
+    def _publish_function_call_complete(self, chain_id: str, call_id: str, function_name: str, function_id: str, source_provider_id: str = None):
+        """Publish a chain event for function call completion"""
+        chain_event = dds.DynamicData(self.chain_event_type)
+        chain_event["chain_id"] = chain_id
+        chain_event["call_id"] = call_id
+        chain_event["interface_id"] = str(self.app.participant.instance_handle)
+        chain_event["primary_agent_id"] = ""
+        chain_event["specialized_agent_ids"] = ""
+        chain_event["function_id"] = function_id
+        chain_event["query_id"] = str(uuid.uuid4())
+        chain_event["timestamp"] = int(time.time() * 1000)
+        chain_event["event_type"] = "FUNCTION_CALL_COMPLETE"
+        chain_event["source_id"] = source_provider_id if source_provider_id else function_name
+        chain_event["target_id"] = str(self.app.participant.instance_handle)
+        chain_event["status"] = 0
+        
+        self.chain_event_writer.write(chain_event)
+        self.chain_event_writer.flush() 

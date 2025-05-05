@@ -1,5 +1,24 @@
 """
-Base agent class for the GENESIS library.
+Genesis Agent Base Class
+
+This module provides the abstract base class `GenesisAgent` for all agents
+within the Genesis framework. It establishes the core agent lifecycle,
+communication patterns, and integration with the underlying DDS infrastructure
+managed by `GenesisApp`.
+
+Key responsibilities include:
+- Initializing the agent's identity and DDS presence via `GenesisApp`.
+- Handling agent registration on the Genesis network.
+- Setting up an RPC replier to receive and process requests for the agent's service.
+- Defining an abstract `process_request` method that concrete subclasses must implement
+  to handle service-specific logic.
+- Providing utilities for agent lifecycle management (`run`, `close`).
+- Offering mechanisms for function discovery within the Genesis network.
+
+This class serves as the foundation upon which specialized agents, like
+`MonitoredAgent`, are built.
+
+Copyright (c) 2025, RTI & Jason Upchurch
 """
 
 import sys
