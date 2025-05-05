@@ -10,6 +10,7 @@
       <member name="prefered_name" type="string" stringMaxLength="256" />
       <member name="default_capable" type="int32"/>
       <member name="instance_id" type="string" key="true" stringMaxLength="128"/>
+      <member name="service_name" type="string" stringMaxLength="256"/>
     </struct>
 
 
