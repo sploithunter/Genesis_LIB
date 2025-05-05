@@ -1,5 +1,15 @@
 """
 Function Runner module for managing Genesis function processes
+
+NOTE: This module is not currently in use in the codebase. It is kept for potential future use
+when a more robust function process management system is needed. The current implementation
+handles function processes directly in test scripts using subprocess management.
+
+The class provides useful abstractions for:
+- Managing multiple function processes
+- Handling process lifecycle
+- Managing output and logging
+- Graceful shutdown
 """
 
 import os

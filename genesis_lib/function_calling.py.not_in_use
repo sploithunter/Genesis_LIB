@@ -2,8 +2,18 @@
 
 """
 Function calling functionality for the GENESIS library.
-This module provides classes and utilities for discovering, managing, and calling functions
-in a distributed system.
+
+NOTE: This module is not currently in use in the codebase. It is kept for potential future use
+when a more robust function calling system is needed. The current implementation uses:
+- GenericFunctionClient for function discovery and calling
+- utils/function_utils.py for function handling utilities
+- Direct function calls in OpenAIGenesisAgent
+
+The module provides useful abstractions for:
+- Thread-safe function calling
+- Asynchronous function discovery
+- Function call queuing and response handling
+- Function metadata management
 """
 
 import os

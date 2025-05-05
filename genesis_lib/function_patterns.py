@@ -1,8 +1,18 @@
 """
 Function success and failure patterns for the GENESIS distributed system.
 
-This module provides patterns that help identify when functions succeed or fail,
-and how to handle different scenarios.
+NOTE: This module is not currently in use in the codebase. It is kept for potential future use
+when a more robust pattern-based error handling system is needed. The current implementation
+handles errors directly in:
+- GenericFunctionClient for function discovery and calling
+- OpenAIGenesisAgent for agent-specific error handling
+- utils/function_utils.py for function utilities
+
+The module provides useful abstractions for:
+- Pattern-based success/failure detection
+- Structured error handling with recovery hints
+- Type-based and regex-based pattern matching
+- Centralized pattern registry
 """
 
 from typing import Dict, Any, List, Optional
