@@ -2,8 +2,8 @@
 
 # Script to run simple Interface <-> Agent RPC test with DDS tracing
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
+# Initialize test status
+TEST_FAILED=0
 
 # Get the script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,12 +28,10 @@ kill_process() {
     local is_spy=$3
 
     if [ "$is_spy" = "true" ]; then
-        # For spy processes, use pkill with the specific command line
         echo "🔫 TRACE: Stopping $name process $pid..."
         pkill -f "rtiddsspy.*spy_transient.xml.*SpyLib::TransientReliable" || true
         sleep 1
     else
-        # For other processes, use the normal kill approach
         if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
             echo "🔫 TRACE: Stopping $name process $pid..."
             kill -TERM "$pid" 2>/dev/null || true
@@ -43,6 +41,28 @@ kill_process() {
                 kill -KILL "$pid" 2>/dev/null || true
             fi
             wait "$pid" 2>/dev/null || true
+        fi
+    fi
+}
+
+# Function to check log contents
+check_log() {
+    local log_file=$1
+    local pattern=$2
+    local description=$3
+    local required=$4
+
+    if grep -q "$pattern" "$log_file"; then
+        echo "✅ TRACE: $description - Found in logs"
+        return 0
+    else
+        if [ "$required" = "true" ]; then
+            echo "❌ TRACE: $description - NOT FOUND in logs"
+            TEST_FAILED=1
+            return 1
+        else
+            echo "⚠️ TRACE: $description - NOT FOUND in logs (not required)"
+            return 0
         fi
     fi
 }
@@ -74,60 +94,21 @@ echo "✅ TRACE: RTI DDS Spy started with PID: $REGISTRATION_SPY_PID (Log: $REGI
 echo "⏳ TRACE: Waiting for RTI DDS Spy to receive durable announcement..."
 sleep 10
 
-# Check for registration announcement in DDS Spy logs
-echo "🔍 TRACE: Checking for registration announcement..."
-echo "📜 DEBUG: Current RTI DDS Spy log contents:"
-cat "$REGISTRATION_SPY_LOG"
-echo "----------------------------------------"
+# Check Test 1 - Registration Durability
+echo "🔍 TRACE: Running Test 1 checks..."
 
-# First check for writer creation
-if grep -q "New writer.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$REGISTRATION_SPY_LOG"; then
-    echo "✅ TRACE: Found GenesisRegistration writer"
-    echo "🔍 TRACE: Now checking for registration announcement data..."
-    
-    # Wait a bit longer for the data to arrive
-    sleep 5
-    
-    # Check the log again for the actual announcement data
-    echo "📜 DEBUG: Updated RTI DDS Spy log contents:"
-    cat "$REGISTRATION_SPY_LOG"
-    echo "----------------------------------------"
-    
-    if grep -q "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$REGISTRATION_SPY_LOG"; then
-        echo "✅ TRACE: REGISTRATION ANNOUNCEMENTS WORK. DO NOT CHANGE IT. REGISTRATION ANNOUNCES WORK."
-        echo "✅ TRACE: DURABILITY TEST PASSED - RTI DDS Spy received announcement even though it started after agent!"
-        ANNOUNCEMENT_PASSED=true
-    else
-        echo "⚠️ WARNING: Registration writer found but no announcement data. Needs fixing!"
-        ANNOUNCEMENT_PASSED=false
-    fi
-else
-    echo "❌ TRACE: No registration writer found"
-    ANNOUNCEMENT_PASSED=false
-fi
+# Check agent initialization
+check_log "$AGENT_LOG" "✅ TRACE: Agent created, starting run..." "Agent initialization" true
+check_log "$AGENT_LOG" "MathTestAgent listening for requests" "Agent listening state" true
 
-# Check interface logs for registration through listener
-echo "🔍 TRACE: Checking interface logs for registration through listener..."
-if grep -q "✅ TRACE: Found registration announcement through registration listener" "$INTERFACE_LOG"; then
-    echo "✅ TRACE: Interface successfully received registration through listener"
-    LISTENER_PASSED=true
-else
-    echo "⚠️ WARNING: Interface did not receive registration through listener"
-    LISTENER_PASSED=false
-fi
+# Check registration announcement
+check_log "$REGISTRATION_SPY_LOG" "New writer.*topic=\"GenesisRegistration\"" "Registration writer creation" true
+check_log "$REGISTRATION_SPY_LOG" "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "Registration announcement" true
 
 # Clean up Test 1
 echo "🧹 TRACE: Cleaning up Test 1..."
 kill_process "$REGISTRATION_SPY_PID" "registration spy" true
 kill_process "$AGENT_PID" "agent" false
-
-# Report test results
-echo "✅ TRACE: Test 1 completed"
-echo "=============================================="
-echo "Test Results:"
-echo "Registration Announcement: ${ANNOUNCEMENT_PASSED}"
-echo "Registration Listener: ${LISTENER_PASSED}"
-echo "=============================================="
 
 echo "🔬 TRACE: Starting Test 2 - Interface Test"
 echo "=============================================="
@@ -158,18 +139,32 @@ echo "✅ TRACE: Interface started with PID: $INTERFACE_PID"
 echo "⏳ TRACE: Waiting for interface test to complete..."
 wait $INTERFACE_PID || true
 
-# Display logs
-echo "📜 TRACE: Displaying Interface Test DDS Spy Log:"
-echo "----------------------------------------"
-cat "$INTERFACE_SPY_LOG"
+# Check Test 2 - Interface Test
+echo "🔍 TRACE: Running Test 2 checks..."
 
-echo "📜 TRACE: Displaying Agent Log:"
-echo "----------------------------------------"
-cat "$AGENT_LOG"
+# Check agent logs
+check_log "$AGENT_LOG" "✅ TRACE: Agent created, starting run..." "Agent initialization" true
+check_log "$AGENT_LOG" "MathTestAgent listening for requests" "Agent listening state" true
+check_log "$AGENT_LOG" "Received request:" "Request received" true
+check_log "$AGENT_LOG" "Sent reply:" "Reply sent" true
 
-echo "📜 TRACE: Displaying Interface Log:"
-echo "----------------------------------------"
-cat "$INTERFACE_LOG"
+# Check interface logs
+check_log "$INTERFACE_LOG" "Monitored interface MathTestInterface initialized" "Interface initialization" true
+check_log "$INTERFACE_LOG" "<MonitoredInterface Handler> Agent Discovered: MathTestAgent (GenericAgent)" "Agent discovery callback" true
+check_log "$INTERFACE_LOG" "🔎 TRACE: Available agents found: {.*'prefered_name': 'MathTestAgent'.*}" "Available agents logged" true
+check_log "$INTERFACE_LOG" "✅ TRACE: Agent discovered. Selecting first available: MathTestAgent" "Agent selection" true
+check_log "$INTERFACE_LOG" "🔗 TRACE: Attempting to connect to service: GenericAgent" "Connection attempt" true
+check_log "$INTERFACE_LOG" "✅ TRACE: Successfully connected to agent: MathTestAgent" "Connection success" true
+check_log "$INTERFACE_LOG" "📤 TRACE: Sending math request:" "Request sent" true
+check_log "$INTERFACE_LOG" "📥 TRACE: Received reply:" "Reply received" true
+check_log "$INTERFACE_LOG" "✅ TRACE: Math test passed" "Math test verification" true
+check_log "$INTERFACE_LOG" "🏁 TRACE: MathTestInterface ending with exit code: 0" "Clean exit" true
+
+# Check DDS Spy logs
+check_log "$INTERFACE_SPY_LOG" "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "Agent registration" true
+check_log "$INTERFACE_LOG" "✨ TRACE: Agent DISCOVERED: MathTestAgent (GenericAgent)" "Interface discovery" true
+check_log "$INTERFACE_SPY_LOG" "New writer.*topic=\"GenericAgentRequest\".*type=\"ChatGPTRequest\"" "RPC request" true
+check_log "$INTERFACE_SPY_LOG" "New writer.*topic=\"GenericAgentReply\".*type=\"ChatGPTReply\"" "RPC reply" true
 
 # Clean up Test 2
 echo "🧹 TRACE: Cleaning up Test 2..."
@@ -177,7 +172,13 @@ kill_process "$INTERFACE_SPY_PID" "interface spy" true
 kill_process "$INTERFACE_PID" "interface" false
 kill_process "$AGENT_PID" "agent" false
 
-echo "✅ TRACE: Test 2 completed"
+# Final report
 echo "=============================================="
-
-echo "✅ TRACE: All tests completed successfully"
+echo "Test Results Summary:"
+if [ $TEST_FAILED -eq 0 ]; then
+    echo "✅ TRACE: All tests passed successfully"
+    exit 0
+else
+    echo "❌ TRACE: One or more tests failed"
+    exit 1
+fi

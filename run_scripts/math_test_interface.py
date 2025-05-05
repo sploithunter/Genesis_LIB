@@ -44,6 +44,8 @@ class MathTestInterface:
             # Select the first agent discovered (simple strategy for testing)
             chosen_agent = None
             if interface.available_agents:
+                 # Log the list of available agents for verification
+                 logger.info(f"🔎 TRACE: Available agents found: {interface.available_agents}")
                  chosen_agent = list(interface.available_agents.values())[0]
                  logger.info(f"✅ TRACE: Agent discovered. Selecting first available: {chosen_agent['prefered_name']}")
             else:
