@@ -12,6 +12,7 @@ import rti.rpc as rpc
 import re
 import os
 from genesis_lib.utils import get_datamodel_path
+import asyncio
 
 # Configure logging
 logger = logging.getLogger("function_discovery")
@@ -387,6 +388,9 @@ class FunctionRegistry:
         self.discovered_functions = {}  # Dict[str, Dict] of functions from other providers
         self.service_base = None  # Reference to EnhancedServiceBase
         
+        # Event to signal when the first function capability has been discovered
+        self._discovery_event = asyncio.Event()
+        
         # Initialize function matcher with LLM support
         self.matcher = FunctionMatcher()
         
@@ -411,11 +415,40 @@ class FunctionRegistry:
         self.execution_reply_type = self.type_provider.type("genesis_lib", "FunctionExecutionReply")
         
         # Create topics
-        self.capability_topic = dds.DynamicData.Topic(
-            participant,
-            "FunctionCapability",
-            self.capability_type
-        )
+        # Try to find the topic first, create if not found
+        try:
+            # find_topics returns all topics for the participant
+            all_topics = participant.find_topics()
+            found_topic = None
+            for topic in all_topics:
+                # Check if the topic name matches
+                if topic.name == "FunctionCapability":
+                     # Optional: Check type name if necessary
+                     # if topic.type_name == self.capability_type.name:
+                    found_topic = topic
+                    break # Found the topic
+            
+            if found_topic:
+                self.capability_topic = found_topic
+                logger.info("===== DDS TRACE: Found existing FunctionCapability topic. =====")
+            else:
+                 # Topic not found, create it
+                logger.info("===== DDS TRACE: FunctionCapability topic not found, creating new one... =====")
+                self.capability_topic = dds.DynamicData.Topic(
+                    participant=participant,
+                    topic_name="FunctionCapability",
+                    topic_type=self.capability_type
+                )
+                logger.info("===== DDS TRACE: Created new FunctionCapability topic. =====")
+
+        except dds.Error as e:
+            # Handle potential errors during find_topics or create_topic
+            logger.error(f"===== DDS TRACE: DDS Error finding/creating FunctionCapability topic: {e} ====")
+            raise
+        except Exception as e:
+            # Catch any other unexpected errors
+            logger.error(f"===== DDS TRACE: Unexpected error during topic find/create: {e} ====")
+            raise
         
         # Create DataReader for capability discovery
         reader_qos = dds.QosProvider.default.datareader_qos
@@ -605,6 +638,7 @@ class FunctionRegistry:
     
     def _advertise_function(self, function_info: FunctionInfo):
         """Advertise function capability via DDS"""
+        logger.info(f"===== DDS TRACE: Preparing DDS data for advertising function: {function_info.name} ({function_info.function_id}) =====")
         capability = dds.DynamicData(self.capability_type)
         capability['function_id'] = function_info.function_id
         capability['name'] = function_info.name
@@ -624,66 +658,74 @@ class FunctionRegistry:
             logger.warning(f"Could not determine service_name when advertising function {function_info.name}")
             capability['service_name'] = "UnknownService" # Default if service name is not found
         
-        self.capability_writer.write(capability)
-        self.capability_writer.flush()
+        logger.info(f"===== DDS TRACE: Publishing FunctionCapability for {function_info.name} ({function_info.function_id}): {capability} =====")
+        try:
+            self.capability_writer.write(capability)
+            self.capability_writer.flush()
+            logger.info(f"===== DDS TRACE: Successfully published FunctionCapability for {function_info.name} =====")
+        except Exception as e:
+            logger.error(f"===== DDS TRACE: Error publishing FunctionCapability for {function_info.name}: {e} ====", exc_info=True)
+            # Optionally re-raise or handle
     
     def handle_capability_advertisement(self, capability: dds.DynamicData, info: dds.SampleInfo):
-        """Handle incoming function capability advertisement."""
-        function_id = capability['function_id']
-        provider_id = str(info.publication_handle)  # Use DataWriter GUID from the remote publisher
-        client_id = str(self.capability_writer.instance_handle)  # Use our DataWriter GUID
-        
-        # Determine if we're the provider or client
-        is_provider = function_id in self.functions
-        role = "PROVIDER" if is_provider else "CLIENT"
-        
-       # print(f"DEBUG: {role} side processing function_id={function_id}, provider={provider_id}, client={client_id}")
-        
-        # Skip if this is our own function - we don't need to discover it
-        if is_provider:
-            return
-        
-        # Check if we've already discovered this function from this provider
-        if function_id in self.discovered_functions:
-            existing_info = self.discovered_functions[function_id]
-            if existing_info['provider_id'] == provider_id:
-                # Already discovered from this provider, skip
-                return
-        
-        # Extract schema from capability
+        """Handle received function capability data"""
+        function_id_str = "unknown_id"
         try:
-            schema = json.loads(capability['parameter_schema'])
-        except (json.JSONDecodeError, KeyError):
-            schema = {}  # Default to empty schema if not found or invalid
+            function_id_str = capability.get_string("function_id") # Get ID for logging early
+            logger.info(f"===== DDS TRACE: handle_capability_advertisement received data for function_id: {function_id_str} =====")
+
+            # Check if instance state is ALIVE before processing
+            if info.state.instance_state != dds.InstanceState.ALIVE:
+                logger.debug(f"Ignoring non-alive capability sample: {info.state.instance_state}")
+                return
             
-        # Store discovered function information - only for functions we don't own
-        self.discovered_functions[function_id] = {
-            'name': capability['name'],
-            'description': capability['description'],
-            'provider_id': provider_id,  # Use DataWriter GUID
-            'discoverer_id': client_id,  # Use DataWriter GUID
-            'schema': schema,
-            'capability': capability
-        }
-        
-        # Build metadata for service base
-        metadata = {
-            "function_name": capability['name'],
-            "provider_id": provider_id,
-            "client_id": client_id,
-            "function_id": function_id,
-            "description": capability['description'],
-            "message": f"provider={provider_id}, client={client_id} function={function_id}",
-            "role": role.lower()
-        }
-        
-        # Notify EnhancedServiceBase about the discovery
-        if self.service_base is not None:
-            self.service_base.handle_function_discovery(
-                function_name=capability['name'],
-                metadata=metadata,
-                status_data={"status": "discovered", "state": "available"}
-            )
+            # Extract required fields
+            function_id = capability["function_id"]
+            name = capability["name"]
+            provider_id = capability["provider_id"]
+            description = capability.get_string("description") # Use get_string for safety
+            schema_str = capability.get_string("parameter_schema") # Use get_string for safety
+            capabilities_str = capability.get_string("capabilities") # Use get_string for safety
+            service_name = capability.get_string("service_name") # Get service name
+            
+            # Basic validation
+            if not all([function_id, name, provider_id]):
+                logger.warning(f"Received capability advertisement with missing required fields")
+                return
+
+            # Deserialize JSON strings safely
+            schema = json.loads(schema_str) if schema_str else {}
+            capabilities = json.loads(capabilities_str) if capabilities_str else []
+            
+            # Store or update the discovered function
+            # Use a dictionary to store structured info
+            self.discovered_functions[function_id] = {
+                "name": name,
+                "description": description,
+                "provider_id": provider_id,
+                "schema": schema,
+                "capabilities": capabilities,
+                "service_name": service_name, # Store service name
+                "capability": capability # Store the raw capability object for potential future use
+            }
+            
+            logger.info(f"Updated/Added discovered function: {name} ({function_id}) from provider {provider_id} for service {service_name}")
+            
+            # Signal that at least one function has been discovered
+            if not self._discovery_event.is_set():
+                logger.info(f"===== DDS TRACE: Setting _discovery_event for function_id: {function_id} =====")
+                self._discovery_event.set()
+                logger.info("===== DDS TRACE: Discovery event set (first function discovered). =====")
+            else:
+                logger.info(f"===== DDS TRACE: _discovery_event already set (function_id: {function_id}). =====")
+
+        except KeyError as e:
+            logger.error(f"===== DDS TRACE: Missing key in capability data (function_id: {function_id_str}): {e} ====")
+        except json.JSONDecodeError as e:
+            logger.error(f"Error decoding JSON in capability data: {e}")
+        except Exception as e:
+            logger.error(f"Error handling capability advertisement: {e}")
+            logger.error(logging.traceback.format_exc())
     
     def handle_capability_removal(self, reader: dds.DynamicData.DataReader):
         """Handle removal of function capabilities when a provider goes offline"""
@@ -766,69 +808,43 @@ class FunctionRegistry:
 
 class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
     """Listener for function capability advertisements"""
+
     def __init__(self, registry):
+        """Initialize listener with a reference to the registry"""
         super().__init__()
         self.registry = registry
-        self.logger = configure_genesis_logging(
-            logger_name=f"FunctionCapabilityListener.{id(registry)}",
-            source_name=f"FuncCapListener-{id(registry)}",
-            log_level=logging.INFO
-        )
-        self.processed_samples = set()  # Track processed sample IDs
+        logger.info("FunctionCapabilityListener initialized")
 
     def on_subscription_matched(self, reader, info):
         """Handle subscription matches"""
-        # First check if this is a FunctionCapability topic match
-        if reader.topic_name != "FunctionCapability":
-           # print(f"Ignoring subscription match for topic: {reader.topic_name}")
-            return
-            
-        # Now we know this is a FunctionCapability topic match
-        remote_guid = str(info.last_publication_handle)
-        
-        # Check if capability_writer exists before accessing it
-        if hasattr(self.registry, 'capability_writer') and self.registry.capability_writer is not None:
-            self_guid = str(self.registry.capability_writer.instance_handle) or "0"
-        else:
-            self_guid = "0"  # Default value if capability_writer is not available
-            
-        #print(f"FunctionCapability subscription matched with remote GUID: {remote_guid}")
-        #print(f"FunctionCapability subscription matched with self GUID:   {self_guid}")
-        
-   
+        logger.info(f"Capability subscription matched: {info.current_count} total writers")
+        # Optionally, trigger an initial check or event if needed
+        # maybe set the discovery event here if count > 0?
+        # if info.current_count > 0 and not self.registry._discovery_event.is_set():
+        #     self.registry._discovery_event.set()
+        #     logger.info("Discovery event set via on_subscription_matched.")
 
     def on_data_available(self, reader):
-        """Handle new function capability advertisements"""
+        """Handle incoming capability data"""
+        logger.info("===== DDS TRACE: FunctionCapabilityListener.on_data_available entered =====")
         try:
-           # print("*********ODA******** Reader structure and methods:")
-           # print(dir(reader))
-            reader_matched_publications = reader.matched_publications
-            #print("**********ODA******** Reader matched publications:")
-            #print(dir(reader_matched_publications))
-            current_publication = reader_matched_publications[0]
-            #print(f"*********ODA********* Current publication: {current_publication}")
             samples = reader.take()
-            for data, info in samples:
-                # Create unique sample ID from function_id and timestamp
-                sample_id = f"{data['function_id']}_{info.source_timestamp}"
-                
-                # Skip if we've already processed this sample
-                if sample_id in self.processed_samples:
-                    continue
-                    
-                if data and info.state.instance_state == dds.InstanceState.ALIVE:
-                    self.registry.handle_capability_advertisement(data, info)
-                    self.processed_samples.add(sample_id)
-                   # print(f"DEBUG: FunctionCapabilityListener.on_data_available processed sample {sample_id}")
-                    
-                    # Clean up old samples (keep last 1000)
-                    if len(self.processed_samples) > 1000:
-                        self.processed_samples = set(list(self.processed_samples)[-1000:])
-                        
+            logger.info(f"===== DDS TRACE: Took {len(samples)} FunctionCapability samples =====")
+            for capability, info in samples:
+                if capability is not None and info.valid:
+                    fid = capability.get_string('function_id') # Get ID for logging
+                    logger.info(f"===== DDS TRACE: Processing valid FunctionCapability sample for function ID: {fid}, instance_state: {info.state.instance_state} =====")
+                    self.registry.handle_capability_advertisement(capability, info)
+                elif capability is not None:
+                    fid = capability.get_string('function_id')
+                    logger.warning(f"===== DDS TRACE: Received INVALID but non-null FunctionCapability sample for function ID: {fid}, sample_state: {info.state.sample_state}, view_state: {info.state.view_state}, instance_state: {info.state.instance_state} =====")
+                elif info.state.instance_state != dds.InstanceState.ALIVE:
+                     # Handle potential disposal or unregistration if needed
+                     logger.info(f"===== DDS TRACE: Received null data with non-alive instance_state: {info.state.instance_state} =====")
+                     # TODO: Implement removal logic if necessary, e.g.:
+                     #     # Need a way to get function_id from instance_handle if possible, or handle removal
+                     #     logger.info(f"Instance {instance_handle} disposed.")
+            logger.info("===== DDS TRACE: Finished processing FunctionCapability samples in on_data_available =====")
         except Exception as e:
-            self.logger.error(f"Error processing function capability: {e}")
-    
-    def on_liveliness_changed(self, reader, status):
-        """Handle liveliness changes"""
-        if status.not_alive_count > 0:
-            self.registry.handle_capability_removal(reader)
+            logger.error(f"Error in on_data_available: {e}")
+            logger.error(logging.traceback.format_exc())

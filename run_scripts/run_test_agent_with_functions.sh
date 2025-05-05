@@ -73,7 +73,7 @@ done
 
 # Wait for services to start
 echo "Waiting for services to start..."
-sleep 10
+sleep 15
 
 # Function to run a single test
 run_test() {

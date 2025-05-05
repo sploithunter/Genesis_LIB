@@ -14,6 +14,7 @@ import uuid
 import json
 from genesis_lib.utils import get_datamodel_path
 import asyncio
+import traceback
 
 # Get logger
 logger = logging.getLogger(__name__)
@@ -25,14 +26,24 @@ class RegistrationListener(dds.DynamicData.NoOpDataReaderListener):
         self.interface = interface
         self.received_announcements = {}  # Track announcements by instance_id
         self.subscription_matched = False
+        self._registration_event = asyncio.Event()
+        logger.info("🔧 TRACE: Registration listener initialized")
         
     def on_data_available(self, reader):
         """Handle new registration announcements"""
         try:
+            logger.info("📥 TRACE: Data available on registration reader")
+            # Get reader status before taking samples
+            status = reader.datareader_protocol_status
+            logger.info(f"📊 TRACE: Reader status - Received: {status.received_sample_count}, Lost: {status.sample_lost_count}")
+            
             samples = reader.take()
+            logger.info(f"📦 TRACE: Took {len(samples)} samples from reader")
+            
             for sample, info in samples:
                 if sample is not None and info.valid:
                     instance_id = sample['instance_id']
+                    logger.info(f"🔍 TRACE: Sample info - Valid: {info.valid}, State: {info.state.instance_state}, Gen: {info.generation_count}")
                     self.received_announcements[instance_id] = {
                         'message': sample['message'],
                         'prefered_name': sample['prefered_name'],
@@ -45,13 +56,27 @@ class RegistrationListener(dds.DynamicData.NoOpDataReaderListener):
                     logger.info(f"   Preferred Name: {sample['prefered_name']}")
                     logger.info(f"   Default Capable: {sample['default_capable']}")
                     logger.info(f"   Instance ID: {sample['instance_id']}")
+                    # Signal that we've received a registration
+                    self._registration_event.set()
+                else:
+                    logger.warning(f"⚠️ TRACE: Invalid or null sample. Valid: {info.valid}, State: {info.state.instance_state if info else 'Unknown'}")
         except Exception as e:
-            logger.error(f"Error processing registration announcement: {e}")
+            logger.error(f"❌ TRACE: Error processing registration announcement: {e}")
+            logger.error(traceback.format_exc())
                     
     def on_subscription_matched(self, reader, status):
         """Track when registration publishers are discovered"""
-        logger.info(f"Registration subscription matched. Current count: {status.current_count}")
+        logger.info(f"🤝 TRACE: Registration subscription matched event. Current count: {status.current_count}")
         self.subscription_matched = status.current_count > 0
+        
+        # Get matched publications count
+        matched_publications = reader.matched_publications
+        logger.info(f"📊 TRACE: Number of matched publications: {len(matched_publications)}")
+        
+        if status.current_count > 0:
+            logger.info("✅ TRACE: Registration subscription successfully matched with publisher")
+        else:
+            logger.warning("⚠️ TRACE: Registration subscription lost all publisher matches")
 
 class GenesisInterface(ABC):
     """Base class for all Genesis interfaces"""
@@ -82,27 +107,40 @@ class GenesisInterface(ABC):
 
     def _setup_registration_monitoring(self):
         """Set up registration monitoring with listener"""
-        # Configure reader QoS
-        reader_qos = dds.QosProvider.default.datareader_qos
-        reader_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
-        reader_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
-        reader_qos.history.kind = dds.HistoryKind.KEEP_LAST
-        reader_qos.history.depth = 500  # Match agent's writer depth
-        reader_qos.liveliness.kind = dds.LivelinessKind.AUTOMATIC
-        reader_qos.liveliness.lease_duration = dds.Duration(seconds=2)
-        reader_qos.ownership.kind = dds.OwnershipKind.SHARED
-        
-        # Create registration reader with listener
-        self.registration_listener = RegistrationListener(self)
-        self.app.registration_reader = dds.DynamicData.DataReader(
-            subscriber=self.app.subscriber,
-            topic=self.app.registration_topic,
-            qos=reader_qos,
-            listener=self.registration_listener,
-            mask=dds.StatusMask.DATA_AVAILABLE | dds.StatusMask.SUBSCRIPTION_MATCHED
-        )
-        
-        logger.info("Registration monitoring setup complete")
+        try:
+            logger.info("🔧 TRACE: Setting up registration monitoring...")
+            
+            # Configure reader QoS
+            reader_qos = dds.QosProvider.default.datareader_qos
+            reader_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
+            reader_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
+            reader_qos.history.kind = dds.HistoryKind.KEEP_LAST
+            reader_qos.history.depth = 500  # Match agent's writer depth
+            reader_qos.liveliness.kind = dds.LivelinessKind.AUTOMATIC
+            reader_qos.liveliness.lease_duration = dds.Duration(seconds=2)
+            reader_qos.ownership.kind = dds.OwnershipKind.SHARED
+            
+            logger.info("📋 TRACE: Configured reader QoS settings")
+            
+            # Create registration reader with listener
+            logger.info("🎯 TRACE: Creating registration listener...")
+            self.registration_listener = RegistrationListener(self)
+            
+            logger.info("📡 TRACE: Creating registration reader...")
+            self.app.registration_reader = dds.DynamicData.DataReader(
+                subscriber=self.app.subscriber,
+                topic=self.app.registration_topic,
+                qos=reader_qos,
+                listener=self.registration_listener,
+                mask=dds.StatusMask.DATA_AVAILABLE | dds.StatusMask.SUBSCRIPTION_MATCHED
+            )
+            
+            logger.info("✅ TRACE: Registration monitoring setup complete")
+            
+        except Exception as e:
+            logger.error(f"❌ TRACE: Error setting up registration monitoring: {e}")
+            logger.error(traceback.format_exc())
+            raise
 
     async def wait_for_agent(self, timeout_seconds: int = 30) -> bool:
         """Wait for agent to be discovered"""
@@ -121,27 +159,51 @@ class GenesisInterface(ABC):
                 logger.error(f"Timeout waiting for registration subscription to be matched")
                 return False
             await asyncio.sleep(0.1)
+        
+        try:
+            # Wait for either registration announcement or RPC discovery
+            registration_task = asyncio.create_task(
+                asyncio.wait_for(
+                    self.registration_listener._registration_event.wait(),
+                    timeout=timeout_seconds
+                )
+            )
             
-        while self.requester.matched_replier_count == 0:
-            # Check if we've received any registration announcements
-            if self.registration_listener.received_announcements:
+            rpc_discovery_task = asyncio.create_task(
+                self._wait_for_rpc_match()
+            )
+            
+            # Wait for either task to complete
+            done, pending = await asyncio.wait(
+                [registration_task, rpc_discovery_task],
+                return_when=asyncio.FIRST_COMPLETED,
+                timeout=timeout_seconds
+            )
+            
+            # Cancel pending task
+            for task in pending:
+                task.cancel()
+                
+            # Check which path succeeded
+            if registration_task in done:
                 logger.info("✅ TRACE: Found registration announcement while waiting for agent")
                 return True
-                
-            if time.time() - start_time > timeout_seconds:
+            elif rpc_discovery_task in done:
+                logger.warning("⚠️ TRACE: Agent discovered through RPC, not through registration announcement")
+                return True
+            else:
                 logger.error(f"Timeout waiting for {self.service_name} agent")
                 return False
                 
-            logger.info(f"Waiting for {self.service_name} agent to appear...")
-            await asyncio.sleep(1)
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout waiting for {self.service_name} agent")
+            return False
             
-        logger.info(f"Found {self.service_name} agent!")
-        
-        # If we got here through RPC discovery but didn't see a registration announcement, warn
-        if not self.registration_listener.received_announcements:
-            logger.warning("⚠️ TRACE: Agent discovered through RPC, not through registration announcement")
-        
-        return True
+    async def _wait_for_rpc_match(self):
+        """Helper to wait for RPC discovery"""
+        while self.requester.matched_replier_count == 0:
+            await asyncio.sleep(0.1)
+        logger.info(f"Found {self.service_name} agent through RPC!")
 
     async def send_request(self, request_data: Dict[str, Any], timeout_seconds: float = 10.0) -> Optional[Dict[str, Any]]:
         """Send request to agent and wait for reply"""

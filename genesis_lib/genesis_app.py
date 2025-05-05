@@ -102,7 +102,7 @@ class GenesisApp:
 
         try:
             # Close DDS entities in reverse order of creation, but keep registration writer until last
-            resources_to_close = ['function_registry', 'registration_reader', 'registration_topic', 
+            resources_to_close = ['function_registry', 'registration_topic',
                                 'publisher', 'subscriber', 'participant']
             
             # First close everything except registration writer

@@ -73,8 +73,8 @@ class OpenAIGenesisAgent(MonitoredAgent):
         # Initialize OpenAI client
         self.client = OpenAI(api_key=self.api_key)
         
-        # Initialize generic client for function discovery
-        self.generic_client = GenericFunctionClient()
+        # Initialize generic client for function discovery, passing the agent's participant
+        self.generic_client = GenericFunctionClient(participant=self.app.participant)
         self.function_cache = {}  # Cache for discovered functions
         
         # Initialize function classifier
@@ -110,9 +110,10 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
     async def _ensure_functions_discovered(self):
         """Ensure functions are discovered before use"""
         if not self.function_cache:
-            logger.info("===== TRACING: Starting function discovery =====")
+            logger.info("===== DDS TRACE: Function cache empty, calling generic_client.discover_functions... =====")
             await self.generic_client.discover_functions()
-            
+            logger.info("===== DDS TRACE: generic_client.discover_functions returned. =====")
+
             # Cache discovered functions
             functions = self.generic_client.list_available_functions()
             if not functions:

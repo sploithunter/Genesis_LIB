@@ -30,18 +30,27 @@ mkdir -p "$LOG_DIR"
 
 # Function to display log content on failure
 display_log_on_failure() {
-    local log_file=$1
-    local error_type=$2
-    local error_message=$3
-    
+    local error_type=$1
+    local error_message=$2
+    shift 2 # Remove error_type and error_message from arguments
+
     echo "❌ ERROR: $error_message"
     echo "=================================================="
-    echo "Log file contents ($log_file):"
+    echo "Relevant log file contents (last 20 lines each):"
     echo "=================================================="
-    # Show the last 20 lines of the log file, or the whole file if it's shorter
-    tail -n 20 "$log_file" | sed 's/^/  /'
+
+    for log_file in "$@"; do
+        if [ -f "$log_file" ]; then
+            echo "--- Log: $log_file ---"
+            # Show the last 20 lines of the log file
+            tail -n 20 "$log_file" | sed 's/^/  /'
+            echo "--- End Log: $log_file ---"
+        else
+            echo "--- Log not found: $log_file ---"
+        fi
+    done
     echo "=================================================="
-    echo "Full log available at: $log_file"
+    echo "Full logs available in: $LOG_DIR"
     echo "=================================================="
 }
 
@@ -50,91 +59,136 @@ run_with_timeout() {
     local script_name=$1
     local timeout=$2
     local script_basename=$(basename "$script_name")
-    local log_file="$LOG_DIR/${script_basename%.*}.log"
+    local primary_log_file="$LOG_DIR/${script_basename%.*}.log"
+    local failure_detected=0
+    local error_type=""
+    local error_message=""
+    local all_log_files=()
     
     echo "=================================================="
     echo "Running $script_name with ${timeout}s timeout..."
-    [ "$DEBUG" = "true" ] && echo "Log file: $log_file"
+    [ "$DEBUG" = "true" ] && echo "Log file: $primary_log_file"
     echo "=================================================="
     
     # Determine if this is a Python script or a shell script
     if [[ "$script_name" == *.py ]]; then
         # Run Python script with timeout and capture output
-        PYTHONPATH=$PYTHONPATH:$PROJECT_ROOT timeout $timeout python "$script_name" > "$log_file" 2>&1
+        PYTHONPATH=$PYTHONPATH:$PROJECT_ROOT timeout $timeout python "$script_name" > "$primary_log_file" 2>&1
     else
         # Run shell script with timeout and capture output
-        PYTHONPATH=$PYTHONPATH:$PROJECT_ROOT timeout $timeout bash "$script_name" > "$log_file" 2>&1
+        PYTHONPATH=$PYTHONPATH:$PROJECT_ROOT timeout $timeout bash "$script_name" > "$primary_log_file" 2>&1
     fi
     
     # Check exit status
     local exit_code=$?
     if [ $exit_code -eq 124 ]; then
-        display_log_on_failure "$log_file" "timeout" "$script_name timed out after ${timeout}s"
-        # Clean up any processes that might still be running
-        cleanup
-        return 1
+        failure_detected=1
+        error_type="timeout"
+        error_message="$script_name timed out after ${timeout}s"
     elif [ $exit_code -ne 0 ]; then
-        display_log_on_failure "$log_file" "exit_code" "$script_name failed with exit code $exit_code"
-        # Clean up any processes that might still be running
-        cleanup
-        return 1
+        failure_detected=1
+        error_type="exit_code"
+        error_message="$script_name failed with exit code $exit_code"
     fi
     
-    # Check for test failures in the log
-    if grep -q "Some tests failed" "$log_file"; then
-        display_log_on_failure "$log_file" "test_failure" "$script_name reported test failures"
-        # Clean up any processes that might still be running
-        cleanup
-        return 1
+    # Check for test failures in the log if no other failure detected yet
+    if [ $failure_detected -eq 0 ] && grep -q "Some tests failed" "$primary_log_file"; then
+        failure_detected=1
+        error_type="test_failure"
+        error_message="$script_name reported test failures"
     fi
     
-    # Check for Python errors in the log
-    if grep -q "ImportError\|NameError\|TypeError\|AttributeError\|RuntimeError\|SyntaxError\|IndentationError" "$log_file"; then
-        display_log_on_failure "$log_file" "python_error" "$script_name encountered Python errors"
-        # Clean up any processes that might still be running
-        cleanup
-        return 1
+    # Check for Python errors in the log if no other failure detected yet
+    if [ $failure_detected -eq 0 ] && grep -q "ImportError\|NameError\|TypeError\|AttributeError\|RuntimeError\|SyntaxError\|IndentationError" "$primary_log_file"; then
+        failure_detected=1
+        error_type="python_error"
+        error_message="$script_name encountered Python errors"
     fi
     
-    # Check for unexpected error messages in the log, excluding expected ones
-    # Create a temporary file with filtered content
-    local temp_log=$(mktemp)
-    # Filter out INFO, DEBUG, and expected warning/error messages
-    grep -v "INFO\|DEBUG\|WARNING\|Cannot divide by zero\|Function call failed\|All calculator tests completed successfully\|Debug: \|test passed\|Test passed\|DivisionByZeroError\|Error executing function: Cannot divide by zero" "$log_file" > "$temp_log"
-    
-    # Only show debug output if DEBUG is true
-    if [ "$DEBUG" = "true" ]; then
-        echo "Debug: Remaining content after filtering:"
-        cat "$temp_log"
-        echo "Debug: End of filtered content"
-    fi
-    
-    # Check for remaining error messages, being more specific about what constitutes an error
-    if grep -q "^ERROR:\|^Error:\|^error:" "$temp_log" || \
-       (grep -q "Traceback (most recent call last)" "$temp_log" && \
-        ! grep -q "DivisionByZeroError: Cannot divide by zero" "$log_file"); then
-        display_log_on_failure "$log_file" "unexpected_error" "$script_name encountered unexpected errors"
-        # Show the matching lines
+    # Check for unexpected error messages in the log if no other failure detected yet
+    if [ $failure_detected -eq 0 ]; then
+        # Create a temporary file with filtered content
+        local temp_log=$(mktemp)
+        # Filter out INFO, DEBUG, and expected warning/error messages
+        grep -v "INFO\|DEBUG\|WARNING\|Cannot divide by zero\|Function call failed\|All calculator tests completed successfully\|Debug: \|test passed\|Test passed\|DivisionByZeroError\|Error executing function: Cannot divide by zero" "$primary_log_file" > "$temp_log"
+        
+        # Only show debug output if DEBUG is true
         if [ "$DEBUG" = "true" ]; then
-            echo "Debug: Lines containing errors:"
-            grep "^ERROR:\|^Error:\|^error:\|Traceback (most recent call last)\|Exception:" "$temp_log"
-            echo "Debug: End of error lines"
+            echo "Debug: Remaining content after filtering:"
+            cat "$temp_log"
+            echo "Debug: End of filtered content"
+        fi
+        
+        # Check for remaining error messages, being more specific about what constitutes an error
+        if grep -q "^ERROR:\|^Error:\|^error:" "$temp_log" || \
+           (grep -q "Traceback (most recent call last)" "$temp_log" && \
+            ! grep -q "DivisionByZeroError: Cannot divide by zero" "$primary_log_file"); then
+            failure_detected=1
+            error_type="unexpected_error"
+            error_message="$script_name encountered unexpected errors"
+            # Show the matching lines
+            if [ "$DEBUG" = "true" ]; then
+                echo "Debug: Lines containing errors:"
+                grep "^ERROR:\|^Error:\|^error:\|Traceback (most recent call last)\|Exception:" "$temp_log"
+                echo "Debug: End of error lines"
+            fi
         fi
         rm "$temp_log"
+    fi
+    
+    # Check for unexpected termination if no other failure detected yet
+    if [ $failure_detected -eq 0 ] && grep -q "Killed\|Segmentation fault\|Aborted\|core dumped" "$primary_log_file"; then
+        failure_detected=1
+        error_type="termination"
+        error_message="$script_name terminated unexpectedly"
+    fi
+    
+    # --- Failure Handling --- 
+    if [ $failure_detected -ne 0 ]; then
+        # Prepare list of logs to display
+        all_log_files+=("$primary_log_file")
+        
+        # --- Add Heuristics to find related logs --- 
+        local script_prefix="${script_basename%.*}" # Get script name without extension
+        
+        # Example Heuristic: For run_test_agent_with_functions.sh
+        if [[ "$script_basename" == "run_test_agent_with_functions.sh" ]]; then
+            # Add logs generated by this specific script
+            related_logs=($(ls "$LOG_DIR/test_agent_"*".log" "$LOG_DIR/calculator_service_"*".log" 2>/dev/null))
+            all_log_files+=("${related_logs[@]}")
+        fi
+        
+        # Example Heuristic: For start_services_and_agent.py
+        if [[ "$script_basename" == "start_services_and_agent.py" ]]; then
+            related_logs=($(ls "$LOG_DIR/"*"_service_"*".log" "$LOG_DIR/openai_chat_agent.log" 2>/dev/null))
+            all_log_files+=("${related_logs[@]}")
+        fi
+        
+        # Example Heuristic: For start_services_and_cli.sh
+        if [[ "$script_basename" == "start_services_and_cli.sh" ]]; then
+            related_logs=($(ls "$LOG_DIR/"*"_service_"*".log" "$LOG_DIR/interface_cli.log" 2>/dev/null))
+            all_log_files+=("${related_logs[@]}")
+        fi
+        
+        # Example Heuristic: For run_math_interface_agent_simple.sh
+        if [[ "$script_basename" == "run_math_interface_agent_simple.sh" ]]; then
+            related_logs=($(ls "$LOG_DIR/math_test_agent.log" "$LOG_DIR/math_test_interface.log" "$LOG_DIR/rtiddsspy_math.log" 2>/dev/null))
+            all_log_files+=("${related_logs[@]}")
+        fi
+        
+        # --- Display all found logs --- 
+        # Remove duplicates (although unlikely with current heuristics)
+        unique_log_files=($(printf "%s\n" "${all_log_files[@]}" | sort -u))
+        
+        # Call display function with all unique log files
+        display_log_on_failure "$error_type" "$error_message" "${unique_log_files[@]}"
+        
         # Clean up any processes that might still be running
         cleanup
         return 1
     fi
-    rm "$temp_log"
     
-    # Check for unexpected termination
-    if grep -q "Killed\|Segmentation fault\|Aborted\|core dumped" "$log_file"; then
-        display_log_on_failure "$log_file" "termination" "$script_name terminated unexpectedly"
-        # Clean up any processes that might still be running
-        cleanup
-        return 1
-    fi
-    
+    # If no failure detected
     echo "✅ SUCCESS: $script_name completed successfully"
     return 0
 }
@@ -160,7 +214,9 @@ trap cleanup EXIT
 echo "Starting Genesis-LIB test suite..."
 [ "$DEBUG" = "true" ] && echo "Logs will be saved to $LOG_DIR"
 
-# Run each test script with appropriate timeout
+# Math Interface/Agent Simple Test (Checks RPC and Durability)
+run_with_timeout "run_math_interface_agent_simple.sh" 60 || { echo "Test failed: run_math_interface_agent_simple.sh"; exit 1; }
+
 # Basic calculator test
 run_with_timeout "run_math.sh" 30 || { echo "Test failed: run_math.sh"; exit 1; }
 

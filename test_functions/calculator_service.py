@@ -38,10 +38,13 @@ class CalculatorService(EnhancedServiceBase):
     """
 
     def __init__(self):
+        logger.info("===== DDS TRACE: CalculatorService initializing... =====")
         super().__init__("CalculatorService", capabilities=["calculator", "math"])
-        logger.info("CalculatorService initialized")
+        logger.info("===== DDS TRACE: CalculatorService EnhancedServiceBase initialized. =====")
+        logger.info("===== DDS TRACE: Calling _advertise_functions... =====")
         self._advertise_functions()
-        logger.info("Functions advertised")
+        logger.info("===== DDS TRACE: _advertise_functions called. =====")
+        logger.info("CalculatorService initialized")
 
     @genesis_function()
     async def add(self, x: float, y: float, request_info=None) -> Dict[str, Any]:

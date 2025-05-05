@@ -22,20 +22,22 @@ class GenericFunctionClient:
     without prior knowledge of the specific functions.
     """
     
-    def __init__(self, function_registry: Optional[FunctionRegistry] = None):
+    def __init__(self, function_registry: Optional[FunctionRegistry] = None, participant: Optional[dds.DomainParticipant] = None, domain_id: int = 0):
         """
         Initialize the generic function client.
         
         Args:
             function_registry: Optional existing FunctionRegistry instance to use.
                              If None, a new one will be created.
+            participant: Optional existing DDS Participant instance to use for the registry.
+            domain_id: DDS domain ID to use if creating a new registry without a participant.
         """
         logger.info("Initializing GenericFunctionClient")
         
         # Track if we created the registry
         self._created_registry = False
         if function_registry is None:
-            self.function_registry = FunctionRegistry()
+            self.function_registry = FunctionRegistry(participant=participant, domain_id=domain_id)
             self._created_registry = True
         else:
             self.function_registry = function_registry
@@ -49,29 +51,38 @@ class GenericFunctionClient:
     async def discover_functions(self, timeout_seconds: int = 10) -> Dict[str, Any]:
         """
         Discover available functions in the distributed system.
-        
+        Waits until functions are discovered (signaled by registry event) or the timeout is reached.
+
         Args:
             timeout_seconds: How long to wait for functions to be discovered
-            
+
         Returns:
             Dictionary of discovered functions
         """
-        logger.info("Discovering all available functions")
-        start_time = time.time()
-        
-        while time.time() - start_time < timeout_seconds:
-            # Update discovered functions
-            self.discovered_functions = self.function_registry.discovered_functions.copy()
-            
-            # Wait a bit before checking again
-            await asyncio.sleep(0.5)
-        
-        # Log the discovered functions, even if none were found
+        logger.info(f"===== DDS TRACE: Waiting for function discovery event (timeout: {timeout_seconds}s)... =====")
+
+        try:
+            # Wait for the registry's discovery event or timeout
+            registry_event = self.function_registry._discovery_event
+            logger.info(f"===== DDS TRACE: Waiting on event {id(registry_event)}... =====")
+            await asyncio.wait_for(registry_event.wait(), timeout=timeout_seconds)
+            logger.info(f"===== DDS TRACE: Function discovery event received or already set (event: {id(registry_event)}). =====")
+        except asyncio.TimeoutError:
+            logger.warning(f"===== DDS TRACE: Timeout ({timeout_seconds}s) reached waiting for function discovery event. =====")
+        except Exception as e:
+             logger.error(f"===== DDS TRACE: Error waiting for function discovery event: {e} ====")
+
+        # Regardless of event, grab the current state of discovered functions from the registry
+        logger.info("===== DDS TRACE: Retrieving discovered functions from registry... =====")
+        self.discovered_functions = self.function_registry.discovered_functions.copy()
+        logger.info(f"===== DDS TRACE: Retrieved {len(self.discovered_functions)} functions from registry. =====")
+
+        # Log the discovered functions
         if not self.discovered_functions:
-            logger.info("No functions discovered in the distributed system")
+            logger.warning("No functions were discovered in the registry.")
             return {}
-        
-        logger.info(f"Discovered {len(self.discovered_functions)} functions")
+
+        logger.info(f"Discovered {len(self.discovered_functions)} functions in registry")
         for func_id, func_info in self.discovered_functions.items():
             if isinstance(func_info, dict):
                 logger.info(f"  - {func_id}: {func_info.get('name', 'unknown')} - {func_info.get('description', 'No description')}")

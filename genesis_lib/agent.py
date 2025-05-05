@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 class GenesisAgent(ABC):
     """Base class for all Genesis agents"""
+    registration_writer: Optional[dds.DynamicData.DataWriter] = None # Define at class level
+
     def __init__(self, agent_name: str, service_name: str, agent_id: str = None):
         """
         Initialize the agent.
@@ -31,19 +33,43 @@ class GenesisAgent(ABC):
             service_name: Name of the service this agent provides
             agent_id: Optional UUID for the agent (if None, will generate one)
         """
+        logger.info(f"GenesisAgent {agent_name} STARTING initializing with agent_id {agent_id}")
         self.agent_name = agent_name
         self.service_name = service_name
         self.app = GenesisApp(preferred_name=self.agent_name, agent_id=agent_id)
-        
+        logger.info(f"GenesisAgent {self.agent_name} initialized with app {self.app.agent_id}")
+
+
         # Get types from XML
         config_path = get_datamodel_path()
         self.type_provider = dds.QosProvider(config_path)
         self.request_type = self.type_provider.type("genesis_lib", f"{service_name}Request")
         self.reply_type = self.type_provider.type("genesis_lib", f"{service_name}Reply")
         
+        logger.info(f"GenesisAgent {self.agent_name} initialized with broken (need to fix soon) static RPC types")
         # Create event loop for async operations
         self.loop = asyncio.get_event_loop()
-        
+        logger.info(f"GenesisAgent {self.agent_name} initialized with loop {self.loop}")
+
+
+        # Create registration writer with QoS
+        writer_qos = dds.QosProvider.default.datawriter_qos
+        writer_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
+        writer_qos.history.kind = dds.HistoryKind.KEEP_LAST
+        writer_qos.history.depth = 500
+        writer_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
+        writer_qos.liveliness.kind = dds.LivelinessKind.AUTOMATIC
+        writer_qos.liveliness.lease_duration = dds.Duration(seconds=2)
+        writer_qos.ownership.kind = dds.OwnershipKind.SHARED
+
+        # Create registration writer
+        self.registration_writer = dds.DynamicData.DataWriter(
+            self.app.publisher,
+            self.app.registration_topic,
+            qos=writer_qos
+        )
+        logger.info("✅ TRACE: Registration writer created with QoS settings")
+
         # Create replier with data available listener
         class RequestListener(dds.DynamicData.DataReaderListener):
             def __init__(self, agent):
@@ -166,7 +192,7 @@ class GenesisAgent(ABC):
         try:
             # Announce presence
             logger.info("Announcing agent presence...")
-            await self.app.announce_self()
+            await self.announce_self()
             
             # Main loop - just keep the event loop running
             logger.info(f"{self.agent_name} listening for requests (Ctrl+C to exit)...")
@@ -203,6 +229,46 @@ class GenesisAgent(ABC):
             loop.run_until_complete(self.close())
         finally:
             loop.close()
+
+    async def announce_self(self):
+        """Publish a GenesisRegistration announcement for this agent."""
+        try:
+            logger.info(f"Starting announce_self for agent {self.agent_name}")
+            
+            # Create registration dynamic data
+            registration = dds.DynamicData(self.app.registration_type)
+            registration["message"] = f"Agent {self.agent_name} announcing presence"
+            registration["prefered_name"] = self.agent_name
+            registration["default_capable"] = 1
+            registration["instance_id"] = self.app.agent_id
+            
+            logger.info(f"Created registration announcement: message='{registration['message']}', prefered_name='{registration['prefered_name']}', default_capable={registration['default_capable']}, instance_id='{registration['instance_id']}'")
+            
+            # Write and flush the registration announcement
+            logger.info("🔍 TRACE: About to write registration announcement...")
+            write_result = self.registration_writer.write(registration)
+            logger.info(f"✅ TRACE: Registration announcement write result: {write_result}")
+            
+            try:
+                logger.info("🔍 TRACE: About to flush registration writer...")
+                # Get writer status before flush
+                status = self.registration_writer.datawriter_protocol_status
+                logger.info(f"📊 TRACE: Writer status before flush - Sent")
+                
+                self.registration_writer.flush()
+                
+                # Get writer status after flush
+                status = self.registration_writer.datawriter_protocol_status
+                logger.info(f"📊 TRACE: Writer status after flush - Sent")
+                logger.info("✅ TRACE: Registration writer flushed successfully")
+                logger.info("Successfully announced agent presence")
+            except Exception as flush_error:
+                logger.error(f"💥 TRACE: Error flushing registration writer: {flush_error}")
+                logger.error(traceback.format_exc())
+                
+        except Exception as e:
+            logger.error(f"Error in announce_self: {e}")
+            logger.error(traceback.format_exc())
 
 class GenesisAnthropicChatAgent(GenesisAgent, AnthropicChatAgent):
     """Genesis agent that uses Anthropic's Claude model"""

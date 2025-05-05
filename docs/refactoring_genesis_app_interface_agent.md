@@ -107,7 +107,11 @@ This refactoring aims to address these points by clearly separating the responsi
     *   No errors related to missing or incorrect DDS entities occur.
     *   Cleanup (`close()`) happens without errors.
     *   Agent announcement errors (once `announce_self` is moved).
-
+*   **Extensive Tracing:** Add tracing statements to everything.
+    *   This is a distributed system and is very difficult to debug without tracing statements.
+    *   New code should always have tracing statements to see where things are failing.
+    *   Tracing statements are particularly important when a DDS message is sent and received.
+    *   Use rtiddsspy -printSample if you're looking to see if a message is sent but not received.  RTIDDS spy subscribes to all messages so it is a good endpoint to try to debug sends.
 ## 5. Conclusion
 
 This refactoring will result in a more robust, maintainable, and logically structured Genesis library. By clearly separating the roles of the core application, interfaces, and agents, and by prioritizing event-driven DDS patterns, the system will be easier to understand, extend, and debug. 

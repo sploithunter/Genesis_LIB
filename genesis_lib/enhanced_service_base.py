@@ -220,7 +220,7 @@ class EnhancedServiceBase(GenesisRPCService):
         self.app_guid = None  # Will be set after capability writer is created
         
         # Initialize the function registry and store reference to self
-        self.registry = registry if registry is not None else FunctionRegistry(participant=participant, domain_id=domain_id)
+        self.registry = registry if registry is not None else FunctionRegistry(participant=self.participant, domain_id=domain_id)
         self.registry.service_base = self  # Set this instance as the service base
 
         # Create and set our enhanced listener
@@ -539,13 +539,14 @@ class EnhancedServiceBase(GenesisRPCService):
         4. Publishes monitoring events for function discovery
         """
         if self._functions_advertised:
-            logger.warning("Functions have already been advertised")
+            logger.warning("===== DDS TRACE: Functions already advertised, skipping. =====")
             return
-            
-        logger.info("Advertising functions to the registry")
-        
+
+        logger.info("===== DDS TRACE: Starting function advertisement process... =====")
+
         # Get total number of functions for tracking first/last
         total_functions = len(self.functions)
+        logger.info(f"===== DDS TRACE: Found {total_functions} functions to advertise. =====")
 
         # Publish initial node join event (both old and new monitoring)
         self._publish_monitoring_event(
@@ -594,6 +595,7 @@ class EnhancedServiceBase(GenesisRPCService):
         )
         
         for i, (func_name, func_data) in enumerate(self.functions.items(), 1):
+            logger.info(f"===== DDS TRACE: Preparing to advertise function {i}/{total_functions}: {func_name} =====")
             # Get schema from the function data
             schema = json.loads(func_data["tool"].function.parameters)
             
@@ -694,6 +696,7 @@ class EnhancedServiceBase(GenesisRPCService):
         
         # Mark functions as advertised
         self._functions_advertised = True
+        logger.info("===== DDS TRACE: Finished function advertisement process. =====")
     
     def publish_function_call_event(self, function_name: str, call_data: Dict[str, Any], request_info=None):
         """
