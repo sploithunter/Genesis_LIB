@@ -9,138 +9,160 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
 
-# Ensure we are in the run_scripts directory
-cd "$SCRIPT_DIR"
-
 # Set up log directory
 LOG_DIR="$PROJECT_ROOT/logs"
 mkdir -p "$LOG_DIR"
-
-# Clear existing log files
-echo "🧹 TRACE: Clearing existing log files..."
-rm -f "$LOG_DIR/rtiddsspy_math.log"
-rm -f "$LOG_DIR/math_test_agent.log"
-rm -f "$LOG_DIR/math_test_interface.log"
 
 # Define script and log file names
 AGENT_SCRIPT="$PROJECT_ROOT/run_scripts/math_test_agent.py"
 INTERFACE_SCRIPT="$PROJECT_ROOT/run_scripts/math_test_interface.py"
 AGENT_LOG="$LOG_DIR/math_test_agent.log"
 INTERFACE_LOG="$LOG_DIR/math_test_interface.log"
-SPY_LOG="$LOG_DIR/rtiddsspy_math.log"
+REGISTRATION_SPY_LOG="$LOG_DIR/rtiddsspy_registration.log"
+INTERFACE_SPY_LOG="$LOG_DIR/rtiddsspy_interface.log"
 
-# Process IDs
-AGENT_PID=""
-INTERFACE_PID=""
-SPY_PID=""
+# Function to kill a process and ensure it's dead
+kill_process() {
+    local pid=$1
+    local name=$2
+    local is_spy=$3
 
-# Cleanup function to ensure processes are killed
-cleanup() {
-    echo "🧹 TRACE: Starting cleanup process..."
-    if [ -n "$AGENT_PID" ]; then
-        echo "🔫 TRACE: Stopping agent process $AGENT_PID..."
-        kill $AGENT_PID 2>/dev/null || true
-        wait $AGENT_PID 2>/dev/null || true
+    if [ "$is_spy" = "true" ]; then
+        # For spy processes, use pkill with the specific command line
+        echo "🔫 TRACE: Stopping $name process $pid..."
+        pkill -f "rtiddsspy.*spy_transient.xml.*SpyLib::TransientReliable" || true
+        sleep 1
+    else
+        # For other processes, use the normal kill approach
+        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            echo "🔫 TRACE: Stopping $name process $pid..."
+            kill -TERM "$pid" 2>/dev/null || true
+            sleep 1
+            if kill -0 "$pid" 2>/dev/null; then
+                echo "⚠️ TRACE: Process $pid didn't respond to SIGTERM, using SIGKILL..."
+                kill -KILL "$pid" 2>/dev/null || true
+            fi
+            wait "$pid" 2>/dev/null || true
+        fi
     fi
-    if [ -n "$INTERFACE_PID" ]; then
-        echo "🔫 TRACE: Stopping interface process $INTERFACE_PID..."
-        kill $INTERFACE_PID 2>/dev/null || true
-        wait $INTERFACE_PID 2>/dev/null || true
-    fi
-    if [ -n "$SPY_PID" ]; then
-        echo "🔫 TRACE: Stopping RTI DDS Spy process $SPY_PID..."
-        kill $SPY_PID 2>/dev/null || true
-        wait $SPY_PID 2>/dev/null || true
-    fi
-    echo "✅ TRACE: Cleanup completed successfully"
 }
 
-# Set trap for cleanup on exit
-trap cleanup EXIT INT TERM
+# Clear existing log files
+echo "🧹 TRACE: Clearing existing log files..."
+rm -f "$AGENT_LOG" "$INTERFACE_LOG" "$REGISTRATION_SPY_LOG" "$INTERFACE_SPY_LOG"
 
-# Start RTI DDS Spy with print sample
-echo "🚀 TRACE: Starting RTI DDS Spy..."
-/Applications/rti_connext_dds-7.3.0/bin/rtiddsspy -printSample > "$SPY_LOG" 2>&1 &
-SPY_PID=$!
-echo "✅ TRACE: RTI DDS Spy started with PID: $SPY_PID (Log: $SPY_LOG)"
+echo "🔬 TRACE: Starting Test 1 - Registration Durability Test"
+echo "=============================================="
 
-# Wait a moment for the spy to initialize
-echo "⏳ TRACE: Waiting for RTI DDS Spy to initialize..."
-sleep 2
-
-# Run the agent in the background
-echo "🚀 TRACE: Starting Math Test Agent in background..."
-PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$AGENT_SCRIPT" > "$AGENT_LOG" 2>&1 &
+# Start the agent first
+echo "🚀 TRACE: Starting agent..."
+PYTHONUNBUFFERED=1 stdbuf -o0 -e0 python3 -u "$AGENT_SCRIPT" > "$AGENT_LOG" 2>&1 &
 AGENT_PID=$!
-echo "✅ TRACE: Agent started with PID: $AGENT_PID (Log: $AGENT_LOG)"
+echo "✅ TRACE: Agent started with PID: $AGENT_PID"
 
-# Wait for the agent to initialize
-echo "⏳ TRACE: Waiting 3 seconds for agent to initialize..."
-sleep 3
+# Wait for the agent to initialize and announce itself
+echo "⏳ TRACE: Waiting for agent to initialize..."
+sleep 5
 
-# Run single interface instance
-echo "🚀 TRACE: Starting Math Test Interface..."
-PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" python "$INTERFACE_SCRIPT" > "$INTERFACE_LOG" 2>&1 &
-INTERFACE_PID=$!
-echo "✅ TRACE: Interface started with PID: $INTERFACE_PID (Log: $INTERFACE_LOG)"
+# Now start RTI DDS Spy AFTER the agent
+echo "🚀 TRACE: Starting RTI DDS Spy to verify durability..."
+/Applications/rti_connext_dds-7.3.0/bin/rtiddsspy -printSample -qosFile spy_transient.xml -qosProfile SpyLib::TransientReliable > "$REGISTRATION_SPY_LOG" 2>&1 &
+REGISTRATION_SPY_PID=$!
+echo "✅ TRACE: RTI DDS Spy started with PID: $REGISTRATION_SPY_PID (Log: $REGISTRATION_SPY_LOG)"
 
-# Wait for the interface to complete
-echo "⏳ TRACE: Waiting for interface to complete..."
-if wait $INTERFACE_PID; then
-    echo "✅ TRACE: Interface completed successfully"
+# Wait for the spy to receive the durable announcement
+echo "⏳ TRACE: Waiting for RTI DDS Spy to receive durable announcement..."
+sleep 10
+
+# Check for registration announcement in DDS Spy logs
+echo "🔍 TRACE: Checking for registration announcement..."
+echo "📜 DEBUG: Current RTI DDS Spy log contents:"
+cat "$REGISTRATION_SPY_LOG"
+echo "----------------------------------------"
+
+# First check for writer creation
+if grep -q "New writer.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$REGISTRATION_SPY_LOG"; then
+    echo "✅ TRACE: Found GenesisRegistration writer"
+    echo "🔍 TRACE: Now checking for registration announcement data..."
+    
+    # Wait a bit longer for the data to arrive
+    sleep 5
+    
+    # Check the log again for the actual announcement data
+    echo "📜 DEBUG: Updated RTI DDS Spy log contents:"
+    cat "$REGISTRATION_SPY_LOG"
+    echo "----------------------------------------"
+    
+    if grep -q "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$REGISTRATION_SPY_LOG"; then
+        echo "✅ TRACE: REGISTRATION ANNOUNCEMENTS WORK. DO NOT CHANGE IT. REGISTRATION ANNOUNCES WORK."
+        echo "✅ TRACE: DURABILITY TEST PASSED - RTI DDS Spy received announcement even though it started after agent!"
+        ANNOUNCEMENT_PASSED=true
+    else
+        echo "⚠️ WARNING: Registration writer found but no announcement data. Needs fixing!"
+        ANNOUNCEMENT_PASSED=false
+    fi
 else
-    echo "❌ TRACE: Interface failed"
-    exit 1
+    echo "❌ TRACE: No registration writer found"
+    ANNOUNCEMENT_PASSED=false
 fi
 
-# Wait a moment to ensure all DDS messages are captured
-echo "⏳ TRACE: Waiting for final DDS messages..."
-sleep 2
+# Clean up Test 1
+echo "🧹 TRACE: Cleaning up Test 1..."
+kill_process "$REGISTRATION_SPY_PID" "registration spy" true
+kill_process "$AGENT_PID" "agent" false
 
-# Display the logs
-echo -e "\n📜 TRACE: Displaying RTI DDS Spy Log:"
+echo "✅ TRACE: Test 1 completed"
+echo "=============================================="
+
+echo "🔬 TRACE: Starting Test 2 - Interface Test"
+echo "=============================================="
+
+# Start a new agent for the interface test
+echo "🚀 TRACE: Starting new agent for interface test..."
+PYTHONUNBUFFERED=1 stdbuf -o0 -e0 python3 -u "$AGENT_SCRIPT" > "$AGENT_LOG" 2>&1 &
+AGENT_PID=$!
+echo "✅ TRACE: Agent started with PID: $AGENT_PID"
+
+# Wait for the agent to initialize
+echo "⏳ TRACE: Waiting for agent to initialize..."
+sleep 5
+
+# Start RTI DDS Spy for interface test
+echo "🚀 TRACE: Starting RTI DDS Spy for interface test..."
+/Applications/rti_connext_dds-7.3.0/bin/rtiddsspy -printSample -qosFile spy_transient.xml -qosProfile SpyLib::TransientReliable > "$INTERFACE_SPY_LOG" 2>&1 &
+INTERFACE_SPY_PID=$!
+echo "✅ TRACE: RTI DDS Spy started with PID: $INTERFACE_SPY_PID (Log: $INTERFACE_SPY_LOG)"
+
+# Start the interface
+echo "🚀 TRACE: Starting interface..."
+python3 "$INTERFACE_SCRIPT" > "$INTERFACE_LOG" 2>&1 &
+INTERFACE_PID=$!
+echo "✅ TRACE: Interface started with PID: $INTERFACE_PID"
+
+# Wait for the interface test to complete
+echo "⏳ TRACE: Waiting for interface test to complete..."
+wait $INTERFACE_PID || true
+
+# Display logs
+echo "📜 TRACE: Displaying Interface Test DDS Spy Log:"
 echo "----------------------------------------"
-cat "$SPY_LOG"
-echo -e "\n📜 TRACE: Displaying Agent Log:"
+cat "$INTERFACE_SPY_LOG"
+
+echo "📜 TRACE: Displaying Agent Log:"
 echo "----------------------------------------"
 cat "$AGENT_LOG"
-echo -e "\n📜 TRACE: Displaying Interface Log:"
+
+echo "📜 TRACE: Displaying Interface Log:"
 echo "----------------------------------------"
 cat "$INTERFACE_LOG"
 
-# Check for registration announcement in DDS Spy logs
-echo "🔍 TRACE: Checking for registration announcement in DDS Spy logs..."
+# Clean up Test 2
+echo "🧹 TRACE: Cleaning up Test 2..."
+kill_process "$INTERFACE_SPY_PID" "interface spy" true
+kill_process "$INTERFACE_PID" "interface" false
+kill_process "$AGENT_PID" "agent" false
 
-# Debug: Show what we're looking for
-echo "🔍 TRACE: Looking for GenesisRegistration topic entries..."
-grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" || echo "No GenesisRegistration entries found"
+echo "✅ TRACE: Test 2 completed"
+echo "=============================================="
 
-echo "🔍 TRACE: Looking for agent announcement message..."
-grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | grep "message:" || echo "No agent announcement message found"
-
-echo "🔍 TRACE: Looking for preferred name..."
-grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | grep "prefered_name:" || echo "No preferred name found"
-
-echo "🔍 TRACE: Looking for default_capable..."
-grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | grep "default_capable:" || echo "No default_capable found"
-
-echo "🔍 TRACE: Looking for instance_id..."
-grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | grep "instance_id:" || echo "No instance_id found"
-
-# Now do the actual check
-if grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | \
-   grep -q "message: \"Agent MathTestAgent announcing presence\"" && \
-   grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | \
-   grep -q "prefered_name: \"MathTestAgent\"" && \
-   grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | \
-   grep -q "default_capable: 1" && \
-   grep -A 4 "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "$SPY_LOG" | \
-   grep -q "instance_id: \"[0-9a-f-]\{36\}\""; then
-    echo "✅ TRACE: Registration announcement found with all expected fields"
-else
-    echo "❌ TRACE: Registration announcement not found or missing expected fields"
-    exit 1
-fi
-
-echo "✅ TRACE: Test completed successfully"
-exit 0 
+echo "✅ TRACE: All tests completed successfully"

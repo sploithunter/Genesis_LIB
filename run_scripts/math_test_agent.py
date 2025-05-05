@@ -6,116 +6,111 @@ import traceback
 import time
 import uuid
 import json
+import rti.connextdds as dds
 from genesis_lib.monitored_agent import MonitoredAgent
+import signal
 
-# Configure logging with detailed format
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s')
+# Configure root logger to handle all loggers
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# Set all genesis_lib loggers to DEBUG
+for name in ['genesis_lib', 'genesis_lib.agent', 'genesis_lib.monitored_agent', 'genesis_lib.genesis_app']:
+    logging.getLogger(name).setLevel(logging.DEBUG)
+
+# Get our specific logger
 logger = logging.getLogger("MathTestAgent")
+logger.setLevel(logging.DEBUG)
+
+# Test log message
+print("🔍 TRACE: Script starting, before any initialization (print)")
+logger.info("🔍 TRACE: Script starting, before any initialization (logger)")
 
 class MathTestAgent(MonitoredAgent):
     """
     A monitored agent for testing concurrent Interface <-> Agent RPC
     using simple math operations.
     """
+    print("🏗️ TRACE: Starting MathTestAgent initialization... (print)")
+    logger.info("🏗️ TRACE: Starting MathTestAgent initialization... (logger)")
     def __init__(self):
-        logger.info("🏗️ TRACE: Creating MathTestAgent...")
-        super().__init__(
-            agent_name="MathTestAgent",
-            service_name="ChatGPT",  # Use the same service name as baseline
-            agent_id=str(uuid.uuid4())
-        )
-
-    async def _process_request(self, request) -> dict:
-        """Process a request from an interface."""
+        logger.info("🏗️ TRACE: Starting MathTestAgent initialization...")
         try:
-            # Parse the JSON message from the request
-            data = json.loads(request['message'])
-            x = data['x']
-            y = data['y']
-            operation = data['operation']
-            conversation_id = data['conversation_id']
+            super().__init__(
+                agent_name="MathTestAgent",
+                service_name="ChatGPT",  # Use the same service name as baseline
+                agent_id=str(uuid.uuid4())
+            )
+            logger.info("✅ TRACE: MonitoredAgent base class initialized")
+            self._shutdown_event = asyncio.Event()
+            logger.info("✅ TRACE: MathTestAgent initialization complete")
+        except Exception as e:
+            logger.error(f"💥 TRACE: Error during MathTestAgent initialization: {e}")
+            logger.error(f"Stack trace: {traceback.format_exc()}")
 
-            # Perform the requested operation
-            if operation == 'add':
+    async def process_request(self, request):
+        """Process math operation requests"""
+        try:
+            # Parse request JSON
+            request_data = json.loads(request["message"])
+            
+            # Extract operation and numbers from request
+            operation = request_data["operation"]
+            x = request_data["x"]
+            y = request_data["y"]
+            conversation_id = request_data["conversation_id"]
+            
+            # Perform operation
+            result = 0
+            if operation == "add":
                 result = x + y
-            elif operation == 'subtract':
-                result = x - y
-            elif operation == 'multiply':
+            elif operation == "multiply":
                 result = x * y
-            elif operation == 'divide':
+            elif operation == "divide":
                 if y == 0:
-                    return {
-                        'message': 'Error: Division by zero',
-                        'status': 1,
-                        'conversation_id': conversation_id
-                    }
+                    raise ValueError("Cannot divide by zero")
                 result = x / y
+            elif operation == "subtract":
+                result = x - y
             else:
-                return {
-                    'message': f'Error: Unknown operation {operation}',
-                    'status': 1,
-                    'conversation_id': conversation_id
-                }
-
+                raise ValueError(f"Unsupported operation: {operation}")
+                
+            # Return result
             return {
-                'message': str(result),
-                'status': 0,
-                'conversation_id': conversation_id
-            }
-
-        except json.JSONDecodeError as e:
-            logger.error(f"💥 TRACE: Error decoding JSON message: {e}")
-            logger.error(f"Stack trace:\n{traceback.format_exc()}")
-            return {
-                'message': f'Error: Invalid JSON message: {e}',
-                'status': 1,
-                'conversation_id': ''
-            }
-        except KeyError as e:
-            logger.error(f"💥 TRACE: Missing required field: {e}")
-            logger.error(f"Stack trace:\n{traceback.format_exc()}")
-            return {
-                'message': f'Error: Missing required field: {e}',
-                'status': 1,
-                'conversation_id': ''
+                "message": str(result),
+                "status": 0,
+                "conversation_id": conversation_id
             }
         except Exception as e:
-            logger.error(f"💥 TRACE: Error processing request: {e}")
-            logger.error(f"Stack trace:\n{traceback.format_exc()}")
             return {
-                'message': f'Error: {e}',
-                'status': 1,
-                'conversation_id': ''
+                "message": f"Error processing request: {str(e)}",
+                "status": 1,
+                "conversation_id": ""
             }
 
 async def main():
-    logger.info("🎬 TRACE: Starting main()")
-    agent = None
+    """Main function"""
     try:
-        logger.info("🏗️ TRACE: Creating MathTestAgent instance")
+        # Create and run agent
         agent = MathTestAgent()
-        
-        logger.info("🔄 TRACE: Starting agent event loop")
-        await agent.run()  # Call run() instead of waiting on a shutdown event
-        
+        logger.info("✅ TRACE: Agent created, starting run...")
+        await agent.run()
     except KeyboardInterrupt:
-        logger.info("👋 TRACE: KeyboardInterrupt received, shutting down.")
+        logger.info("👋 TRACE: Received keyboard interrupt, shutting down...")
     except Exception as e:
-        logger.error(f"💥 TRACE: Fatal error in main: {e}")
-        logger.error(f"Stack trace:\n{traceback.format_exc()}")
+        logger.error(f"💥 TRACE: Error in main: {e}")
+        logger.error(f"Stack trace: {traceback.format_exc()}")
     finally:
-        if agent:
-            logger.info("🧹 TRACE: Closing agent resources...")
+        # Clean shutdown
+        if 'agent' in locals():
+            logger.info("🧹 TRACE: Cleaning up agent...")
             await agent.close()
-            logger.info("✅ TRACE: Agent closed successfully")
-        logger.info("👋 TRACE: main() ending")
+            logger.info("✅ TRACE: Agent cleanup complete")
 
 if __name__ == "__main__":
-    logger.info("🚀 TRACE: Script starting")
-    try:
-        asyncio.run(main())
-    except Exception as e:
-        logger.error(f"💥 TRACE: Script error: {e}")
-        logger.error(f"Stack trace:\n{traceback.format_exc()}")
-    logger.info("👋 TRACE: Script ending") 
+    asyncio.run(main()) 
