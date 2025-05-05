@@ -43,10 +43,10 @@ class GenesisAgent(ABC):
         # Get types from XML
         config_path = get_datamodel_path()
         self.type_provider = dds.QosProvider(config_path)
-        self.request_type = self.type_provider.type("genesis_lib", f"{service_name}Request")
-        self.reply_type = self.type_provider.type("genesis_lib", f"{service_name}Reply")
-        
-        logger.info(f"GenesisAgent {self.agent_name} initialized with broken (need to fix soon) static RPC types")
+        # Initialize RPC types
+        self.request_type = self.type_provider.type("genesis_lib", "ChatGPTRequest")
+        self.reply_type = self.type_provider.type("genesis_lib", "ChatGPTReply")
+        logger.info(f"GenesisAgent {self.agent_name} initialized with hardcoded ChatGPT RPC types")
         # Create event loop for async operations
         self.loop = asyncio.get_event_loop()
         logger.info(f"GenesisAgent {self.agent_name} initialized with loop {self.loop}")
@@ -241,8 +241,9 @@ class GenesisAgent(ABC):
             registration["prefered_name"] = self.agent_name
             registration["default_capable"] = 1
             registration["instance_id"] = self.app.agent_id
+            registration["service_name"] = self.service_name
             
-            logger.info(f"Created registration announcement: message='{registration['message']}', prefered_name='{registration['prefered_name']}', default_capable={registration['default_capable']}, instance_id='{registration['instance_id']}'")
+            logger.info(f"Created registration announcement: message='{registration['message']}', prefered_name='{registration['prefered_name']}', default_capable={registration['default_capable']}, instance_id='{registration['instance_id']}', service_name='{registration['service_name']}'")
             
             # Write and flush the registration announcement
             logger.info("🔍 TRACE: About to write registration announcement...")

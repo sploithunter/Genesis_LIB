@@ -43,7 +43,7 @@ class MathTestAgent(MonitoredAgent):
         try:
             super().__init__(
                 agent_name="MathTestAgent",
-                service_name="ChatGPT",  # Use the same service name as baseline
+                service_name="ChatGPT_42",  # Changed service name to test type independence
                 agent_id=str(uuid.uuid4())
             )
             logger.info("✅ TRACE: MonitoredAgent base class initialized")
