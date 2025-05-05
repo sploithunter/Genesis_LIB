@@ -65,13 +65,14 @@ class MonitoredAgent(GenesisAgent):
             description: Optional description of the agent
             domain_id: Optional DDS domain ID
         """
+        logger.info(f"MonitoredAgent {agent_name} STARTING initializing with agent_id {agent_id}")
         # Initialize base class with only the parameters it accepts
         super().__init__(
             agent_name=agent_name,
             service_name=service_name,
             agent_id=agent_id
         )
-        
+        logger.info(f"MonitoredAgent {agent_name} initialized with base class")
         # Store additional parameters as instance variables
         self.agent_type = agent_type
         self.description = description or f"A {agent_type} providing {service_name} service"
@@ -98,9 +99,38 @@ class MonitoredAgent(GenesisAgent):
         
         # Create subscription match listener
         self._setup_subscription_listener()
-        
-        # Announce agent presence
-        self._publish_discovery_event()
+
+        # Publish agent discovery event
+        self.publish_component_lifecycle_event(
+            category="NODE_DISCOVERY",
+            message=f"Agent {agent_name} discovered",
+            previous_state="OFFLINE",
+            new_state="DISCOVERING",
+            source_id=self.app.agent_id,
+            target_id=self.app.agent_id,
+            capabilities=json.dumps({
+                "agent_type": agent_type,
+                "service": service_name,
+                "description": self.description,
+                "agent_id": self.app.agent_id
+            })
+        )
+
+        # Publish agent ready event
+        self.publish_component_lifecycle_event(
+            category="AGENT_READY",
+            message=f"{agent_name} ready for requests",
+            previous_state="DISCOVERING",
+            new_state="READY",
+            source_id=self.app.agent_id,
+            target_id=self.app.agent_id,
+            capabilities=json.dumps({
+                "agent_type": agent_type,
+                "service": service_name,
+                "description": self.description,
+                "agent_id": self.app.agent_id
+            })
+        )
         
         logger.info(f"Monitored agent {agent_name} initialized with type {agent_type}, agent_id={self.app.agent_id}, dds_guid={self.app.dds_guid}")
     
@@ -255,73 +285,6 @@ class MonitoredAgent(GenesisAgent):
             qos=reader_qos,
             listener=SubscriptionMatchListener(logger),
             mask=dds.StatusMask.SUBSCRIPTION_MATCHED
-        )
-    
-    def _publish_discovery_event(self):
-        """Publish agent discovery event"""
-        metadata = {
-            "agent_name": self.agent_name,
-            "service_name": self.service_name,
-            "agent_type": self.agent_type,
-            "provider_id": self.app.agent_id  # Use agent UUID instead of DDS GUID
-        }
-        
-        # First publish node discovery event with new explicit categorization
-        self.publish_component_lifecycle_event(
-            category="NODE_DISCOVERY",
-            message=f"Agent {self.agent_name} discovered ({self.app.agent_id})",
-            capabilities=json.dumps({
-                "agent_type": self.agent_type,
-                "service": self.service_name,
-                "agent_id": self.app.agent_id  # Include agent UUID in capabilities
-            }),
-            source_id=self.app.agent_id,  # Set source_id for node discovery
-            target_id=self.app.agent_id   # Set target_id for node discovery
-        )
-
-        # Initial join event
-        self.publish_component_lifecycle_event(
-            category="AGENT_INIT",
-            message=f"Agent {self.agent_name} initialization started",
-            capabilities=json.dumps({
-                "agent_type": self.agent_type,
-                "service": self.service_name,
-                "agent_id": self.app.agent_id
-            }),
-            source_id=self.app.agent_id
-        )
-
-        # Transition to discovering state
-        self.publish_component_lifecycle_event(
-            category="STATE_CHANGE",
-            message=f"Agent {self.agent_name} discovering services",
-            capabilities=json.dumps({
-                "agent_type": self.agent_type,
-                "service": self.service_name,
-                "agent_id": self.app.agent_id
-            }),
-            source_id=self.app.agent_id,  # Set source_id for state change
-            target_id=self.app.agent_id  # For state changes, target is self
-        )
-
-        # Publish legacy monitoring event
-        self.publish_monitoring_event(
-            "AGENT_DISCOVERY",
-            metadata=metadata,
-            status_data={"status": "available", "state": "ready"}
-        )
-
-        # Transition to ready state
-        self.publish_component_lifecycle_event(
-            category="AGENT_READY",
-            message=f"Agent {self.agent_name} ready for requests",
-            capabilities=json.dumps({
-                "agent_type": self.agent_type,
-                "service": self.service_name,
-                "agent_id": self.app.agent_id
-            }),
-            source_id=self.app.agent_id,
-            target_id=self.app.agent_id
         )
     
     def publish_monitoring_event(self, 
