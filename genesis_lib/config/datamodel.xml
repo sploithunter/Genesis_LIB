@@ -13,7 +13,7 @@
       <member name="service_name" type="string" stringMaxLength="256"/>
     </struct>
 
-
+    <!-- Below are the two NLP communication types, interface to agent and agent to agent.  Right now they're at 8K, But it should probably be either Unbounded or... Better yet, Add Streaming like we had in version 0.1.-->
     <!-- interface to agent communication -->
     <struct name="InterfaceAgentRequest">
       <member name="message" type="string" stringMaxLength="8192"/>

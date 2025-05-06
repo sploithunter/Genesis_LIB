@@ -44,4 +44,27 @@ Currently, no workaround is implemented. The system continues to function but wi
 ### Status
 - **Priority**: High
 - **Status**: Known architectural issue, needs refactoring
-- **Impact**: Performance and architectural cleanliness 
+- **Impact**: Performance and architectural cleanliness
+
+## NLP Communication Topic Size Limitation
+
+### Description
+The natural language processing communication topics (InterfaceAgentRequest, InterfaceAgentReply, AgentAgentRequest, and AgentAgentReply) are currently bounded at 8K characters. This limitation may be insufficient for complex NLP interactions and needs to be addressed by either implementing proper streaming support or using unbounded strings.
+
+### Symptoms
+- Messages exceeding 8K characters may be truncated
+- Potential loss of information in complex NLP interactions
+- System may not handle large language model responses effectively
+
+### Affected Components
+- InterfaceAgentRequest/Reply
+- AgentAgentRequest/Reply
+- Any components using these communication channels
+
+### Workaround
+Currently, messages need to be kept under 8K characters. For larger messages, they may need to be split into multiple smaller messages.
+
+### Status
+- **Priority**: High
+- **Status**: Known issue, needs implementation
+- **Impact**: May affect quality and completeness of NLP interactions 
