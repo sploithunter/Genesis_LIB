@@ -1,3 +1,34 @@
+"""
+Genesis Monitoring System
+
+This module provides the core monitoring infrastructure for the Genesis framework,
+enabling real-time observation and logging of all distributed components. It implements
+a comprehensive DDS-based monitoring system that captures and processes events from
+agents, interfaces, and services across the network.
+
+Key responsibilities include:
+- Real-time log aggregation and distribution via DDS
+- Component lifecycle event monitoring and tracking
+- Function call and execution monitoring
+- Chain event tracking for multi-step operations
+- Liveliness monitoring for network health
+- Centralized logging with source identification
+- Event filtering and querying capabilities
+
+The monitoring system subscribes to various DDS topics:
+- LogMessage: For centralized logging across all components
+- ComponentLifecycleEvent: For tracking component states and transitions
+- ChainEvent: For monitoring function call chains and workflows
+- LivelinessUpdate: For network health and component presence
+- MonitoringEvent: For general monitoring and status updates
+
+This system enables comprehensive visibility into the Genesis network's operation,
+facilitating debugging, performance monitoring, and system health tracking.
+
+Copyright (c) 2025, RTI & Jason Upchurch
+"""
+
+#!/usr/bin/env python3
 import rti.connextdds as dds
 import logging
 import uuid

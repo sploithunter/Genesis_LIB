@@ -1,3 +1,28 @@
+"""
+Genesis Application Base Class
+
+This module provides the foundational base class `GenesisApp` that serves as the core
+integration point for all components in the Genesis framework. It establishes the
+essential DDS infrastructure, function registration capabilities, and lifecycle
+management that are required by both agents and interfaces.
+
+Key responsibilities include:
+- DDS participant and topic management
+- Function registration and discovery infrastructure
+- Agent registration and presence announcement
+- Resource lifecycle management
+- Error pattern handling and recovery
+- Integration with the Genesis monitoring system
+
+The GenesisApp class is designed to be extended by both `GenesisAgent` and
+`GenesisInterface` classes, providing them with the necessary infrastructure
+for DDS-based communication and function discovery. It handles the complexity
+of DDS setup, QoS configuration, and resource management, allowing derived
+classes to focus on their specific roles in the Genesis network.
+
+Copyright (c) 2025, RTI & Jason Upchurch
+"""
+
 #!/usr/bin/env python3
 
 import logging

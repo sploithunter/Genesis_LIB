@@ -1,5 +1,46 @@
 #!/bin/bash
 
+# Genesis Test Suite
+# =================
+#
+# This script runs the complete test suite for the Genesis framework, ensuring
+# all components work together correctly in a distributed environment. It tests
+# the core functionality of the framework including:
+#
+# - Function discovery and registration
+# - RPC communication between services
+# - Agent interactions and function calling
+# - Monitoring and logging capabilities
+# - Error handling and recovery
+#
+# The test suite follows this sequence:
+# 1. Starts the monitoring system to observe test execution
+# 2. Launches test services (Calculator, TextProcessor, etc.)
+# 3. Runs test agents that interact with the services
+# 4. Executes integration tests
+# 5. Performs cleanup of all components
+#
+# Prerequisites:
+# - Python 3.10 or higher
+# - RTI Connext DDS 7.3.0 or higher
+# - Required API keys (OpenAI, Anthropic) in environment
+# - All dependencies installed via setup.sh
+#
+# Usage:
+#   ./run_all_tests.sh
+#
+# Environment Variables:
+#   NDDSHOME: Path to RTI Connext DDS installation
+#   OPENAI_API_KEY: OpenAI API key for LLM tests
+#   ANTHROPIC_API_KEY: Anthropic API key for Claude tests
+#
+# Exit Codes:
+#   0: All tests passed successfully
+#   1: One or more tests failed
+#   2: Environment setup failed
+#
+# Copyright (c) 2025, RTI & Jason Upchurch
+
 # run_all_tests.sh - A script to run all Genesis-LIB test scripts with timeouts
 # This script runs each test script with a timeout and proper error handling
 # If any test fails, the script will stop for debugging

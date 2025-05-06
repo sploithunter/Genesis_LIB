@@ -1,3 +1,25 @@
+"""
+Genesis Function Client
+
+This module provides a generic function client implementation for the Genesis framework,
+enabling dynamic discovery and invocation of functions across the distributed network.
+It serves as a key component in the function calling infrastructure, allowing agents
+to discover and utilize functions without prior knowledge of their implementation.
+
+Key responsibilities include:
+- Dynamic discovery of available functions in the distributed system
+- Automatic service client management and lifecycle
+- Intelligent function routing based on service type
+- Schema validation and function metadata management
+- Seamless integration with the Genesis RPC system
+
+The GenericFunctionClient enables agents to discover and call any function service
+without requiring prior knowledge of specific functions, making the Genesis network
+more flexible and adaptable to changing capabilities.
+
+Copyright (c) 2025, RTI & Jason Upchurch
+"""
+
 #!/usr/bin/env python3
 
 import logging

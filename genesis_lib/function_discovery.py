@@ -1,3 +1,29 @@
+"""
+Genesis Function Discovery System
+
+This module provides the core function discovery and registration system for the Genesis
+framework, enabling dynamic discovery and matching of functions across the distributed
+network. It implements a DDS-based discovery mechanism that allows functions to be
+advertised, discovered, and matched based on capabilities and requirements.
+
+Key responsibilities include:
+- DDS-based function capability advertisement and discovery
+- Function registration and metadata management
+- Intelligent function matching using LLM analysis
+- Function validation and schema management
+- Service integration and lifecycle management
+
+Known Limitations:
+- Current implementation may lead to recursive function discovery due to its deep
+  integration in the library stack. This can cause functions to discover each other
+  in unintended ways. Future versions will address this by:
+  1. Moving function discovery to a higher level in the framework
+  2. Implementing clearer boundaries between function providers and consumers
+  3. Adding explicit discovery scoping and filtering
+
+Copyright (c) 2025, RTI & Jason Upchurch
+"""
+
 #!/usr/bin/env python3
 
 import logging

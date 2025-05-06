@@ -1,9 +1,40 @@
+from __future__ import annotations
+
 #!/usr/bin/env python3
+
 """
-Lightweight decorator to declare & register GENESIS functions in one step.
+Genesis Function Decorator System
+
+This module provides a powerful decorator system for automatically generating and managing
+function schemas within the Genesis framework. It enables seamless integration between
+Python functions and large language models by automatically inferring and validating
+function signatures, parameters, and documentation.
+
+Key features:
+- Automatic schema generation from Python type hints and docstrings
+- Support for complex type annotations (Unions, Lists, Dicts)
+- Parameter validation and coercion using Pydantic models
+- OpenAI-compatible function schema generation
+- Intelligent parameter description extraction from docstrings
+
+The @genesis_function decorator allows developers to expose their functions to LLMs
+without manually writing JSON schemas, making the Genesis network more accessible
+and maintainable.
+
+Example:
+    @genesis_function
+    def calculate_sum(a: int, b: int) -> int:
+        \"\"\"Add two numbers together.
+        
+        Args:
+            a: First number to add
+            b: Second number to add
+        \"\"\"
+        return a + b
+
+Copyright (c) 2025, RTI & Jason Upchurch
 """
 
-from __future__ import annotations
 import json, inspect, typing, re
 from typing import Any, Callable, Dict, Optional, Type, Union, get_origin, get_args
 

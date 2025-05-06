@@ -1,3 +1,24 @@
+"""
+Genesis Function Call Data Model
+
+This module defines the data structures used for function calling RPC (Remote Procedure Call)
+within the Genesis framework. It implements OpenAI-style function calling interfaces using
+RTI's IDL (Interface Definition Language) for type-safe serialization and deserialization.
+
+Key responsibilities include:
+- Defining function call request/reply structures for RPC communication
+- Implementing OpenAI-compatible function calling interfaces
+- Providing schema validation for function definitions
+- Supporting session management operations
+
+Note: This is a temporary implementation that will be integrated into the main
+datamodel.xml in a future update. The current separation allows for rapid iteration
+on the function calling interface while maintaining compatibility with the existing
+DDS infrastructure.
+
+Copyright (c) 2025, RTI & Jason Upchurch
+"""
+
 from dataclasses import field
 from typing import Union, Sequence, Optional, Dict, Any
 import rti.idl as idl

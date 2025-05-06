@@ -1,16 +1,31 @@
 #!/usr/bin/env python3
 """
-GENESIS Enhanced Service Base
+Genesis Enhanced Service Base
 
-This module provides an enhanced base class for GENESIS RPC services that abstracts
-common functionality related to function registration, discovery, and monitoring.
+This module provides the core base class for all services in the Genesis framework,
+implementing automatic function discovery, registration, and monitoring capabilities.
+It serves as the foundation for exposing functions to large language models and agents
+within the Genesis network.
 
-By extending this base class, service implementations can focus on their specific
-business logic while inheriting standardized patterns for:
-- Function registration and discovery
-- Monitoring event publication
-- Error handling
-- Resource management
+Key responsibilities include:
+- Automatic function registration and discovery for LLM tool use
+- Comprehensive monitoring and event tracking
+- Function capability advertisement and lifecycle management
+- Enhanced error handling and resource management
+- Integration with the Genesis monitoring system
+- Support for function decorators and automatic schema generation
+
+The EnhancedServiceBase class enables services to:
+1. Automatically expose their functions to LLMs and agents
+2. Track function calls, results, and errors
+3. Monitor service and function lifecycle events
+4. Manage function capabilities and discovery
+5. Handle complex RPC interactions with proper monitoring
+
+This is the primary integration point for services that want to participate
+in the Genesis network's function calling ecosystem.
+
+Copyright (c) 2025, RTI & Jason Upchurch
 """
 
 import logging

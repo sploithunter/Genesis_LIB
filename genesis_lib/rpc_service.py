@@ -1,3 +1,35 @@
+"""
+Genesis RPC Service
+
+This module provides the core RPC service implementation for the Genesis framework,
+enabling reliable function execution and communication between distributed components.
+It serves as the foundation for all service-side RPC interactions in the Genesis network,
+providing a robust and flexible interface for remote function handling.
+
+Key responsibilities include:
+- DDS-based RPC communication with remote clients
+- Function registration and schema management
+- Request handling and validation
+- Error handling and response formatting
+- Resource lifecycle management
+- Common validation patterns for inputs
+
+The GenesisRPCService is designed to be extended by specialized services and used by
+higher-level components like EnhancedServiceBase. It handles the complexity of
+DDS-based RPC communication, allowing developers to focus on implementing their
+service functions without worrying about the underlying communication details.
+
+The service supports:
+- Automatic function registration with schemas
+- JSON-based request/response handling
+- Input validation with common patterns
+- Asynchronous function execution
+- Comprehensive error handling
+- Resource cleanup and lifecycle management
+
+Copyright (c) 2025, RTI & Jason Upchurch
+"""
+
 import rti.connextdds as dds
 import rti.rpc
 import asyncio

@@ -1,3 +1,28 @@
+"""
+Genesis RPC Client
+
+This module provides the core RPC client implementation for the Genesis framework,
+enabling reliable function calling and communication between distributed components.
+It serves as the foundation for all client-side RPC interactions in the Genesis network,
+providing a robust and flexible interface for remote function invocation.
+
+Key responsibilities include:
+- DDS-based RPC communication with remote services
+- Function call validation and error handling
+- Service discovery and connection management
+- Input validation with configurable patterns
+- Timeout and error handling
+- Resource lifecycle management
+
+The GenesisRPCClient is designed to be extended by specialized clients (e.g.,
+TextProcessorClient) and used by higher-level components like GenericFunctionClient
+and GenesisInterface. It handles the complexity of DDS-based RPC communication,
+allowing developers to focus on building their services without worrying about
+the underlying communication details.
+
+Copyright (c) 2025, RTI & Jason Upchurch
+"""
+
 import rti.connextdds as dds
 import rti.rpc
 import asyncio

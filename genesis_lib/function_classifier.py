@@ -1,9 +1,25 @@
 #!/usr/bin/env python3
 
 """
-Function classifier for the GENESIS library.
-This module provides functionality for classifying and filtering functions
-based on their relevance to a user query.
+Genesis Function Classifier
+
+This module provides intelligent function classification capabilities for the Genesis framework,
+enabling efficient and accurate matching between user queries and available functions. It serves
+as a critical component in the function discovery and selection pipeline, using lightweight LLMs
+to quickly identify relevant functions before deeper processing.
+
+Key responsibilities include:
+- Rapid classification of functions based on user queries
+- Intelligent filtering of irrelevant functions
+- Optimization of function selection for LLM processing
+- Support for complex function metadata analysis
+- Integration with the Genesis function discovery system
+
+The FunctionClassifier enables the Genesis network to efficiently match user needs with
+available capabilities, reducing the cognitive load on primary LLMs and improving
+response times.
+
+Copyright (c) 2025, RTI & Jason Upchurch
 """
 
 import os
