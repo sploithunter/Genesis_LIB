@@ -1,5 +1,22 @@
 """
-Base interface class for the GENESIS library.
+Genesis Interface Base Class
+
+This module provides the abstract base class `GenesisInterface` for all interfaces
+within the Genesis framework. It establishes the core interface functionality,
+communication patterns, and integration with the underlying DDS infrastructure
+managed by `GenesisApp`.
+
+Key responsibilities include:
+- Initializing the interface's identity and DDS presence via `GenesisApp`.
+- Setting up an RPC requester to send requests to agents.
+- Handling agent discovery and registration monitoring.
+- Providing utilities for interface lifecycle management (`connect_to_agent`, `send_request`, `close`).
+- Managing callback registration for agent discovery and departure events.
+
+This class serves as the foundation upon which specialized interfaces, like
+`MonitoredInterface`, are built.
+
+Copyright (c) 2025, RTI & Jason Upchurch
 """
 
 import time
@@ -123,9 +140,9 @@ class GenesisInterface(ABC):
         # Get types from XML
         config_path = get_datamodel_path()
         self.type_provider = dds.QosProvider(config_path)
-        # Hardcode ChatGPT request/reply types
-        self.request_type = self.type_provider.type("genesis_lib", "ChatGPTRequest")
-        self.reply_type = self.type_provider.type("genesis_lib", "ChatGPTReply")
+        # Hardcode InterfaceAgent request/reply types
+        self.request_type = self.type_provider.type("genesis_lib", "InterfaceAgentRequest")
+        self.reply_type = self.type_provider.type("genesis_lib", "InterfaceAgentReply")
         
         # Store member names for later use
         self.reply_members = [member.name for member in self.reply_type.members()]

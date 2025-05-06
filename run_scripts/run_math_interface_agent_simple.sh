@@ -163,8 +163,8 @@ check_log "$INTERFACE_LOG" "🏁 TRACE: MathTestInterface ending with exit code:
 # Check DDS Spy logs
 check_log "$INTERFACE_SPY_LOG" "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "Agent registration" true
 check_log "$INTERFACE_LOG" "✨ TRACE: Agent DISCOVERED: MathTestAgent (GenericAgent)" "Interface discovery" true
-check_log "$INTERFACE_SPY_LOG" "New writer.*topic=\"GenericAgentRequest\".*type=\"ChatGPTRequest\"" "RPC request" true
-check_log "$INTERFACE_SPY_LOG" "New writer.*topic=\"GenericAgentReply\".*type=\"ChatGPTReply\"" "RPC reply" true
+check_log "$INTERFACE_SPY_LOG" "New writer.*topic=\"GenericAgentRequest\".*type=\"InterfaceAgentRequest\"" "RPC request" true
+check_log "$INTERFACE_SPY_LOG" "New writer.*topic=\"GenericAgentReply\".*type=\"InterfaceAgentReply\"" "RPC reply" true
 
 # Clean up Test 2
 echo "🧹 TRACE: Cleaning up Test 2..."

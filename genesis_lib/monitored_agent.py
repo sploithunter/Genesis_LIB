@@ -105,8 +105,8 @@ class MonitoredAgent(GenesisAgent):
         # Get types from XML
         config_path = get_datamodel_path()
         self.type_provider = dds.QosProvider(config_path)
-        self.request_type = self.type_provider.type("genesis_lib", "ChatGPTRequest")
-        self.reply_type = self.type_provider.type("genesis_lib", "ChatGPTReply")
+        self.request_type = self.type_provider.type("genesis_lib", "InterfaceAgentRequest")
+        self.reply_type = self.type_provider.type("genesis_lib", "InterfaceAgentReply")
         
         # Set up monitoring
         self._setup_monitoring()

@@ -14,13 +14,25 @@
     </struct>
 
 
-    <!-- ChatGPT service interface -->
-    <struct name="ChatGPTRequest">
+    <!-- interface to agent communication -->
+    <struct name="InterfaceAgentRequest">
       <member name="message" type="string" stringMaxLength="8192"/>
       <member name="conversation_id" type="string" stringMaxLength="128"/>
     </struct>
 
-    <struct name="ChatGPTReply">
+    <struct name="InterfaceAgentReply">
+      <member name="message" type="string" stringMaxLength="8192"/>
+      <member name="status" type="int32"/>
+      <member name="conversation_id" type="string" stringMaxLength="128"/>
+    </struct>
+
+        <!-- Agent to agent communication -->
+    <struct name="AgentAgentRequest">
+      <member name="message" type="string" stringMaxLength="8192"/>
+      <member name="conversation_id" type="string" stringMaxLength="128"/>
+    </struct>
+
+    <struct name="AgentAgentReply">
       <member name="message" type="string" stringMaxLength="8192"/>
       <member name="status" type="int32"/>
       <member name="conversation_id" type="string" stringMaxLength="128"/>

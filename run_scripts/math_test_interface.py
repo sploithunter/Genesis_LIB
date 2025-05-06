@@ -31,7 +31,7 @@ class MathTestInterface:
         try:
             logger.info("🏗️ TRACE: Creating MathService interface...")
             # Create interface - now using MonitoredInterface directly
-            interface = MonitoredInterface(interface_name="MathTestInterface", service_name="ChatGPT")
+            interface = MonitoredInterface(interface_name="MathTestInterface", service_name="InterfaceAgent111")
 
             logger.info(f"🔍 TRACE: Waiting for agent discovery event...")
             try:

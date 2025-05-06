@@ -1,7 +1,24 @@
 #!/usr/bin/env python3
 """
-Monitored interface base class for the GENESIS library.
-Provides monitoring capabilities for all interfaces.
+Genesis Monitored Interface
+
+This module provides the `MonitoredInterface` class that extends `GenesisInterface`
+to add comprehensive monitoring capabilities. It enhances the base interface with
+event publishing, lifecycle tracking, and performance monitoring through the DDS
+infrastructure.
+
+Key responsibilities include:
+- Extending GenesisInterface with standardized monitoring capabilities.
+- Publishing interface lifecycle events (JOINING, DISCOVERING, READY, etc.).
+- Tracking and publishing request/response events.
+- Managing component lifecycle events and chain events.
+- Providing enhanced monitoring through DDS topics and writers.
+- Supporting both legacy and enhanced (V2) monitoring systems.
+
+This class serves as the monitoring-enabled version of the base interface,
+allowing interfaces to participate in the Genesis monitoring ecosystem.
+
+Copyright (c) 2025, RTI & Jason Upchurch
 """
 
 import logging
@@ -86,12 +103,6 @@ class MonitoredInterface(GenesisInterface):
             service_name: Name of the service this interface connects to
         """
         super().__init__(interface_name=interface_name, service_name=service_name)
-        
-        # Get types from XML
-        config_path = get_datamodel_path()
-        self.type_provider = dds.QosProvider(config_path)
-        self.request_type = self.type_provider.type("genesis_lib", f"{service_name}Request")
-        self.reply_type = self.type_provider.type("genesis_lib", f"{service_name}Reply")
         
         # Set up monitoring
         self._setup_monitoring()
