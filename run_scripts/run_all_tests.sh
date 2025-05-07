@@ -65,6 +65,49 @@ fi
 LOG_DIR="$PROJECT_ROOT/logs"
 mkdir -p "$LOG_DIR"
 
+# Function to check for and clean up DDS processes
+check_and_cleanup_dds() {
+    echo "🔍 TRACE: Checking for existing DDS processes..."
+    
+    # Start spy to check for DDS activity
+    SPY_LOG="$LOG_DIR/dds_check.log"
+    /Applications/rti_connext_dds-7.3.0/bin/rtiddsspy -printSample -qosFile "$PROJECT_ROOT/spy_transient.xml" -qosProfile SpyLib::TransientReliable > "$SPY_LOG" 2>&1 &
+    SPY_PID=$!
+    
+    # Wait a bit to see if any DDS activity is detected
+    sleep 5
+    
+    # Check if spy detected any activity
+    if grep -q "New writer\|New data" "$SPY_LOG"; then
+        echo "⚠️ TRACE: Detected DDS activity. Attempting to clean up..."
+        
+        # Try to kill any DDS processes
+        pkill -f "rtiddsspy" || true
+        pkill -f "python.*genesis_lib" || true
+        
+        # Wait a bit and check again
+        sleep 5
+        
+        # Start a new spy to verify cleanup
+        rm -f "$SPY_LOG"
+        /Applications/rti_connext_dds-7.3.0/bin/rtiddsspy -printSample -qosFile "$PROJECT_ROOT/spy_transient.xml" -qosProfile SpyLib::TransientReliable > "$SPY_LOG" 2>&1 &
+        SPY_PID=$!
+        sleep 5
+        
+        # Check if DDS activity is still present
+        if grep -q "New writer\|New data" "$SPY_LOG"; then
+            echo "❌ ERROR: Failed to clean up DDS processes. Please manually check and kill any running DDS processes."
+            kill $SPY_PID 2>/dev/null || true
+            return 1
+        fi
+    fi
+    
+    # Clean up spy
+    kill $SPY_PID 2>/dev/null || true
+    echo "✅ TRACE: No DDS processes detected or successfully cleaned up"
+    return 0
+}
+
 [ "$DEBUG" = "true" ] && echo "Project root: $PROJECT_ROOT"
 [ "$DEBUG" = "true" ] && echo "Script directory: $SCRIPT_DIR"
 [ "$DEBUG" = "true" ] && echo "Log directory: $LOG_DIR"
@@ -254,6 +297,9 @@ trap cleanup EXIT
 # Main execution
 echo "Starting Genesis-LIB test suite..."
 [ "$DEBUG" = "true" ] && echo "Logs will be saved to $LOG_DIR"
+
+# Check for and clean up any existing DDS processes
+check_and_cleanup_dds || { echo "Test suite aborted due to DDS process issues"; exit 1; }
 
 # Math Interface/Agent Simple Test (Checks RPC and Durability)
 run_with_timeout "run_math_interface_agent_simple.sh" 60 || { echo "Test failed: run_math_interface_agent_simple.sh"; exit 1; }
