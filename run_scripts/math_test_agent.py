@@ -56,8 +56,10 @@ class MathTestAgent(MonitoredAgent):
     async def process_request(self, request):
         """Process math operation requests"""
         try:
+            # Get the message field from the DynamicData object
+            message = request.get_string("message")
             # Parse request JSON
-            request_data = json.loads(request["message"])
+            request_data = json.loads(message)
             
             # Extract operation and numbers from request
             operation = request_data["operation"]
