@@ -30,7 +30,6 @@ from typing import Dict, Any, List, Optional
 from genesis_lib.monitored_agent import MonitoredAgent
 from genesis_lib.function_classifier import FunctionClassifier
 from genesis_lib.generic_function_client import GenericFunctionClient
-import rti.connextdds as dds
 
 # Configure logging
 logging.basicConfig(
