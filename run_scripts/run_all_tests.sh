@@ -332,6 +332,9 @@ run_with_timeout "run_simple_agent.sh" 60 || { echo "Test failed: run_simple_age
 # Simple client test
 run_with_timeout "run_simple_client.sh" 60 || { echo "Test failed: run_simple_client.sh"; exit 1; }
 
+# Calculator durability test
+run_with_timeout "test_calculator_durability.sh" 60 || { echo "Test failed: test_calculator_durability.sh"; exit 1; }
+
 # Example agent test
 DEBUG=true run_with_timeout "run_test_agent_with_functions.sh" 60 || { echo "Test failed: run_test_agent_with_functions.sh"; exit 1; }
 
