@@ -111,11 +111,15 @@ class GenesisApp:
         writer_qos.ownership.kind = dds.OwnershipKind.SHARED
         
         # Initialize function registry and pattern registry
+        logger.info("===== DDS TRACE: Initializing FunctionRegistry in GenesisApp =====")
         self.function_registry = FunctionRegistry(self.participant, domain_id)
+        logger.info(f"===== DDS TRACE: FunctionRegistry initialized with participant {self.participant.instance_handle} =====")
         self.pattern_registry = pattern_registry
         
         # Register built-in functions
+        logger.info("===== DDS TRACE: Starting built-in function registration =====")
         self._register_builtin_functions()
+        logger.info("===== DDS TRACE: Completed built-in function registration =====")
         
         logger.info(f"GenesisApp initialized with agent_id={self.agent_id}, dds_guid={self.dds_guid}")
 
@@ -164,6 +168,7 @@ class GenesisApp:
 
     def _register_builtin_functions(self):
         """Register any built-in functions for this application"""
+        logger.info("===== DDS TRACE: _register_builtin_functions called =====")
         # Override this method in subclasses to register built-in functions
         pass
 

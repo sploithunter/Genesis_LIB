@@ -55,7 +55,9 @@ class GenesisAgent(ABC):
         logger.info(f"GenesisAgent {agent_name} STARTING initializing with agent_id {agent_id}")
         self.agent_name = agent_name
         self.service_name = service_name
+        logger.info("===== DDS TRACE: Creating GenesisApp in GenesisAgent =====")
         self.app = GenesisApp(preferred_name=self.agent_name, agent_id=agent_id)
+        logger.info(f"===== DDS TRACE: GenesisApp created with agent_id {self.app.agent_id} =====")
         logger.info(f"GenesisAgent {self.agent_name} initialized with app {self.app.agent_id}")
 
 
@@ -165,7 +167,7 @@ class GenesisAgent(ABC):
         Returns:
             List of discovered functions
         """
-        logger.info("===== TRACING: Starting function discovery =====")
+        logger.info("===== DDS TRACE: Starting function discovery in GenesisAgent =====")
         
         # Store discovered functions
         available_functions = []
@@ -174,35 +176,37 @@ class GenesisAgent(ABC):
         while retry_count < max_retries:
             try:
                 # Discover functions using the client
-                logger.info("===== TRACING: Calling discover_functions on function client =====")
+                logger.info("===== DDS TRACE: Calling discover_functions on function client =====")
                 await function_client.discover_functions()
                 
                 # Get the list of available functions
                 available_functions = function_client.list_available_functions()
                 
                 if available_functions:
-                    logger.info(f"===== TRACING: Discovered {len(available_functions)} functions =====")
+                    logger.info(f"===== DDS TRACE: Discovered {len(available_functions)} functions =====")
                     for func in available_functions:
-                        logger.info(f"===== TRACING: Function: {func['name']} ({func['function_id']}) =====")
+                        logger.info(f"===== DDS TRACE: Function: {func['name']} ({func['function_id']}) =====")
                         logger.info(f"  - Description: {func['description']}")
                         logger.info(f"  - Schema: {json.dumps(func['schema'], indent=2)}")
                     
                     # Store discovered functions in the agent instance
+                    logger.info("===== DDS TRACE: Updating agent's discovered_functions list =====")
                     self.discovered_functions = available_functions
+                    logger.info(f"===== DDS TRACE: Updated discovered_functions with {len(available_functions)} functions =====")
                     
                     break
                 else:
-                    logger.warning("===== TRACING: No functions discovered, retrying... =====")
+                    logger.warning("===== DDS TRACE: No functions discovered, retrying... =====")
                     retry_count += 1
                     await asyncio.sleep(1)
             except Exception as e:
-                logger.error(f"===== TRACING: Error discovering functions: {str(e)} =====")
+                logger.error(f"===== DDS TRACE: Error discovering functions: {str(e)} =====")
                 logger.error(traceback.format_exc())
                 retry_count += 1
                 await asyncio.sleep(1)
                 
         if retry_count >= max_retries:
-            logger.warning("===== TRACING: Could not discover functions after maximum retries =====")
+            logger.warning("===== DDS TRACE: Could not discover functions after maximum retries =====")
             
         return available_functions
 

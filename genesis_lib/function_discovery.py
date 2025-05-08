@@ -40,8 +40,22 @@ import os
 from genesis_lib.utils import get_datamodel_path
 import asyncio
 
-# Configure logging
+# Configure root logger to handle all loggers
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+
+# Configure function discovery logger specifically
 logger = logging.getLogger("function_discovery")
+logger.setLevel(logging.DEBUG)
+
+# Set all genesis_lib loggers to DEBUG
+for name in ['genesis_lib', 'genesis_lib.function_discovery', 'genesis_lib.agent', 'genesis_lib.monitored_agent', 'genesis_lib.genesis_app']:
+    logging.getLogger(name).setLevel(logging.DEBUG)
 
 @dataclass
 class FunctionInfo:

@@ -15,9 +15,54 @@ mkdir -p "$LOG_DIR"
 
 # Define script and log file names
 SERVICE_SCRIPT="$PROJECT_ROOT/test_functions/calculator_service.py"
-SERVICE_LOG="$LOG_DIR/calculator_service_durability.log"
-REGISTRATION_SPY_LOG="$LOG_DIR/rtiddsspy_calculator_registration.log"
-SERVICE_SPY_LOG="$LOG_DIR/rtiddsspy_calculator_service.log"
+SERVICE_LOG="$LOG_DIR/serviceside_service_durability.log"
+REGISTRATION_SPY_LOG="$LOG_DIR/serviceside_rtiddsspy_durability.log"
+SERVICE_SPY_LOG="$LOG_DIR/serviceside_rtiddsspy_durability.log"
+AGENT_SCRIPT="$PROJECT_ROOT/run_scripts/math_test_agent.py"
+AGENT_LOG="$LOG_DIR/serviceside_agent_durability.log"
+
+# Function to check for and clean up DDS processes
+check_and_cleanup_dds() {
+    echo "🔍 TRACE: Checking for existing DDS processes..."
+    
+    # Start spy to check for DDS activity
+    SPY_LOG="$LOG_DIR/dds_check.log"
+    /Applications/rti_connext_dds-7.3.0/bin/rtiddsspy -printSample -qosFile "$PROJECT_ROOT/spy_transient.xml" -qosProfile SpyLib::TransientReliable > "$SPY_LOG" 2>&1 &
+    SPY_PID=$!
+    
+    # Wait a bit to see if any DDS activity is detected
+    sleep 5
+    
+    # Check if spy detected any activity
+    if grep -q "New writer\|New data" "$SPY_LOG"; then
+        echo "⚠️ TRACE: Detected DDS activity. Attempting to clean up..."
+        
+        # Try to kill any DDS processes
+        pkill -f "rtiddsspy" || true
+        pkill -f "python.*genesis_lib" || true
+        
+        # Wait a bit and check again
+        sleep 5
+        
+        # Start a new spy to verify cleanup
+        rm -f "$SPY_LOG"
+        /Applications/rti_connext_dds-7.3.0/bin/rtiddsspy -printSample -qosFile "$PROJECT_ROOT/spy_transient.xml" -qosProfile SpyLib::TransientReliable > "$SPY_LOG" 2>&1 &
+        SPY_PID=$!
+        sleep 5
+        
+        # Check if DDS activity is still present
+        if grep -q "New writer\|New data" "$SPY_LOG"; then
+            echo "❌ ERROR: Failed to clean up DDS processes. Please manually check and kill any running DDS processes."
+            kill $SPY_PID 2>/dev/null || true
+            return 1
+        fi
+    fi
+    
+    # Clean up spy
+    kill $SPY_PID 2>/dev/null || true
+    echo "✅ TRACE: No DDS processes detected or successfully cleaned up"
+    return 0
+}
 
 # Function to kill a process and ensure it's dead
 kill_process() {
@@ -43,6 +88,18 @@ kill_process() {
     fi
 }
 
+# Function to cleanup any existing processes
+cleanup_existing_processes() {
+    echo "🧹 TRACE: Cleaning up any existing processes..."
+    # Kill any existing calculator services
+    pkill -f "python3.*calculator_service.py" || true
+    # Kill any existing agents
+    pkill -f "python3.*math_test_agent.py" || true
+    # Kill any existing DDS spies
+    pkill -f "rtiddsspy.*spy_transient.xml.*SpyLib::TransientReliable" || true
+    sleep 2  # Give processes time to clean up
+}
+
 # Function to check log contents
 check_log() {
     local log_file=$1
@@ -65,9 +122,10 @@ check_log() {
     fi
 }
 
-# Clear existing log files
-echo "🧹 TRACE: Clearing existing log files..."
-rm -f "$SERVICE_LOG" "$REGISTRATION_SPY_LOG" "$SERVICE_SPY_LOG"
+# Clear existing log files and check for DDS processes
+echo "🧹 TRACE: Cleaning up before test..."
+check_and_cleanup_dds || { echo "Test aborted due to DDS process issues"; exit 1; }
+rm -f "$SERVICE_LOG" "$REGISTRATION_SPY_LOG" "$SERVICE_SPY_LOG" "$AGENT_LOG"
 
 echo "🔬 TRACE: Starting Test 1 - Service Registration Durability Test"
 echo "=============================================="
@@ -111,14 +169,14 @@ kill_process "$SERVICE_PID" "calculator service" false
 echo "🔬 TRACE: Starting Test 2 - Service Function Registration Test"
 echo "=============================================="
 
-# Start a new calculator service for the function test
-echo "🚀 TRACE: Starting new calculator service for function test..."
-PYTHONUNBUFFERED=1 stdbuf -o0 -e0 python3 -u "$SERVICE_SCRIPT" > "$SERVICE_LOG" 2>&1 &
-SERVICE_PID=$!
-echo "✅ TRACE: Calculator service started with PID: $SERVICE_PID"
+# Start the agent first
+echo "🚀 TRACE: Starting agent..."
+PYTHONUNBUFFERED=1 stdbuf -o0 -e0 python3 -u "$AGENT_SCRIPT" > "$AGENT_LOG" 2>&1 &
+AGENT_PID=$!
+echo "✅ TRACE: Agent started with PID: $AGENT_PID"
 
-# Wait for the service to initialize
-echo "⏳ TRACE: Waiting for service to initialize..."
+# Wait for the agent to initialize
+echo "⏳ TRACE: Waiting for agent to initialize..."
 sleep 5
 
 # Start RTI DDS Spy for function test
@@ -127,6 +185,12 @@ echo "🚀 TRACE: Starting RTI DDS Spy for function test..."
 SERVICE_SPY_PID=$!
 echo "✅ TRACE: RTI DDS Spy started with PID: $SERVICE_SPY_PID (Log: $SERVICE_SPY_LOG)"
 
+# Now start the calculator service AFTER the agent
+echo "🚀 TRACE: Starting calculator service..."
+PYTHONUNBUFFERED=1 stdbuf -o0 -e0 python3 -u "$SERVICE_SCRIPT" > "$SERVICE_LOG" 2>&1 &
+SERVICE_PID=$!
+echo "✅ TRACE: Calculator service started with PID: $SERVICE_PID"
+
 # Wait for function registration
 echo "⏳ TRACE: Waiting for function registration..."
 sleep 5
@@ -134,21 +198,22 @@ sleep 5
 # Check Test 2 - Service Function Registration
 echo "🔍 TRACE: Running Test 2 checks..."
 
-# Check service logs
-check_log "$SERVICE_LOG" "CalculatorService initializing" "Service initialization" true
-check_log "$SERVICE_LOG" "CalculatorService initialized" "Service initialization complete" true
-check_log "$SERVICE_LOG" "All CalculatorService functions published" "Function advertisement" true
+# Check agent logs
+check_log "$AGENT_LOG" "✅ TRACE: Agent created, starting run..." "Agent initialization" true
+check_log "$AGENT_LOG" "MathTestAgent listening for requests" "Agent listening state" true
 
 # Check DDS Spy logs for function registration
 check_log "$SERVICE_SPY_LOG" "New data.*topic=\"FunctionCapability\".*name=\"add\".*service_name=\"CalculatorService\"" "Function capability announcement" true
 check_log "$SERVICE_SPY_LOG" "New writer.*topic=\"CalculatorServiceRequest\".*type=\"FunctionRequest\".*name=\"Replier\"" "Service request writer" true
 check_log "$SERVICE_SPY_LOG" "New writer.*topic=\"CalculatorServiceReply\".*type=\"FunctionReply\".*name=\"Replier\"" "Service reply writer" true
 check_log "$SERVICE_SPY_LOG" "New data.*topic=\"ComponentLifecycleEvent\".*component_type=\"FUNCTION\".*new_state=\"READY\"" "Service ready announcement" true
+check_log "$SERVICE_SPY_LOG" "reason: \"Function 'add' available\"" "Function discovery" true
 
 # Clean up Test 2
 echo "🧹 TRACE: Cleaning up Test 2..."
 kill_process "$SERVICE_SPY_PID" "service spy" true
 kill_process "$SERVICE_PID" "calculator service" false
+kill_process "$AGENT_PID" "agent" false
 
 # Final report
 echo "=============================================="
