@@ -148,3 +148,34 @@ Once functions are discovered and cached by an agent (e.g., `OpenAIGenesisAgent`
     *   The remote service (e.g., `CalculatorService`) receives the `FunctionExecutionRequest`. Its `Replier` uses the `function_id` from the payload to identify and execute the correct internal Python method (e.g., its `add` method).
 
 This flow ensures that functions are dynamically discovered and that calls are routed to the appropriate service and specific function implementation using a combination of logical service names and unique function identifiers. 
+
+example function schema as printed out:
+
+2025-05-08 15:24:01,327 - function_discovery - INFO - Sample data:    function_id: "e77bef10-13e0-40d6-940a-83b2bae9b1a7"
+   name: "divide"
+   description: "Divide the first number by the second.
+        
+        Args:
+            x: The number to divide (example: 6.0)
+            y: The number to divide by (example: 2.0)
+            request_info: Optional request metadata
+            
+        Returns:
+            Dict containing the result of the division
+            
+        Examples:
+            >>> await divide(6, 2)
+            {'result': 3}
+            
+        Raises:
+            InvalidInputError: If either number is outside the valid range [-1,000,000, 1,000,000]
+            DivisionByZeroError: If attempting to divide by zero
+        "
+   provider_id: "010196595846c3e54d893a8480008402"
+   parameter_schema: "{"type": "object", "properties": {"x": {"type": "number", "description": "The number to divide (example: 6.0)"}, "y": {"type": "number", "description": "The number to divide by (example: 2.0)"}}, "required": ["x", "y"], "additionalProperties": false}"
+   capabilities: "["calculator", "math"]"
+   performance_metrics: "{"latency": "low"}"
+   security_requirements: "{"level": "public"}"
+   classification: "{}"
+   last_seen: 1746739425774
+   service_name: "CalculatorService"

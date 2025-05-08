@@ -93,7 +93,9 @@ async def run_test_client():
         # Test text processor service
         text_client = GenesisRPCClient('TextProcessorService')
         print('Waiting for text processor service to be available...')
-        await text_client.wait_for_service(timeout_seconds=30)  # Increased timeout
+        wait_result = await text_client.wait_for_service(timeout_seconds=30)  # Increased timeout
+        logger.info(f"TextProcessorService wait_for_service completed. Result: {wait_result}")
+        print("Calling count_words...")
         result = await text_client.call_function('count_words', text='This is a test sentence with seven words.')
         print(f'Text processor test: Word count = {result}')
         

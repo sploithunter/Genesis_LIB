@@ -149,66 +149,12 @@ class GenesisAgent(ABC):
         self.replier.request_datareader.set_listener(self.request_listener, mask)
         
         # Store discovered functions
-        self.discovered_functions = []
+        # self.discovered_functions = [] # Removed as per event-driven plan
 
     @abstractmethod
     async def process_request(self, request: Any) -> Dict[str, Any]:
         """Process the request and return reply data as a dictionary"""
         pass
-
-    async def discover_functions(self, function_client, max_retries: int = 5) -> List[Dict[str, Any]]:
-        """
-        Discover available functions from all services using the provided function client.
-        
-        Args:
-            function_client: An instance of a function client (e.g., GenericFunctionClient)
-            max_retries: Maximum number of retries for function discovery
-            
-        Returns:
-            List of discovered functions
-        """
-        logger.info("===== DDS TRACE: Starting function discovery in GenesisAgent =====")
-        
-        # Store discovered functions
-        available_functions = []
-        retry_count = 0
-        
-        while retry_count < max_retries:
-            try:
-                # Discover functions using the client
-                logger.info("===== DDS TRACE: Calling discover_functions on function client =====")
-                await function_client.discover_functions()
-                
-                # Get the list of available functions
-                available_functions = function_client.list_available_functions()
-                
-                if available_functions:
-                    logger.info(f"===== DDS TRACE: Discovered {len(available_functions)} functions =====")
-                    for func in available_functions:
-                        logger.info(f"===== DDS TRACE: Function: {func['name']} ({func['function_id']}) =====")
-                        logger.info(f"  - Description: {func['description']}")
-                        logger.info(f"  - Schema: {json.dumps(func['schema'], indent=2)}")
-                    
-                    # Store discovered functions in the agent instance
-                    logger.info("===== DDS TRACE: Updating agent's discovered_functions list =====")
-                    self.discovered_functions = available_functions
-                    logger.info(f"===== DDS TRACE: Updated discovered_functions with {len(available_functions)} functions =====")
-                    
-                    break
-                else:
-                    logger.warning("===== DDS TRACE: No functions discovered, retrying... =====")
-                    retry_count += 1
-                    await asyncio.sleep(1)
-            except Exception as e:
-                logger.error(f"===== DDS TRACE: Error discovering functions: {str(e)} =====")
-                logger.error(traceback.format_exc())
-                retry_count += 1
-                await asyncio.sleep(1)
-                
-        if retry_count >= max_retries:
-            logger.warning("===== DDS TRACE: Could not discover functions after maximum retries =====")
-            
-        return available_functions
 
     async def run(self):
         """Main agent loop"""
