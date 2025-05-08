@@ -81,12 +81,27 @@ check_and_cleanup_dds() {
     if grep -q "New writer\|New data" "$SPY_LOG"; then
         echo "⚠️ TRACE: Detected DDS activity. Attempting to clean up..."
         
-        # Try to kill any DDS processes
-        pkill -f "rtiddsspy" || true
+        # Try to kill any DDS processes (first pass)
+        pkill -f "rtiddsspy.*SpyLib::TransientReliable" || true
         pkill -f "python.*genesis_lib" || true
         
+        # Specifically find and kill known test service PIDs (second pass)
+        TARGET_SCRIPTS=(\
+            "test_functions/calculator_service.py"\
+            "test_functions/text_processor_service.py"\
+            "test_functions/letter_counter_service.py"\
+        )
+        for script_pattern in "${TARGET_SCRIPTS[@]}"; do
+            PIDS=$(pgrep -f "python.*${script_pattern}")
+            if [ -n "$PIDS" ]; then
+                echo "🎯 TRACE: Forcefully killing lingering processes for ${script_pattern} by PID: $PIDS"
+                # Use xargs to handle potential multiple PIDs
+                echo "$PIDS" | xargs kill -9 || true
+            fi
+        done
+        
         # Wait a bit and check again
-        sleep 5
+        sleep 10 # Increased duration to allow processes to fully terminate
         
         # Start a new spy to verify cleanup
         rm -f "$SPY_LOG"
@@ -94,9 +109,10 @@ check_and_cleanup_dds() {
         SPY_PID=$!
         sleep 5
         
-        # Check if DDS activity is still present
-        if grep -q "New writer\|New data" "$SPY_LOG"; then
-            echo "❌ ERROR: Failed to clean up DDS processes. Please manually check and kill any running DDS processes."
+        # Check if DDS activity is still present on specific test topics
+        # Use extended regex (-E) to match specific topics
+        if grep -E '(New writer|New data).*topic="(FunctionCapability|CalculatorServiceRequest|TextProcessorServiceRequest|LetterCounterServiceRequest)"' "$SPY_LOG"; then
+            echo "❌ ERROR: Detected lingering DDS activity on test topics (FunctionCapability or Service Requests) after cleanup attempt."
             kill $SPY_PID 2>/dev/null || true
             return 1
         fi
@@ -104,7 +120,7 @@ check_and_cleanup_dds() {
     
     # Clean up spy
     kill $SPY_PID 2>/dev/null || true
-    echo "✅ TRACE: No DDS processes detected or successfully cleaned up"
+    echo "✅ TRACE: DDS process cleanup attempted."
     return 0
 }
 
