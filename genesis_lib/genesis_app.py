@@ -123,6 +123,20 @@ class GenesisApp:
         
         logger.info(f"GenesisApp initialized with agent_id={self.agent_id}, dds_guid={self.dds_guid}")
 
+    def get_available_functions(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Retrieves a snapshot of all currently discovered functions available on the network.
+        This information is sourced from the FunctionRegistry.
+
+        Returns:
+            A dictionary mapping function_id to its details (name, description, provider_id, etc.).
+        """
+        if hasattr(self, 'function_registry') and self.function_registry:
+            return self.function_registry.get_all_discovered_functions()
+        else:
+            logger.warning("FunctionRegistry not available in GenesisApp, cannot get available functions.")
+            return {}
+
     async def close(self):
         """Close all DDS entities and cleanup resources"""
         if hasattr(self, '_closed') and self._closed:

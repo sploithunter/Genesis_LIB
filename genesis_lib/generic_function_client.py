@@ -100,6 +100,26 @@ class GenericFunctionClient:
         logger.info("===== DDS TRACE: Retrieving discovered functions from registry... =====")
         self.discovered_functions = self.function_registry.discovered_functions.copy()
         logger.info(f"===== DDS TRACE: Retrieved {len(self.discovered_functions)} functions from registry. =====")
+        logger.info("===== DDS TRACE: GenericFunctionClient internal cache content START =====")
+        for func_id, func_data in self.discovered_functions.items():
+            if isinstance(func_data, dict):
+                cap_obj = func_data.get('capability')
+                cap_type = type(cap_obj).__name__ if cap_obj else 'None'
+                # Safely get service_name from dict first, then try from capability if needed
+                service_name_from_dict = func_data.get('service_name', 'MISSING_IN_DICT')
+                service_name_from_cap = 'N/A'
+                if isinstance(cap_obj, dds.DynamicData) and 'service_name' in cap_obj:
+                     try:
+                         service_name_from_cap = cap_obj['service_name']
+                     except Exception as e:
+                         service_name_from_cap = f'ERROR_READING_CAP: {e}'
+                elif cap_obj:
+                    service_name_from_cap = 'WRONG_CAP_TYPE'
+                
+                logger.info(f"  - ID: {func_id}, Name: {func_data.get('name')}, Provider: {func_data.get('provider_id')}, SvcName(dict): {service_name_from_dict}, CapType: {cap_type}, SvcName(cap): {service_name_from_cap}")
+            else:
+                logger.warning(f"  - ID: {func_id}, Unexpected data format: {type(func_data).__name__}")
+        logger.info("===== DDS TRACE: GenericFunctionClient internal cache content END =====")
 
         # Log the discovered functions
         if not self.discovered_functions:

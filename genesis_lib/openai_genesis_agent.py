@@ -83,7 +83,10 @@ class OpenAIGenesisAgent(MonitoredAgent):
         self.client = OpenAI(api_key=self.api_key)
         
         # Initialize generic client for function discovery, passing the agent's participant
-        self.generic_client = GenericFunctionClient(participant=self.app.participant)
+        # self.generic_client = GenericFunctionClient(participant=self.app.participant)
+        # Ensure GenericFunctionClient uses the SAME FunctionRegistry as the GenesisApp
+        logger.info(f"===== TRACING: Initializing GenericFunctionClient using agent app's FunctionRegistry: {id(self.app.function_registry)} =====")
+        self.generic_client = GenericFunctionClient(function_registry=self.app.function_registry)
         self.function_cache = {}  # Cache for discovered functions
         
         # Initialize function classifier

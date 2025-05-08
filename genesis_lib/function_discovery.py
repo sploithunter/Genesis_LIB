@@ -39,6 +39,7 @@ import re
 import os
 from genesis_lib.utils import get_datamodel_path
 import asyncio
+import sys
 
 # Configure root logger to handle all loggers
 logging.basicConfig(
@@ -763,8 +764,8 @@ class FunctionRegistry:
             logger.error(f"===== DDS TRACE: Missing key in capability data (function_id: {function_id_str}): {e} ====")
         except json.JSONDecodeError as e:
             logger.error(f"Error decoding JSON in capability data: {e}")
-        except Exception as e:
-            logger.error(f"Error handling capability advertisement: {e}")
+        except Exception as e: # Add a general except block for the try
+            logger.error(f"Error handling capability advertisement for function_id {function_id_str}: {e}")
             logger.error(logging.traceback.format_exc())
     
     def handle_capability_removal(self, reader: dds.DynamicData.DataReader):
@@ -823,6 +824,25 @@ class FunctionRegistry:
             return self.functions.get(function_id)
         return None
     
+    def get_all_discovered_functions(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Returns a shallow copy of the currently discovered functions on the network.
+        The dictionary maps function_id to its details.
+        """
+        return dict(self.discovered_functions)
+
+    def remove_discovered_function(self, function_id: str):
+        """
+        Removes a function from the discovered_functions cache.
+        Typically called when a function provider is no longer available.
+        """
+        if function_id in self.discovered_functions:
+            removed_function_name = self.discovered_functions[function_id].get("name", "unknown_function")
+            del self.discovered_functions[function_id]
+            logger.info(f"===== DDS TRACE: Removed function {removed_function_name} ({function_id}) from discovered functions cache. =====")
+        else:
+            logger.warning(f"===== DDS TRACE: Attempted to remove non-existent function ID {function_id} from cache. =====")
+
     def close(self):
         """Cleanup DDS entities"""
         if hasattr(self, 'execution_client'):
@@ -868,23 +888,77 @@ class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
         """Handle incoming capability data"""
         logger.info("===== DDS TRACE: FunctionCapabilityListener.on_data_available entered =====")
         try:
-            samples = reader.take()
+            samples = reader.take() # Take all available samples
             logger.info(f"===== DDS TRACE: Took {len(samples)} FunctionCapability samples =====")
-            for capability, info in samples:
-                if capability is not None and info.valid:
-                    fid = capability.get_string('function_id') # Get ID for logging
-                    logger.info(f"===== DDS TRACE: Processing valid FunctionCapability sample for function ID: {fid}, instance_state: {info.state.instance_state} =====")
-                    self.registry.handle_capability_advertisement(capability, info)
-                elif capability is not None:
-                    fid = capability.get_string('function_id')
-                    logger.warning(f"===== DDS TRACE: Received INVALID but non-null FunctionCapability sample for function ID: {fid}, sample_state: {info.state.sample_state}, view_state: {info.state.view_state}, instance_state: {info.state.instance_state} =====")
-                elif info.state.instance_state != dds.InstanceState.ALIVE:
-                     # Handle potential disposal or unregistration if needed
-                     logger.info(f"===== DDS TRACE: Received null data with non-alive instance_state: {info.state.instance_state} =====")
-                     # TODO: Implement removal logic if necessary, e.g.:
-                     #     # Need a way to get function_id from instance_handle if possible, or handle removal
-                     #     logger.info(f"Instance {instance_handle} disposed.")
+            # Print sample details for debugging
+            for sample, info in samples:
+                logger.info("===== DDS TRACE: Sample details =====")
+                logger.info(f"Sample data: {sample}")
+                logger.info(f"Sample info: {info}")
+                logger.info(f"Sample state: {info.state.sample_state}")
+                logger.info(f"Instance state: {info.state.instance_state}")
+                logger.info("===== DDS TRACE: End sample details =====")
+            for capability_data, info in samples:
+                # Check if the sample contains valid data that hasn't been read before
+                if info.state.sample_state == dds.SampleState.NOT_READ: # FIX: Check for NOT_READ
+                    # This sample contains valid data for a new or updated function
+                    log_fid = "N/A"
+                    if capability_data:
+                        try:
+                             log_fid = capability_data.get_string("function_id") or "ID_NOT_IN_DATA"
+                        except Exception:
+                             log_fid = "ERROR_GETTING_ID"
+                    logger.info(f"===== DDS TRACE: Processing READ sample - FuncID: {log_fid} =====")
+                    # Re-log state for this specific case
+                    logger.info(f"===== DDS TRACE:   SampleState: {str(info.state.sample_state)}, InstanceState: {str(info.state.instance_state)} =====")
+
+                    # Process the valid data
+                    self.registry.handle_capability_advertisement(capability_data, info)
+
+                # Separately check if the instance associated with the sample is no longer alive
+                # This handles cases where the sample itself might not be marked as READ anymore,
+                # but we still need to know the instance was disposed or unregistered.
+                if info.state.instance_state != dds.InstanceState.ALIVE:
+                    log_fid = "N/A"
+                    key_holder = dds.DynamicData(self.registry.capability_type)
+                    try:
+                        reader.get_key_value(key_holder, info.instance_handle)
+                        log_fid = key_holder.get_string("function_id") or "ID_NOT_IN_DATA"
+                    except Exception:
+                        log_fid = "ERROR_GETTING_ID"
+
+                    logger.info(f"===== DDS TRACE: Processing Non-ALIVE sample - FuncID: {log_fid} =====")
+                    # Re-log state for this specific case
+                    logger.info(f"===== DDS TRACE:   SampleState: {str(info.state.sample_state)}, InstanceState: {str(info.state.instance_state)} =====")
+
+                    # Process the removal
+                    try:
+                        # Attempt to get the key value from the instance handle
+                        # reader.get_key_value(key_holder, info.instance_handle) # Already done above for logging
+                        function_id_to_remove = log_fid if log_fid not in ["N/A", "ID_NOT_IN_DATA", "ERROR_GETTING_ID"] else None
+
+                        if function_id_to_remove:
+                            logger.info(f"===== DDS TRACE: Instance for function ID {function_id_to_remove} no longer alive (state: {info.state.instance_state}). Attempting removal from registry. =====")
+                            # Check if already removed to avoid redundant logging
+                            if function_id_to_remove in self.registry.discovered_functions:
+                                self.registry.remove_discovered_function(function_id_to_remove)
+                            # else: # Optionally log if already removed
+                            #    logger.debug(f"===== DDS TRACE: Function ID {function_id_to_remove} already removed (instance state: {info.state.instance_state}). =====")
+                        else:
+                            # This case should be rare if function_id is indeed the key
+                            logger.warning(f"===== DDS TRACE: Could not retrieve function_id (key) for disposed/unregistered instance handle {info.instance_handle}. Cannot remove. =====")
+                    except dds.Error as e: # Catch specific DDS errors
+                        logger.error(f"===== DDS TRACE: DDS Error getting key for disposed/unregistered instance handle {info.instance_handle}: {e} =====")
+                    except Exception as e: # Catch other unexpected errors
+                        logger.error(f"===== DDS TRACE: Unexpected error getting key/removing for instance handle {info.instance_handle}: {e} =====")
+                # else:
+                    # Potentially other states, e.g. sample_state != READ and instance_state == ALIVE.
+                    # logger.debug(f"===== DDS TRACE: Ignoring sample with info.state.sample_state={info.state.sample_state} and info.instance_state={info.instance_state} =====")
+
             logger.info("===== DDS TRACE: Finished processing FunctionCapability samples in on_data_available =====")
-        except Exception as e:
-            logger.error(f"Error in on_data_available: {e}")
+        except dds.Error as e: # Catch DDS errors from reader.take()
+            logger.error(f"DDS Error in on_data_available (e.g., during take()): {e}")
+            logger.error(logging.traceback.format_exc())
+        except Exception as e: # Catch other unexpected errors
+            logger.error(f"Unexpected error in on_data_available: {e}")
             logger.error(logging.traceback.format_exc())
