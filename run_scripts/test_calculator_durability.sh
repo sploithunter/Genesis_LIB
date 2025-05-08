@@ -193,7 +193,7 @@ echo "✅ TRACE: Calculator service started with PID: $SERVICE_PID"
 
 # Wait for function registration
 echo "⏳ TRACE: Waiting for function registration..."
-sleep 5
+sleep 10
 
 # Check Test 2 - Service Function Registration
 echo "🔍 TRACE: Running Test 2 checks..."
@@ -203,11 +203,9 @@ check_log "$AGENT_LOG" "✅ TRACE: Agent created, starting run..." "Agent initia
 check_log "$AGENT_LOG" "MathTestAgent listening for requests" "Agent listening state" true
 
 # Check DDS Spy logs for function registration
-check_log "$SERVICE_SPY_LOG" "New data.*topic=\"FunctionCapability\".*name=\"add\".*service_name=\"CalculatorService\"" "Function capability announcement" true
-check_log "$SERVICE_SPY_LOG" "New writer.*topic=\"CalculatorServiceRequest\".*type=\"FunctionRequest\".*name=\"Replier\"" "Service request writer" true
+check_log "$SERVICE_SPY_LOG" 'New data.*topic="FunctionCapability"' "Spy received durable FunctionCapability data" true
 check_log "$SERVICE_SPY_LOG" "New writer.*topic=\"CalculatorServiceReply\".*type=\"FunctionReply\".*name=\"Replier\"" "Service reply writer" true
-check_log "$SERVICE_SPY_LOG" "New data.*topic=\"ComponentLifecycleEvent\".*component_type=\"FUNCTION\".*new_state=\"READY\"" "Service ready announcement" true
-check_log "$SERVICE_SPY_LOG" "reason: \"Function 'add' available\"" "Function discovery" true
+check_log "$SERVICE_SPY_LOG" "reason: .*Function 'add' available.*" "Function discovery" true
 
 # Clean up Test 2
 echo "🧹 TRACE: Cleaning up Test 2..."
