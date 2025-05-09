@@ -10,8 +10,8 @@ from genesis_lib.datamodel import FunctionRequest, FunctionReply
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("interface_cli")
 
-# Use the same service name as the agent
-SERVICE_NAME = "CalculatorService"
+
+SERVICE_NAME = "SimpleInterface"
 
 class SimpleInterface(GenesisInterface):
     def __init__(self):

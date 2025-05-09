@@ -35,10 +35,10 @@ from genesis_lib.rpc_client import GenesisRPCClient
 from genesis_lib.function_discovery import FunctionRegistry
 
 # Configure logging
-logging.basicConfig(level=logging.WARNING,  # Reduce verbosity
-                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# logging.basicConfig(level=logging.WARNING,  # REMOVE THIS
+#                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("generic_function_client")
-logger.setLevel(logging.INFO)  # Keep INFO level for important events
+# logger.setLevel(logging.INFO)  # REMOVE THIS
 
 class GenericFunctionClient:
     """
@@ -56,7 +56,7 @@ class GenericFunctionClient:
             participant: Optional existing DDS Participant instance to use for the registry.
             domain_id: DDS domain ID to use if creating a new registry without a participant.
         """
-        logger.info("Initializing GenericFunctionClient")
+        logger.debug("Initializing GenericFunctionClient")
         
         # Track if we created the registry
         self._created_registry = False
@@ -83,24 +83,24 @@ class GenericFunctionClient:
         Returns:
             Dictionary of discovered functions
         """
-        logger.info(f"===== DDS TRACE: Waiting for function discovery event (timeout: {timeout_seconds}s)... =====")
+        logger.debug(f"===== DDS TRACE: Waiting for function discovery event (timeout: {timeout_seconds}s)... =====")
 
         try:
             # Wait for the registry's discovery event or timeout
             registry_event = self.function_registry._discovery_event
-            logger.info(f"===== DDS TRACE: Waiting on event {id(registry_event)}... =====")
+            logger.debug(f"===== DDS TRACE: Waiting on event {id(registry_event)}... =====")
             await asyncio.wait_for(registry_event.wait(), timeout=timeout_seconds)
-            logger.info(f"===== DDS TRACE: Function discovery event received or already set (event: {id(registry_event)}). =====")
+            logger.debug(f"===== DDS TRACE: Function discovery event received or already set (event: {id(registry_event)}). =====")
         except asyncio.TimeoutError:
             logger.warning(f"===== DDS TRACE: Timeout ({timeout_seconds}s) reached waiting for function discovery event. =====")
         except Exception as e:
              logger.error(f"===== DDS TRACE: Error waiting for function discovery event: {e} ====")
 
         # Regardless of event, grab the current state of discovered functions from the registry
-        logger.info("===== DDS TRACE: Retrieving discovered functions from registry... =====")
+        logger.debug("===== DDS TRACE: Retrieving discovered functions from registry... =====")
         self.discovered_functions = self.function_registry.discovered_functions.copy()
-        logger.info(f"===== DDS TRACE: Retrieved {len(self.discovered_functions)} functions from registry. =====")
-        logger.info("===== DDS TRACE: GenericFunctionClient internal cache content START =====")
+        logger.debug(f"===== DDS TRACE: Retrieved {len(self.discovered_functions)} functions from registry. =====")
+        logger.debug("===== DDS TRACE: GenericFunctionClient internal cache content START =====")
         for func_id, func_data in self.discovered_functions.items():
             if isinstance(func_data, dict):
                 cap_obj = func_data.get('capability')
@@ -116,22 +116,22 @@ class GenericFunctionClient:
                 elif cap_obj:
                     service_name_from_cap = 'WRONG_CAP_TYPE'
                 
-                logger.info(f"  - ID: {func_id}, Name: {func_data.get('name')}, Provider: {func_data.get('provider_id')}, SvcName(dict): {service_name_from_dict}, CapType: {cap_type}, SvcName(cap): {service_name_from_cap}")
+                logger.debug(f"  - ID: {func_id}, Name: {func_data.get('name')}, Provider: {func_data.get('provider_id')}, SvcName(dict): {service_name_from_dict}, CapType: {cap_type}, SvcName(cap): {service_name_from_cap}")
             else:
                 logger.warning(f"  - ID: {func_id}, Unexpected data format: {type(func_data).__name__}")
-        logger.info("===== DDS TRACE: GenericFunctionClient internal cache content END =====")
+        logger.debug("===== DDS TRACE: GenericFunctionClient internal cache content END =====")
 
         # Log the discovered functions
         if not self.discovered_functions:
             logger.warning("No functions were discovered in the registry.")
             return {}
 
-        logger.info(f"Discovered {len(self.discovered_functions)} functions in registry")
+        logger.debug(f"Discovered {len(self.discovered_functions)} functions in registry")
         for func_id, func_info in self.discovered_functions.items():
             if isinstance(func_info, dict):
-                logger.info(f"  - {func_id}: {func_info.get('name', 'unknown')} - {func_info.get('description', 'No description')}")
+                logger.debug(f"  - {func_id}: {func_info.get('name', 'unknown')} - {func_info.get('description', 'No description')}")
             else:
-                logger.info(f"  - {func_id}: {func_info}")
+                logger.debug(f"  - {func_id}: {func_info}")
         
         return self.discovered_functions
     
@@ -146,7 +146,7 @@ class GenericFunctionClient:
             RPC client for the service
         """
         if service_name not in self.service_clients:
-            logger.info(f"Creating new client for service: {service_name}")
+            logger.debug(f"Creating new client for service: {service_name}")
             client = GenesisRPCClient(service_name=service_name)
             # Set a reasonable timeout (10 seconds)
             client.timeout = dds.Duration(seconds=10)
@@ -169,11 +169,19 @@ class GenericFunctionClient:
             ValueError: If the function is not found
             RuntimeError: If the function call fails
         """
-        if function_id not in self.discovered_functions:
+        # Get function info directly from the registry
+        registry_functions = self.function_registry.get_all_discovered_functions()
+        func_info = registry_functions.get(function_id)
+
+        if not func_info:
+            # Attempt to refresh the function list from the registry if not found initially
+            # This handles cases where functions might appear between the agent's last check and the call attempt.
+            # However, OpenAIGenesisAgent now calls _ensure_functions_discovered (which uses list_available_functions)
+            # on every request, so GenericFunctionClient's list_available_functions is already fresh.
+            # The discover_functions method in GFC is more for an initial blocking discovery.
+            # For call_function, if it's not in the registry's current snapshot, it's safer to error out.
+            logger.error(f"Function ID {function_id} not found in FunctionRegistry's current list.")
             raise ValueError(f"Function not found: {function_id}")
-        
-        # Get function info
-        func_info = self.discovered_functions[function_id]
         
         # Extract function name and provider ID
         if isinstance(func_info, dict):
@@ -208,20 +216,20 @@ class GenericFunctionClient:
             logger.error(f"Could not determine service name for function {function_id} (provider: {provider_id})")
             raise RuntimeError(f"Service name not found for function {function_id}")
         
-        logger.info(f"Using discovered service name: {service_name} for function: {function_name} (provider: {provider_id})")
+        logger.debug(f"Using discovered service name: {service_name} for function: {function_name} (provider: {provider_id})")
         
         # Get or create a client for this service
         client = self.get_service_client(service_name)
         
         # Wait for the service to be discovered
-        logger.info(f"Waiting for service {service_name} to be discovered")
+        logger.debug(f"Waiting for service {service_name} to be discovered")
         try:
             await client.wait_for_service(timeout_seconds=5)
         except TimeoutError as e:
             logger.warning(f"Service discovery timed out, but attempting call anyway: {str(e)}")
         
         # Call the function through RPC
-        logger.info(f"Calling function {function_name} via RPC")
+        logger.debug(f"Calling function {function_name} via RPC")
         try:
             return await client.call_function(function_name, **kwargs)
         except Exception as e:
@@ -248,12 +256,17 @@ class GenericFunctionClient:
     def list_available_functions(self) -> List[Dict[str, Any]]:
         """
         List all available functions with their descriptions and schemas.
+        Directly queries the FunctionRegistry for the most up-to-date list.
         
         Returns:
             List of function information dictionaries
         """
         result = []
-        for func_id, func_info in self.discovered_functions.items():
+        # Directly access the FunctionRegistry's list of discovered functions
+        # The FunctionRegistry.get_all_discovered_functions() returns a copy of its internal dict.
+        registry_functions = self.function_registry.get_all_discovered_functions()
+
+        for func_id, func_info in registry_functions.items():
             if isinstance(func_info, dict):
                 # Get the schema directly from the function info
                 schema = func_info.get('schema', {})
@@ -303,18 +316,18 @@ class GenericFunctionClient:
     
     def close(self):
         """Close all client resources, including the FunctionRegistry if created by this instance"""
-        logger.info("Cleaning up GenericFunctionClient resources...")
+        logger.debug("Cleaning up GenericFunctionClient resources...")
         # Close service-specific clients
         for client in self.service_clients.values():
             client.close()
             
         # Close the FunctionRegistry if this client created it
         if self._created_registry and hasattr(self, 'function_registry') and self.function_registry:
-            logger.info("Closing FunctionRegistry created by GenericFunctionClient...")
+            logger.debug("Closing FunctionRegistry created by GenericFunctionClient...")
             self.function_registry.close()
             self.function_registry = None # Clear reference
             
-        logger.info("GenericFunctionClient cleanup complete.")
+        logger.debug("GenericFunctionClient cleanup complete.")
 
 async def run_generic_client_test():
     """
@@ -385,11 +398,11 @@ async def run_generic_client_test():
 
 def main():
     """Main entry point"""
-    logger.info("Starting GenericFunctionClient")
+    logger.debug("Starting GenericFunctionClient")
     try:
         asyncio.run(run_generic_client_test())
     except KeyboardInterrupt:
-        logger.info("Client shutting down due to keyboard interrupt")
+        logger.debug("Client shutting down due to keyboard interrupt")
     except Exception as e:
         logger.error(f"Error in main: {str(e)}", exc_info=True)
 

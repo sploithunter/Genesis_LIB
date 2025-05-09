@@ -62,30 +62,33 @@ class MonitoredAgent(GenesisAgent):
     # Class attribute for function client (can be overridden in subclasses if needed)
     _function_client_initialized = False
     
-    def __init__(self, agent_name: str, service_name: str, agent_type: str = "AGENT", agent_id: str = None,
-                 description: str = None, domain_id: int = 0):
+    def __init__(self, agent_name: str, base_service_name: str, 
+                 agent_type: str = "AGENT", service_instance_tag: Optional[str] = None, 
+                 agent_id: str = None, description: str = None, domain_id: int = 0):
         """
         Initialize the monitored agent.
         
         Args:
             agent_name: Name of the agent
-            service_name: Name of the service this agent provides
+            base_service_name: The fundamental type of service (e.g., "Chat", "ImageGeneration")
             agent_type: Type of agent (AGENT, SPECIALIZED_AGENT)
+            service_instance_tag: Optional tag for unique RPC service name instance
             agent_id: Optional UUID for the agent (if None, will generate one)
             description: Optional description of the agent
             domain_id: Optional DDS domain ID
         """
         logger.info(f"MonitoredAgent {agent_name} STARTING initializing with agent_id {agent_id}")
-        # Initialize base class with only the parameters it accepts
+        # Initialize base class (GenesisAgent) with the new service name parameters
         super().__init__(
             agent_name=agent_name,
-            service_name=service_name,
+            base_service_name=base_service_name,
+            service_instance_tag=service_instance_tag,
             agent_id=agent_id
         )
         logger.info(f"MonitoredAgent {agent_name} initialized with base class")
         # Store additional parameters as instance variables
         self.agent_type = agent_type
-        self.description = description or f"A {agent_type} providing {service_name} service"
+        self.description = description or f"A {agent_type} providing {base_service_name} service"
         self.domain_id = domain_id
         self.monitor = None
         self.subscription = None
@@ -97,7 +100,7 @@ class MonitoredAgent(GenesisAgent):
         # Initialize agent capabilities
         self.agent_capabilities = {
             "agent_type": agent_type,
-            "service": service_name,
+            "service": base_service_name,
             "functions": [],  # Will be populated during function discovery
             "supported_tasks": []  # To be populated by subclasses
         }
@@ -124,7 +127,7 @@ class MonitoredAgent(GenesisAgent):
             target_id=self.app.agent_id,
             capabilities=json.dumps({
                 "agent_type": agent_type,
-                "service": service_name,
+                "service": base_service_name,
                 "description": self.description,
                 "agent_id": self.app.agent_id
             })
@@ -140,7 +143,7 @@ class MonitoredAgent(GenesisAgent):
             target_id=self.app.agent_id,
             capabilities=json.dumps({
                 "agent_type": agent_type,
-                "service": service_name,
+                "service": base_service_name,
                 "description": self.description,
                 "agent_id": self.app.agent_id
             })
@@ -277,25 +280,19 @@ class MonitoredAgent(GenesisAgent):
     def _setup_subscription_listener(self):
         """Set up a listener to track subscription matches"""
         class SubscriptionMatchListener(dds.DynamicData.NoOpDataReaderListener):
-            def __init__(self, logger):
+            def __init__(self, logger_instance):
                 super().__init__()
-                self.logger = logger
+                self.logger = logger_instance
                 
             def on_subscription_matched(self, reader, status):
                 # Only log matches for ComponentLifecycleEvent topic
-                if reader.topic_description.name != "ComponentLifecycleEvent":
-                    return
-                    
-                self.logger.info(
-                    "ComponentLifecycleEvent subscription matched",
-                    extra={
-                        "topic": reader.topic_description.name,
-                        "remote_guid": str(status.last_publication_handle),
-                        "current_count": status.current_count
-                    }
-                )
+                if reader and reader.topic_description and reader.topic_description.name == "ComponentLifecycleEvent":
+                    self.logger.debug("ComponentLifecycleEvent subscription matched")
 
-        # Create reader with the subscription match listener
+        # Pass the main MonitoredAgent logger to the listener
+        listener = SubscriptionMatchListener(logger) 
+        
+        # Configure reader QoS for component lifecycle events
         reader_qos = dds.QosProvider.default.datareader_qos
         reader_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
         reader_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
@@ -305,7 +302,7 @@ class MonitoredAgent(GenesisAgent):
             subscriber=self.app.subscriber,
             topic=self.component_lifecycle_topic,
             qos=reader_qos,
-            listener=SubscriptionMatchListener(logger),
+            listener=listener,
             mask=dds.StatusMask.SUBSCRIPTION_MATCHED
         )
     
@@ -473,7 +470,7 @@ class MonitoredAgent(GenesisAgent):
             self.component_lifecycle_writer.flush()
         except Exception as e:
             logger.error(f"Error publishing component lifecycle event: {e}")
-            logger.error(f"Event category was: {category}")
+            logger.debug(f"Event category was: {category}")
     
     async def process_request(self, request: Any) -> Dict[str, Any]:
         """
@@ -521,7 +518,7 @@ class MonitoredAgent(GenesisAgent):
                 "AGENT_REQUEST",
                 call_data={"request": str(request)},
                 metadata={
-                    "service": self.service_name,
+                    "service": self.base_service_name,
                     "chain_id": chain_id,
                     "call_id": call_id
                 }
@@ -535,7 +532,7 @@ class MonitoredAgent(GenesisAgent):
                 "AGENT_RESPONSE",
                 result_data={"response": str(result)},
                 metadata={
-                    "service": self.service_name,
+                    "service": self.base_service_name,
                     "status": "success",
                     "chain_id": chain_id,
                     "call_id": call_id
@@ -561,7 +558,7 @@ class MonitoredAgent(GenesisAgent):
                 "AGENT_STATUS",
                 status_data={"error": str(e)},
                 metadata={
-                    "service": self.service_name,
+                    "service": self.base_service_name,
                     "status": "error",
                     "chain_id": chain_id,
                     "call_id": call_id
@@ -670,15 +667,15 @@ class MonitoredAgent(GenesisAgent):
         Now includes edge discovery events for multiple connections.
         """
         try:
-            logger.info("Starting wait_for_agent")
+            logger.debug("Starting wait_for_agent")
             # Wait for agent using base class implementation
             result = super().wait_for_agent()
-            logger.info(f"Base wait_for_agent returned: {result}")
+            logger.debug(f"Base wait_for_agent returned: {result}")
 
             if result:
                 # Get all discovered agents' information
                 agent_infos = self.app.get_all_agent_info()
-                logger.info(f"Got agent infos: {agent_infos}")
+                logger.debug(f"Got agent infos: {agent_infos}")
                 
                 for agent_info in agent_infos:
                     if agent_info:
@@ -689,8 +686,8 @@ class MonitoredAgent(GenesisAgent):
                         function_id = str(uuid.uuid4())
                         
                         # Format exactly as monitor expects for edge discovery
-                        reason = f"provider={provider_id} client={client_id} function={function_id} name={self.service_name}"
-                        logger.info(f"Publishing edge discovery event with reason: {reason}")
+                        reason = f"provider={provider_id} client={client_id} function={function_id} name={self.base_service_name}"
+                        logger.debug(f"Publishing edge discovery event with reason: {reason}")
 
                         # Publish edge discovery event while in DISCOVERING state
                         self.publish_component_lifecycle_event(
@@ -698,7 +695,7 @@ class MonitoredAgent(GenesisAgent):
                             message=reason,
                             capabilities=json.dumps({
                                 "agent_type": self.agent_type,
-                                "service": self.service_name,
+                                "service": self.base_service_name,
                                 "edge_type": "agent_function",
                                 "provider_id": provider_id,
                                 "client_id": client_id,
@@ -707,7 +704,7 @@ class MonitoredAgent(GenesisAgent):
                             source_id=self.app.agent_id,
                             target_id=self.app.agent_id
                         )
-                        logger.info("Published edge discovery event")
+                        logger.debug("Published edge discovery event")
 
                         # Add a small delay to ensure events are distinguishable
                         time.sleep(0.1)
@@ -743,13 +740,13 @@ class MonitoredAgent(GenesisAgent):
             # Try different paths to get the requester GUID
             if hasattr(function_client, 'requester') and hasattr(function_client.requester, 'request_datawriter'):
                 requester_guid = str(function_client.requester.request_datawriter.instance_handle)
-                logger.info(f"===== TRACING: Got requester GUID from request_datawriter: {requester_guid} =====")
+                logger.debug(f"===== TRACING: Got requester GUID from request_datawriter: {requester_guid} =====")
             elif hasattr(function_client, 'requester') and hasattr(function_client.requester, 'participant'):
                 requester_guid = str(function_client.requester.participant.instance_handle)
-                logger.info(f"===== TRACING: Got requester GUID from participant: {requester_guid} =====")
+                logger.debug(f"===== TRACING: Got requester GUID from participant: {requester_guid} =====")
             elif hasattr(function_client, 'participant'):
                 requester_guid = str(function_client.participant.instance_handle)
-                logger.info(f"===== TRACING: Got requester GUID from client participant: {requester_guid} =====")
+                logger.debug(f"===== TRACING: Got requester GUID from client participant: {requester_guid} =====")
         except Exception as e:
             logger.error(f"===== TRACING: Error getting requester GUID: {e} =====")
             logger.error(traceback.format_exc())
@@ -763,7 +760,7 @@ class MonitoredAgent(GenesisAgent):
         Args:
             guid: The DDS GUID of the function requester
         """
-        logger.info(f"===== TRACING: Storing function requester GUID: {guid} =====")
+        logger.debug(f"===== TRACING: Storing function requester GUID: {guid} =====")
         self.function_requester_guid = guid
         
         # Create edges to all known function providers
@@ -783,14 +780,14 @@ class MonitoredAgent(GenesisAgent):
                             "provider_guid": provider_guid,
                             "agent_id": self.app.agent_id,
                             "agent_name": self.agent_name,
-                            "service_name": self.service_name
+                            "service_name": self.base_service_name
                         }),
                         source_id=guid,
                         target_id=provider_guid,
                         connection_type="CONNECTS_TO"
                     )
                     
-                    logger.info(f"===== TRACING: Published direct requester-to-provider edge: {guid} -> {provider_guid} =====")
+                    logger.debug(f"===== TRACING: Published direct requester-to-provider edge: {guid} -> {provider_guid} =====")
                 except Exception as e:
                     logger.error(f"===== TRACING: Error publishing direct requester-to-provider edge: {e} =====")
                     logger.error(traceback.format_exc())
@@ -802,7 +799,7 @@ class MonitoredAgent(GenesisAgent):
         Args:
             guid: The DDS GUID of the function provider
         """
-        logger.info(f"===== TRACING: Storing function provider GUID: {guid} =====")
+        logger.debug(f"===== TRACING: Storing function provider GUID: {guid} =====")
         
         # Initialize the set if it doesn't exist
         if not hasattr(self, 'function_provider_guids'):
@@ -827,14 +824,14 @@ class MonitoredAgent(GenesisAgent):
                         "provider_guid": guid,
                         "agent_id": self.app.agent_id,
                         "agent_name": self.agent_name,
-                        "service_name": self.service_name
+                        "service_name": self.base_service_name
                     }),
                     source_id=self.function_requester_guid,
                     target_id=guid,
                     connection_type="CONNECTS_TO"
                 )
                 
-                logger.info(f"===== TRACING: Published direct requester-to-provider edge: {self.function_requester_guid} -> {guid} =====")
+                logger.debug(f"===== TRACING: Published direct requester-to-provider edge: {self.function_requester_guid} -> {guid} =====")
             except Exception as e:
                 logger.error(f"===== TRACING: Error publishing direct requester-to-provider edge: {e} =====")
                 logger.error(traceback.format_exc())
@@ -846,7 +843,7 @@ class MonitoredAgent(GenesisAgent):
         Args:
             functions: List of discovered functions
         """
-        logger.info(f"===== TRACING: Publishing {len(functions)} discovered functions as monitoring events =====")
+        logger.debug(f"===== TRACING: Publishing {len(functions)} discovered functions as monitoring events =====")
         
         # Get the function requester DDS GUID if available
         function_requester_guid = None
@@ -858,17 +855,17 @@ class MonitoredAgent(GenesisAgent):
             # Store the function requester GUID for later use
             if function_requester_guid:
                 self.function_requester_guid = function_requester_guid
-                logger.info(f"===== TRACING: Stored function requester GUID: {function_requester_guid} =====")
+                logger.debug(f"===== TRACING: Stored function requester GUID: {function_requester_guid} =====")
             
         # If we still don't have it, try other methods
         if not function_requester_guid and hasattr(self, 'app') and hasattr(self.app, 'function_registry'):
             try:
                 function_requester_guid = str(self.app.function_registry.participant.instance_handle)
-                logger.info(f"===== TRACING: Function requester GUID from registry: {function_requester_guid} =====")
+                logger.debug(f"===== TRACING: Function requester GUID from registry: {function_requester_guid} =====")
                 
                 # Store the function requester GUID for later use
                 self.function_requester_guid = function_requester_guid
-                logger.info(f"===== TRACING: Stored function requester GUID: {function_requester_guid} =====")
+                logger.debug(f"===== TRACING: Stored function requester GUID: {function_requester_guid} =====")
             except Exception as e:
                 logger.error(f"===== TRACING: Error getting function requester GUID from registry: {e} =====")
         
@@ -880,7 +877,7 @@ class MonitoredAgent(GenesisAgent):
             if 'provider_id' in func and func['provider_id']:
                 provider_guid = func['provider_id']
                 provider_guids.add(provider_guid)
-                logger.info(f"===== TRACING: Found provider GUID: {provider_guid} =====")
+                logger.debug(f"===== TRACING: Found provider GUID: {provider_guid} =====")
                 
                 # Store the provider GUID for later use
                 self.store_function_provider_guid(provider_guid)
@@ -888,7 +885,7 @@ class MonitoredAgent(GenesisAgent):
                 # Store the first provider GUID as the main function provider GUID
                 if function_provider_guid is None:
                     function_provider_guid = provider_guid
-                    logger.info(f"===== TRACING: Using {function_provider_guid} as the main function provider GUID =====")
+                    logger.debug(f"===== TRACING: Using {function_provider_guid} as the main function provider GUID =====")
         
         # Publish a monitoring event for each discovered function
         for func in functions:
@@ -944,7 +941,7 @@ class MonitoredAgent(GenesisAgent):
                 }
             )
             
-            logger.info(f"===== TRACING: Published function discovery event for {function_name} ({function_id}) =====")
+            logger.debug(f"===== TRACING: Published function discovery event for {function_name} ({function_id}) =====")
         
         # Publish edge discovery events connecting the function requester to each provider
         if function_requester_guid:
@@ -970,7 +967,7 @@ class MonitoredAgent(GenesisAgent):
                             connection_type="DISCOVERS"
                         )
                         
-                        logger.info(f"===== TRACING: Published requester-to-provider edge: {function_requester_guid} -> {provider_guid} =====")
+                        logger.debug(f"===== TRACING: Published requester-to-provider edge: {function_requester_guid} -> {provider_guid} =====")
                     except Exception as e:
                         logger.error(f"===== TRACING: Error publishing requester-to-provider edge: {e} =====")
                         logger.error(traceback.format_exc())
@@ -992,14 +989,14 @@ class MonitoredAgent(GenesisAgent):
                         "provider_guid": function_provider_guid,
                         "agent_id": self.app.agent_id,
                         "agent_name": self.agent_name,
-                        "service_name": self.service_name
+                        "service_name": self.base_service_name
                     }),
                     source_id=function_requester_guid,
                     target_id=function_provider_guid,
                     connection_type="CONNECTS_TO"
                 )
                 
-                logger.info(f"===== TRACING: Published direct requester-to-provider edge: {function_requester_guid} -> {function_provider_guid} =====")
+                logger.debug(f"===== TRACING: Published direct requester-to-provider edge: {function_requester_guid} -> {function_provider_guid} =====")
             except Exception as e:
                 logger.error(f"===== TRACING: Error publishing direct requester-to-provider edge: {e} =====")
                 logger.error(traceback.format_exc())
@@ -1008,7 +1005,7 @@ class MonitoredAgent(GenesisAgent):
         
         # Log a summary of all discovered functions
         function_names = [f.get('name', 'unknown') for f in functions]
-        logger.info(f"===== TRACING: MonitoredAgent has discovered these functions: {function_names} =====")
+        logger.debug(f"===== TRACING: MonitoredAgent has discovered these functions: {function_names} =====")
         
         # Transition to READY state after discovering functions
         self.publish_component_lifecycle_event(
@@ -1016,7 +1013,7 @@ class MonitoredAgent(GenesisAgent):
             message=f"Agent {self.agent_name} discovered {len(functions)} functions and is ready",
             capabilities=json.dumps({
                 "agent_type": self.agent_type,
-                "service": self.service_name,
+                "service": self.base_service_name,
                 "discovered_functions": len(functions),
                 "function_names": function_names
             }),
@@ -1032,7 +1029,7 @@ class MonitoredAgent(GenesisAgent):
             requester_guid: The DDS GUID of the function requester
             provider_guid: The DDS GUID of the function provider
         """
-        logger.info(f"===== TRACING: Creating explicit requester-to-provider edge: {requester_guid} -> {provider_guid} =====")
+        logger.debug(f"===== TRACING: Creating explicit requester-to-provider edge: {requester_guid} -> {provider_guid} =====")
         
         try:
             # Create a unique edge key
@@ -1048,14 +1045,14 @@ class MonitoredAgent(GenesisAgent):
                     "provider_guid": provider_guid,
                     "agent_id": self.app.agent_id,
                     "agent_name": self.agent_name,
-                    "service_name": self.service_name
+                    "service_name": self.base_service_name
                 }),
                 source_id=requester_guid,
                 target_id=provider_guid,
                 connection_type="CONNECTS_TO"
             )
             
-            logger.info(f"===== TRACING: Published explicit requester-to-provider edge: {requester_guid} -> {provider_guid} =====")
+            logger.debug(f"===== TRACING: Published explicit requester-to-provider edge: {requester_guid} -> {provider_guid} =====")
             return True
         except Exception as e:
             logger.error(f"===== TRACING: Error publishing explicit requester-to-provider edge: {e} =====")

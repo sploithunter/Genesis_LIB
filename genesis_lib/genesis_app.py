@@ -31,7 +31,6 @@ from typing import Dict, List, Any, Optional, Callable
 import uuid
 import rti.connextdds as dds
 from genesis_lib.function_discovery import FunctionRegistry, FunctionInfo
-from genesis_lib.logging_config import configure_genesis_logging
 from .function_patterns import SuccessPattern, FailurePattern, pattern_registry
 import os
 import traceback
@@ -39,11 +38,7 @@ from genesis_lib.utils import get_datamodel_path
 import asyncio
 
 # Configure logging
-logger = configure_genesis_logging(
-    logger_name="genesis_app",
-    source_name="GenesisApp",
-    log_level=logging.INFO
-)
+logger = logging.getLogger("genesis_app")
 
 class GenesisApp:
     """
@@ -111,15 +106,15 @@ class GenesisApp:
         writer_qos.ownership.kind = dds.OwnershipKind.SHARED
         
         # Initialize function registry and pattern registry
-        logger.info("===== DDS TRACE: Initializing FunctionRegistry in GenesisApp =====")
+        logger.debug("===== DDS TRACE: Initializing FunctionRegistry in GenesisApp =====")
         self.function_registry = FunctionRegistry(self.participant, domain_id)
-        logger.info(f"===== DDS TRACE: FunctionRegistry initialized with participant {self.participant.instance_handle} =====")
+        logger.debug(f"===== DDS TRACE: FunctionRegistry initialized with participant {self.participant.instance_handle} =====")
         self.pattern_registry = pattern_registry
         
         # Register built-in functions
-        logger.info("===== DDS TRACE: Starting built-in function registration =====")
+        logger.debug("===== DDS TRACE: Starting built-in function registration =====")
         self._register_builtin_functions()
-        logger.info("===== DDS TRACE: Completed built-in function registration =====")
+        logger.debug("===== DDS TRACE: Completed built-in function registration =====")
         
         logger.info(f"GenesisApp initialized with agent_id={self.agent_id}, dds_guid={self.dds_guid}")
 
@@ -144,11 +139,10 @@ class GenesisApp:
             return
 
         try:
-            # Close DDS entities in reverse order of creation, but keep registration writer until last
+            # Close DDS entities in reverse order of creation
             resources_to_close = ['function_registry', 'registration_topic',
                                 'publisher', 'subscriber', 'participant']
             
-            # First close everything except registration writer
             for resource in resources_to_close:
                 if hasattr(self, resource):
                     try:
@@ -182,7 +176,7 @@ class GenesisApp:
 
     def _register_builtin_functions(self):
         """Register any built-in functions for this application"""
-        logger.info("===== DDS TRACE: _register_builtin_functions called =====")
+        logger.debug("===== DDS TRACE: _register_builtin_functions called =====")
         # Override this method in subclasses to register built-in functions
         pass
 

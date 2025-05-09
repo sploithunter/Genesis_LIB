@@ -71,6 +71,20 @@ for i in {1..3}; do
     echo "Started calculator service $i with PID $CALC_PID"
 done
 
+# Start Letter Counter Service
+echo "Starting Letter Counter service..."
+python -m test_functions.letter_counter_service > "$LOG_DIR/letter_counter_service.log" 2>&1 &
+LC_PID=$!
+pids+=("$LC_PID")
+echo "Started Letter Counter service with PID $LC_PID"
+
+# Start Text Processor Service
+echo "Starting Text Processor service..."
+python -m test_functions.text_processor_service > "$LOG_DIR/text_processor_service.log" 2>&1 &
+TP_PID=$!
+pids+=("$TP_PID")
+echo "Started Text Processor service with PID $TP_PID"
+
 # Wait for services to start
 echo "Waiting for services to start..."
 sleep 15
@@ -120,24 +134,69 @@ run_test() {
     if [ "$test_name" = "function_test" ]; then
         # Check for RPC call in function test
         if ! grep -q "Calling function add via RPC" "$log_file"; then
-            display_log_on_failure "$log_file" "rpc_error" "Did not see RPC call in function test"
+            display_log_on_failure "$log_file" "rpc_error" "Did not see RPC call in function test (add)"
             cleanup
             exit 1
         fi
         
         # Check for function result
         if ! grep -q "Function add returned: {'result': 535353}" "$log_file"; then
-            display_log_on_failure "$log_file" "result_error" "Did not see expected function result"
+            display_log_on_failure "$log_file" "result_error" "Did not see expected function result for add"
             cleanup
             exit 1
         fi
         
-        echo "✅ SUCCESS: Function test completed successfully"
+        echo "✅ SUCCESS: Function test (calculator) completed successfully"
         echo "🤖 Agent's Response:"
         echo "$agent_response"
         echo "📊 Function Call Confirmed:"
         grep "Calling function add via RPC" "$log_file"
         grep "Function add returned" "$log_file"
+        echo "=================================================="
+    elif [ "$test_name" = "letter_counter_test" ]; then
+        # Check for RPC call to count_letter
+        if ! grep -q "Calling function count_letter via RPC" "$log_file"; then
+            display_log_on_failure "$log_file" "rpc_error" "Did not see RPC call in letter_counter_test (count_letter)"
+            cleanup
+            exit 1
+        fi
+
+        # Check for function result (e.g., "The letter 'l' appears 4 times")
+        # We'll make this check more flexible, just looking for the presence of the result from the service
+        if ! grep -q "GenesisRPCClient - INFO - Function count_letter returned:.*'result': 5" "$log_file"; then
+            display_log_on_failure "$log_file" "result_error" "Did not see expected function result for count_letter (expected 5)"
+            cleanup
+            exit 1
+        fi
+
+        echo "✅ SUCCESS: Letter Counter test completed successfully"
+        echo "🤖 Agent's Response:"
+        echo "$agent_response"
+        echo "📊 Function Call Confirmed:"
+        grep "Calling function count_letter via RPC" "$log_file"
+        grep "Function count_letter returned" "$log_file"
+        echo "=================================================="
+    elif [ "$test_name" = "text_processor_test" ]; then
+        # Check for RPC call to count_words
+        if ! grep -q "Calling function count_words via RPC" "$log_file"; then
+            display_log_on_failure "$log_file" "rpc_error" "Did not see RPC call in text_processor_test (count_words)"
+            cleanup
+            exit 1
+        fi
+
+        # Check for function result (e.g., "The sentence has 7 words.")
+        if ! grep -q "GenesisRPCClient - INFO - Function count_words returned:.*'word_count': 7" "$log_file"; then
+            display_log_on_failure "$log_file" "result_error" "Did not see expected function result for count_words (expected 'word_count': 7)"
+            cleanup
+            exit 1
+        fi
+
+        echo "✅ SUCCESS: Text Processor test completed successfully"
+        echo "🤖 Agent's Response:"
+        echo "$agent_response"
+        echo "📊 Function Call Confirmed:"
+        grep "Calling function count_words via RPC" "$log_file"
+        grep "Function count_words returned" "$log_file"
         echo "=================================================="
     else
         # For non-function test, ensure no RPC calls were made
@@ -162,6 +221,12 @@ run_test "function_test" "Can you add 424242 and 111111?"
 
 # Run the non-function test
 run_test "non_function_test" "Tell me a joke"
+
+# Run the letter counter test
+run_test "letter_counter_test" "How many times does the letter 'l' appear in 'hello silly world'?"
+
+# Run the text processor test
+run_test "text_processor_test" "Count the words in the sentence: 'this is a test of the system'"
 
 [ "$DEBUG" = "true" ] && echo "Logs are available in $LOG_DIR"
 echo "=================================================="

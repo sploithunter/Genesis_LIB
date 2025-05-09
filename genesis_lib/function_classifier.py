@@ -46,7 +46,7 @@ class FunctionClassifier:
             llm_client: The LLM client to use for classification (optional)
         """
         self.llm_client = llm_client
-        logger.info("===== TRACING: FunctionClassifier initialized =====")
+        logger.debug("===== TRACING: FunctionClassifier initialized =====")
     
     def _format_for_classification(self, functions: List[Dict]) -> str:
         """
@@ -157,7 +157,7 @@ Relevant Functions:
         Returns:
             List of relevant function metadata dictionaries
         """
-        logger.info(f"===== TRACING: Classifying functions for query: {query} =====")
+        logger.debug(f"===== TRACING: Classifying functions for query: {query} =====")
         
         # If no LLM client is provided, return all functions
         if not self.llm_client:
@@ -177,7 +177,7 @@ Relevant Functions:
             prompt = self._build_classification_prompt(query, formatted_functions)
             
             # Call the LLM for classification
-            logger.info("===== TRACING: Calling LLM for function classification =====")
+            logger.debug("===== TRACING: Calling LLM for function classification =====")
             
             # Use the OpenAI chat completions API with the specified model
             response = self.llm_client.chat.completions.create(
@@ -196,9 +196,9 @@ Relevant Functions:
             # Parse the classification result
             relevant_function_names = self._parse_classification_result(result)
             
-            logger.info(f"===== TRACING: Identified {len(relevant_function_names)} relevant functions =====")
+            logger.debug(f"===== TRACING: Identified {len(relevant_function_names)} relevant functions =====")
             for name in relevant_function_names:
-                logger.info(f"===== TRACING: Relevant function: {name} =====")
+                logger.debug(f"===== TRACING: Relevant function: {name} =====")
             
             # Filter the functions based on the classification result
             relevant_functions = []

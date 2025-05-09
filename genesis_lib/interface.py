@@ -43,21 +43,21 @@ class RegistrationListener(dds.DynamicData.NoOpDataReaderListener):
                  loop: asyncio.AbstractEventLoop,
                  on_discovered: Optional[Callable[[Dict[str, Any]], Coroutine[Any, Any, None]]] = None, 
                  on_departed: Optional[Callable[[str], Coroutine[Any, Any, None]]] = None):
-        logger.info("🔧 TRACE: RegistrationListener class init calling now")
+        logger.debug("🔧 TRACE: RegistrationListener class init calling now")
         super().__init__()
         self.interface = interface
         self.received_announcements = {}  # Track announcements by instance_id
         self.on_agent_discovered = on_discovered
         self.on_agent_departed = on_departed
         self._loop = loop
-        logger.info("🔧 TRACE: Registration listener initialized with callbacks")
+        logger.debug("🔧 TRACE: Registration listener initialized with callbacks")
         
     def on_data_available(self, reader):
         """Handle new registration announcements and departures"""
-        logger.info("🔔 TRACE: RegistrationListener.on_data_available called (sync)")
+        logger.debug("🔔 TRACE: RegistrationListener.on_data_available called (sync)")
         try:
-            samples = reader.take()
-            logger.info(f"📦 TRACE: Took {len(samples)} samples from reader")
+            samples = reader.read()
+            logger.debug(f"📦 TRACE: Read {len(samples)} samples from reader")
             
             for data, info in samples:
                 if data is None:
@@ -82,14 +82,14 @@ class RegistrationListener(dds.DynamicData.NoOpDataReaderListener):
                             'timestamp': time.time()
                         }
                         self.received_announcements[instance_id] = agent_info
-                        logger.info(f"✨ TRACE: Agent DISCOVERED: {prefered_name} ({service_name}) - ID: {instance_id}")
+                        logger.debug(f"✨ TRACE: Agent DISCOVERED: {prefered_name} ({service_name}) - ID: {instance_id}")
                         if self.on_agent_discovered:
                             # Schedule the async task creation onto the main loop thread
                             self._loop.call_soon_threadsafe(asyncio.create_task, self._run_discovery_callback(agent_info))
                 elif info.state.instance_state in [dds.InstanceState.NOT_ALIVE_DISPOSED, dds.InstanceState.NOT_ALIVE_NO_WRITERS]:
                     if instance_id in self.received_announcements:
                         departed_info = self.received_announcements.pop(instance_id)
-                        logger.info(f"👻 TRACE: Agent DEPARTED: {departed_info.get('prefered_name', 'N/A')} - ID: {instance_id} - Reason: {info.state.instance_state}")
+                        logger.debug(f"👻 TRACE: Agent DEPARTED: {departed_info.get('prefered_name', 'N/A')} - ID: {instance_id} - Reason: {info.state.instance_state}")
                         if self.on_agent_departed:
                             # Schedule the async task creation onto the main loop thread
                             self._loop.call_soon_threadsafe(asyncio.create_task, self._run_departure_callback(instance_id))
@@ -102,7 +102,7 @@ class RegistrationListener(dds.DynamicData.NoOpDataReaderListener):
 
     def on_subscription_matched(self, reader, status):
         """Track when registration publishers are discovered"""
-        logger.info(f"🤝 TRACE: Registration subscription matched event. Current count: {status.current_count}")
+        logger.debug(f"🤝 TRACE: Registration subscription matched event. Current count: {status.current_count}")
         # We're not using this for discovery anymore, just logging for debugging
 
     # --- Helper methods to run async callbacks --- 
@@ -159,7 +159,7 @@ class GenesisInterface(ABC):
     def _setup_registration_monitoring(self):
         """Set up registration monitoring with listener"""
         try:
-            logger.info("🔧 TRACE: Setting up registration monitoring...")
+            logger.debug("🔧 TRACE: Setting up registration monitoring...")
             
             # Configure reader QoS
             reader_qos = dds.QosProvider.default.datareader_qos
@@ -171,10 +171,10 @@ class GenesisInterface(ABC):
             reader_qos.liveliness.lease_duration = dds.Duration(seconds=2)
             reader_qos.ownership.kind = dds.OwnershipKind.SHARED
             
-            logger.info("📋 TRACE: Configured reader QoS settings")
+            logger.debug("📋 TRACE: Configured reader QoS settings")
             
             # Create registration reader with listener
-            logger.info("🎯 TRACE: Creating registration listener...")
+            logger.debug("🎯 TRACE: Creating registration listener...")
             self.registration_listener = RegistrationListener(
                 self,
                 self._loop,
@@ -182,7 +182,7 @@ class GenesisInterface(ABC):
                 on_departed=self._on_agent_departed_callback
             )
             
-            logger.info("📡 TRACE: Creating registration reader...")
+            logger.debug("📡 TRACE: Creating registration reader...")
             self.app.registration_reader = dds.DynamicData.DataReader(
                 subscriber=self.app.subscriber,
                 topic=self.app.registration_topic,
@@ -191,7 +191,7 @@ class GenesisInterface(ABC):
                 mask=dds.StatusMask.DATA_AVAILABLE | dds.StatusMask.SUBSCRIPTION_MATCHED
             )
             
-            logger.info("✅ TRACE: Registration monitoring setup complete")
+            logger.debug("✅ TRACE: Registration monitoring setup complete")
             
         except Exception as e:
             logger.error(f"❌ TRACE: Error setting up registration monitoring: {e}")
@@ -207,7 +207,7 @@ class GenesisInterface(ABC):
              logger.warning(f"⚠️ TRACE: Requester already exists for service '{self.discovered_agent_service_name}'. Overwriting.")
              self.requester.close()
 
-        logger.info(f"🔗 TRACE: Attempting to connect to agent service: {service_name}")
+        logger.debug(f"🔗 TRACE: Attempting to connect to agent service: {service_name}")
         try:
             self.requester = rpc.Requester(
                 request_type=self.request_type,
@@ -227,7 +227,7 @@ class GenesisInterface(ABC):
                     return False
                 await asyncio.sleep(0.1)
             
-            logger.info(f"✅ TRACE: RPC Requester created and DDS replier matched for service: {service_name}")
+            logger.debug(f"✅ TRACE: RPC Requester created and DDS replier matched for service: {service_name}")
             return True
             
         except Exception as req_e:
@@ -244,7 +244,7 @@ class GenesisInterface(ABC):
              return
         while self.requester.matched_replier_count == 0:
             await asyncio.sleep(0.1)
-        logger.info(f"RPC match confirmed for service: {self.discovered_agent_service_name}!")
+        logger.debug(f"RPC match confirmed for service: {self.discovered_agent_service_name}!")
 
     async def send_request(self, request_data: Dict[str, Any], timeout_seconds: float = 10.0) -> Optional[Dict[str, Any]]:
         """Send request to agent and wait for reply"""
@@ -259,7 +259,7 @@ class GenesisInterface(ABC):
                 request[key] = value
                 
             # Send request and wait for reply using synchronous API in a thread
-            logger.info(f"Sending request to agent service '{self.discovered_agent_service_name}': {request_data}")
+            logger.debug(f"Sending request to agent service '{self.discovered_agent_service_name}': {request_data}")
             
             def _send_request_sync(requester, req, timeout):
                 # Ensure the requester is valid before using it
@@ -293,7 +293,7 @@ class GenesisInterface(ABC):
                 for member in self.reply_members:
                     reply_dict[member] = reply[member]
                     
-                logger.info(f"Received reply from agent: {reply_dict}")
+                logger.debug(f"Received reply from agent: {reply_dict}")
                 return reply_dict
             else:
                 logger.error("No reply received")
@@ -316,7 +316,7 @@ class GenesisInterface(ABC):
     # --- New Callback Registration Methods ---
     def register_discovery_callback(self, callback: Callable[[Dict[str, Any]], Coroutine[Any, Any, None]]):
         """Register a callback to be invoked when an agent is discovered."""
-        logger.info(f"🔧 TRACE: Registering discovery callback: {callback.__name__ if callback else 'None'}")
+        logger.debug(f"🔧 TRACE: Registering discovery callback: {callback.__name__ if callback else 'None'}")
         self._on_agent_discovered_callback = callback
         # If listener already exists, update its callback directly
         if hasattr(self, 'registration_listener') and self.registration_listener:
@@ -324,7 +324,7 @@ class GenesisInterface(ABC):
 
     def register_departure_callback(self, callback: Callable[[str], Coroutine[Any, Any, None]]):
         """Register a callback to be invoked when an agent departs."""
-        logger.info(f"🔧 TRACE: Registering departure callback: {callback.__name__ if callback else 'None'}")
+        logger.debug(f"🔧 TRACE: Registering departure callback: {callback.__name__ if callback else 'None'}")
         self._on_agent_departed_callback = callback
         # If listener already exists, update its callback directly
         if hasattr(self, 'registration_listener') and self.registration_listener:

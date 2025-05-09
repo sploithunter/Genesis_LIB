@@ -121,7 +121,7 @@ class MonitoredInterface(GenesisInterface):
         # Announce interface presence
         self._publish_discovery_event()
         
-        logger.info(f"Monitored interface {interface_name} initialized")
+        logger.debug(f"Monitored interface {interface_name} initialized")
     
     def _setup_monitoring(self):
         """Set up DDS entities for monitoring"""
@@ -410,13 +410,13 @@ class MonitoredInterface(GenesisInterface):
         instance_id = agent_info['instance_id']
         prefered_name = agent_info['prefered_name']
         service_name = agent_info['service_name']
-        logger.info(f"<MonitoredInterface Handler> Agent Discovered: {prefered_name} ({service_name}) - ID: {instance_id}")
+        logger.debug(f"<MonitoredInterface Handler> Agent Discovered: {prefered_name} ({service_name}) - ID: {instance_id}")
         self.available_agents[instance_id] = agent_info
         # For this simple test, signal that *an* agent is found
         # A real app might have more complex logic here (e.g., find specific name)
         # Or expose the event/agents list publicly for the app to manage.
         if not self._agent_found_event.is_set():
-            logger.info("<MonitoredInterface Handler> Signaling internal agent found event.")
+            logger.debug("<MonitoredInterface Handler> Signaling internal agent found event.")
             self._agent_found_event.set() 
 
     async def _handle_agent_departed(self, instance_id: str):
@@ -424,7 +424,7 @@ class MonitoredInterface(GenesisInterface):
         if instance_id in self.available_agents:
             departed_agent = self.available_agents.pop(instance_id)
             prefered_name = departed_agent.get('prefered_name', 'N/A')
-            logger.info(f"<MonitoredInterface Handler> Agent Departed: {prefered_name} - ID: {instance_id}")
+            logger.debug(f"<MonitoredInterface Handler> Agent Departed: {prefered_name} - ID: {instance_id}")
             # If the departed agent was the one we connected to, handle it
             if instance_id == self._connected_agent_id:
                  logger.warning(f"<MonitoredInterface Handler> Connected agent {prefered_name} departed! Need to handle reconnection or failure.")
@@ -442,10 +442,10 @@ class MonitoredInterface(GenesisInterface):
         """Send request to agent with monitoring"""
         # Check if we are connected before sending
         if not self.requester or not self._connected_agent_id:
-            logger.error("❌ TRACE: MonitoredInterface cannot send request, not connected to an agent.")
+            logger.error("❌ MonitoredInterface cannot send request, not connected to an agent.")
             # Check if the agent we thought we were connected to just departed
             if self._connected_agent_id and self._connected_agent_id not in self.available_agents:
-                logger.warning("❌ TRACE: Connection lost as the target agent departed.")
+                logger.warning("Connection lost as the target agent departed.")
                 self._connected_agent_id = None # Ensure state reflects disconnection
             return None
         

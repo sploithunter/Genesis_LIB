@@ -35,7 +35,6 @@ from typing import Dict, Any, List, Optional, Callable
 from genesis_lib.rpc_service import GenesisRPCService
 from genesis_lib.function_discovery import FunctionRegistry, FunctionCapabilityListener
 import rti.connextdds as dds
-from genesis_lib.logging_config import configure_genesis_logging
 from genesis_lib.datamodel import FunctionRequest, FunctionReply
 import re
 import uuid
@@ -60,8 +59,6 @@ ENTITY_TYPE_MAP = {
 
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, 
-                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("enhanced_service_base")
 
 class EnhancedFunctionCapabilityListener(FunctionCapabilityListener):

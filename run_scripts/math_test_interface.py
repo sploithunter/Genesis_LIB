@@ -14,10 +14,23 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, project_root)
 
 from genesis_lib.monitored_interface import MonitoredInterface
-from genesis_lib.logging_config import configure_genesis_logging
 
-# Configure logging using common configuration
-logger = configure_genesis_logging("MathTestInterface", "MathTestInterface", logging.INFO)
+# Configure logging for this script
+logger = logging.getLogger("MathTestInterface")
+
+# Explicitly configure root logger and add a stream handler to stdout
+root_logger = logging.getLogger() # Get the root logger
+# Ensure there's a handler for stdout if one isn't already configured effectively
+# We want to make sure this script's logs go to where the test runner expects them.
+# A simple check: if no handlers, or if the existing ones don't include a StreamHandler to stdout/stderr.
+# For simplicity here, let's just ensure our script's logger level and add a handler if root has none.
+if not root_logger.hasHandlers(): # A more robust check might be needed depending on environment
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    root_logger.addHandler(stdout_handler)
+
+root_logger.setLevel(logging.DEBUG) # Set root logger level to DEBUG
+logger.setLevel(logging.INFO)       # Keep MathTestInterface script's own direct logs at INFO
 
 class MathTestInterface:
     def __init__(self, interface_id):

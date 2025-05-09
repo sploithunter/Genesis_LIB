@@ -150,10 +150,10 @@ check_log "$AGENT_LOG" "Sent reply:" "Reply sent" true
 
 # Check interface logs
 check_log "$INTERFACE_LOG" "Monitored interface MathTestInterface initialized" "Interface initialization" true
-check_log "$INTERFACE_LOG" "<MonitoredInterface Handler> Agent Discovered: MathTestAgent (GenericAgent)" "Agent discovery callback" true
+check_log "$INTERFACE_LOG" "<MonitoredInterface Handler> Agent Discovered: MathTestAgent (MathTestService)" "Agent discovery callback" true
 check_log "$INTERFACE_LOG" "🔎 TRACE: Available agents found: {.*'prefered_name': 'MathTestAgent'.*}" "Available agents logged" true
 check_log "$INTERFACE_LOG" "✅ TRACE: Agent discovered. Selecting first available: MathTestAgent" "Agent selection" true
-check_log "$INTERFACE_LOG" "🔗 TRACE: Attempting to connect to service: GenericAgent" "Connection attempt" true
+check_log "$INTERFACE_LOG" "🔗 TRACE: Attempting to connect to service: MathTestService" "Connection attempt" true
 check_log "$INTERFACE_LOG" "✅ TRACE: Successfully connected to agent: MathTestAgent" "Connection success" true
 check_log "$INTERFACE_LOG" "📤 TRACE: Sending math request:" "Request sent" true
 check_log "$INTERFACE_LOG" "📥 TRACE: Received reply:" "Reply received" true
@@ -162,9 +162,9 @@ check_log "$INTERFACE_LOG" "🏁 TRACE: MathTestInterface ending with exit code:
 
 # Check DDS Spy logs
 check_log "$INTERFACE_SPY_LOG" "New data.*topic=\"GenesisRegistration\".*type=\"genesis_agent_registration_announce\"" "Agent registration" true
-check_log "$INTERFACE_LOG" "✨ TRACE: Agent DISCOVERED: MathTestAgent (GenericAgent)" "Interface discovery" true
-check_log "$INTERFACE_SPY_LOG" "New writer.*topic=\"GenericAgentRequest\".*type=\"InterfaceAgentRequest\"" "RPC request" true
-check_log "$INTERFACE_SPY_LOG" "New writer.*topic=\"GenericAgentReply\".*type=\"InterfaceAgentReply\"" "RPC reply" true
+check_log "$INTERFACE_LOG" "✨ TRACE: Agent DISCOVERED: MathTestAgent (MathTestService)" "Interface discovery" true
+check_log "$INTERFACE_SPY_LOG" "New writer.*topic=\"MathTestServiceRequest\".*type=\"InterfaceAgentRequest\"" "RPC request" true
+check_log "$INTERFACE_SPY_LOG" "New writer.*topic=\"MathTestServiceReply\".*type=\"InterfaceAgentReply\"" "RPC reply" true
 
 # Clean up Test 2
 echo "🧹 TRACE: Cleaning up Test 2..."

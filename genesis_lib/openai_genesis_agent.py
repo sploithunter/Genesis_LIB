@@ -32,17 +32,19 @@ from genesis_lib.function_classifier import FunctionClassifier
 from genesis_lib.generic_function_client import GenericFunctionClient
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# logging.basicConfig(  # REMOVE THIS BLOCK
+#     level=logging.INFO,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
 logger = logging.getLogger("openai_genesis_agent")
 
 class OpenAIGenesisAgent(MonitoredAgent):
     """An agent that uses OpenAI API with Genesis function calls"""
     
-    def __init__(self, model_name="gpt-4o", classifier_model_name="gpt-4o-mini", domain_id: int = 0,
-                 agent_name: str = "OpenAIAgent", description: str = None, enable_tracing: bool = False):
+    def __init__(self, model_name="gpt-4o", classifier_model_name="gpt-4o-mini", 
+                 domain_id: int = 0, agent_name: str = "OpenAIAgent", 
+                 base_service_name: str = "OpenAIChat", service_instance_tag: Optional[str] = None, 
+                 description: str = None, enable_tracing: bool = False):
         """Initialize the agent with the specified models
         
         Args:
@@ -50,6 +52,8 @@ class OpenAIGenesisAgent(MonitoredAgent):
             classifier_model_name: Model to use for function classification (default: gpt-4o-mini)
             domain_id: DDS domain ID (default: 0)
             agent_name: Name of the agent (default: "OpenAIAgent")
+            base_service_name: The fundamental type of service (default: "OpenAIChat")
+            service_instance_tag: Optional tag for unique RPC service name instance
             description: Optional description of the agent
             enable_tracing: Whether to enable detailed tracing logs (default: False)
         """
@@ -57,7 +61,7 @@ class OpenAIGenesisAgent(MonitoredAgent):
         self.enable_tracing = enable_tracing
         
         if self.enable_tracing:
-            logger.info(f"Initializing OpenAIGenesisAgent with model {model_name}")
+            logger.debug(f"Initializing OpenAIGenesisAgent with model {model_name}")
         
         # Store model configuration
         self.model_config = {
@@ -68,9 +72,10 @@ class OpenAIGenesisAgent(MonitoredAgent):
         # Initialize monitored agent base class
         super().__init__(
             agent_name=agent_name,
-            service_name="ChatGPT",
+            base_service_name=base_service_name,
+            service_instance_tag=service_instance_tag,
             agent_type="SPECIALIZED_AGENT",  # This is a specialized AI agent
-            description=description or f"An OpenAI-powered agent using {model_name} model",
+            description=description or f"An OpenAI-powered agent using {model_name} model, providing {base_service_name} service",
             domain_id=domain_id
         )
         
@@ -85,7 +90,7 @@ class OpenAIGenesisAgent(MonitoredAgent):
         # Initialize generic client for function discovery, passing the agent's participant
         # self.generic_client = GenericFunctionClient(participant=self.app.participant)
         # Ensure GenericFunctionClient uses the SAME FunctionRegistry as the GenesisApp
-        logger.info(f"===== TRACING: Initializing GenericFunctionClient using agent app's FunctionRegistry: {id(self.app.function_registry)} =====")
+        logger.debug(f"===== TRACING: Initializing GenericFunctionClient using agent app's FunctionRegistry: {id(self.app.function_registry)} =====")
         self.generic_client = GenericFunctionClient(function_registry=self.app.function_registry)
         self.function_cache = {}  # Cache for discovered functions
         
@@ -117,69 +122,81 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
         )
         
         if self.enable_tracing:
-            logger.info("OpenAIGenesisAgent initialized successfully")
+            logger.debug("OpenAIGenesisAgent initialized successfully")
     
     async def _ensure_functions_discovered(self):
-        """Ensure functions are discovered before use"""
-        if not self.function_cache:
-            logger.info("===== DDS TRACE: Function cache empty, calling generic_client.discover_functions... =====")
-            await self.generic_client.discover_functions()
-            logger.info("===== DDS TRACE: generic_client.discover_functions returned. =====")
+        """Ensure functions are discovered before use. Relies on GenericFunctionClient to asynchronously update its list.
+        This method populates the agent's function_cache based on the current list from GenericFunctionClient ON EVERY CALL.
+        """
+        logger.debug("===== TRACING: Attempting to populate function cache from GenericFunctionClient... =====")
+        
+        functions = self.generic_client.list_available_functions()
+        
+        # Reset function cache for fresh population
+        self.function_cache = {}
 
-            # Cache discovered functions
-            functions = self.generic_client.list_available_functions()
-            if not functions:
-                logger.info("===== TRACING: No functions available in the system =====")
-                # Use general system prompt since no functions are available
-                self.system_prompt = self.general_system_prompt
-                return
-                
-            # Switch to function-based prompt since functions are available
-            self.system_prompt = self.function_based_system_prompt
-            
-            for func in functions:
-                self.function_cache[func["name"]] = {
-                    "function_id": func["function_id"],
-                    "description": func["description"],
-                    "schema": func["schema"],
-                    "classification": {
-                        "entity_type": "function",
-                        "domain": ["unknown"],
-                        "operation_type": func.get("operation_type", "unknown"),
-                        "io_types": {
-                            "input": ["unknown"],
-                            "output": ["unknown"]
-                        },
-                        "performance": {
-                            "latency": "unknown",
-                            "throughput": "unknown"
-                        },
-                        "security": {
-                            "level": "public",
-                            "authentication": "none"
-                        }
+        if not functions:
+            logger.debug("===== TRACING: No functions currently listed by GenericFunctionClient. General prompt will be used. =====")
+            self.system_prompt = self.general_system_prompt
+            return
+        
+        logger.debug(f"===== TRACING: {len(functions)} functions listed by GenericFunctionClient. Populating cache. System prompt set to function-based. =====")
+        self.system_prompt = self.function_based_system_prompt
+
+        for func_data in functions: # Iterate over list of dicts
+            # func_data should be a dictionary from the list returned by GenericFunctionClient
+            # It has keys like 'name', 'description', 'schema', 'function_id'
+            func_id = func_data["function_id"]
+            self.function_cache[func_data["name"]] = {
+                "function_id": func_id,
+                "description": func_data["description"],
+                "schema": func_data["schema"],
+                "provider_id": func_data.get("provider_id"),
+                "classification": { # Default classification, can be overridden if func_data has it
+                    "entity_type": "function",
+                    "domain": ["unknown"],
+                    "operation_type": func_data.get("operation_type", "unknown"),
+                    "io_types": {
+                        "input": ["unknown"],
+                        "output": ["unknown"]
+                    },
+                    "performance": {
+                        "latency": "unknown",
+                        "throughput": "unknown"
+                    },
+                    "security": {
+                        "level": "public",
+                        "authentication": "none"
                     }
                 }
-                
-                logger.info("===== TRACING: Discovered function =====")
-                logger.info(f"Name: {func['name']}")
-                logger.info(f"ID: {func['function_id']}")
-                logger.info(f"Description: {func['description']}")
-                logger.info(f"Schema: {json.dumps(func['schema'], indent=2)}")
-                logger.info("=" * 80)
-                
-                # Publish discovery event
-                self.publish_monitoring_event(
-                    "AGENT_DISCOVERY",
-                    metadata={
-                        "function_id": func["function_id"],
-                        "function_name": func["name"]
-                    }
-                )
+            }
+            # If func_data itself contains a 'classification' field, merge it or use it
+            if "classification" in func_data and isinstance(func_data["classification"], dict):
+                self.function_cache[func_data["name"]]["classification"].update(func_data["classification"])
+
+            
+            logger.debug("===== TRACING: Processing discovered function for cache =====")
+            logger.debug(f"Name: {func_data['name']}")
+            logger.debug(f"ID: {func_id}")
+            logger.debug(f"Description: {func_data['description']}")
+            logger.debug(f"Schema: {json.dumps(func_data['schema'], indent=2)}")
+            logger.debug("=" * 80)
+            
+            # Publish discovery event (consider if this is too noisy here - it's already done by FunctionRegistry)
+            # For now, let's keep it to see if OpenAIGenesisAgent "sees" them
+            self.publish_monitoring_event(
+                "AGENT_DISCOVERY", # This event type might need review for semantic correctness here
+                metadata={
+                    "function_id": func_id,
+                    "function_name": func_data["name"],
+                    "provider_id": func_data.get("provider_id"),
+                    "source": "OpenAIGenesisAgent._ensure_functions_discovered"
+                }
+            )
     
     def _get_function_schemas_for_openai(self, relevant_functions: Optional[List[str]] = None):
         """Convert discovered functions to OpenAI function schemas format"""
-        logger.info("===== TRACING: Converting function schemas for OpenAI =====")
+        logger.debug("===== TRACING: Converting function schemas for OpenAI =======")
         function_schemas = []
         
         for name, func_info in self.function_cache.items():
@@ -196,14 +213,14 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 }
             }
             function_schemas.append(schema)
-            logger.info(f"===== TRACING: Added schema for function: {name} =====")
+            logger.debug(f"===== TRACING: Added schema for function: {name} =====")
         
         return function_schemas
     
     async def _call_function(self, function_name: str, **kwargs) -> Any:
         """Call a function using the generic client"""
-        logger.info(f"===== TRACING: Calling function {function_name} =====")
-        logger.info(f"===== TRACING: Function arguments: {json.dumps(kwargs, indent=2)} =====")
+        logger.debug(f"===== TRACING: Calling function {function_name} =====")
+        logger.debug(f"===== TRACING: Function arguments: {json.dumps(kwargs, indent=2)} =====")
         
         if function_name not in self.function_cache:
             error_msg = f"Function not found: {function_name}"
@@ -219,8 +236,8 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             )
             end_time = time.time()
             
-            logger.info(f"===== TRACING: Function call completed in {end_time - start_time:.2f} seconds =====")
-            logger.info(f"===== TRACING: Function result: {result} =====")
+            logger.debug(f"===== TRACING: Function call completed in {end_time - start_time:.2f} seconds =====")
+            logger.debug(f"===== TRACING: Function result: {result} =====")
             
             # Extract result value if in dict format
             if isinstance(result, dict) and "result" in result:
@@ -235,7 +252,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
     async def process_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Process a user request and return a response"""
         user_message = request.get("message", "")
-        logger.info(f"===== TRACING: Processing request: {user_message} =====")
+        logger.debug(f"===== TRACING: Processing request: {user_message} =====")
         
         try:
             # Ensure functions are discovered
@@ -247,7 +264,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             
             # If no functions are available, proceed with basic response
             if not self.function_cache:
-                logger.info("===== TRACING: No functions available, proceeding with general conversation =====")
+                logger.debug("===== TRACING: No functions available, proceeding with general conversation =====")
                 
                 # Create chain event for LLM call start
                 self._publish_llm_call_start(
@@ -369,7 +386,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 }
             
             # Phase 2: Function Execution
-            logger.info("===== TRACING: Calling OpenAI API with function schemas =====")
+            logger.debug("===== TRACING: Calling OpenAI API with function schemas =====")
             
             # Create chain event for LLM call start
             self._publish_llm_call_start(
@@ -388,7 +405,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 tool_choice="auto"
             )
 
-            logger.info(f"=====!!!!! TRACING: OpenAI response: {response} !!!!!=====")
+            logger.debug(f"=====!!!!! TRACING: OpenAI response: {response} !!!!!=====")
             
             # Create chain event for LLM call completion
             self._publish_llm_call_complete(
@@ -402,7 +419,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             
             # Check if the model wants to call a function
             if message.tool_calls:
-                logger.info(f"===== TRACING: Model requested function call(s): {len(message.tool_calls)} =====")
+                logger.debug(f"===== TRACING: Model requested function call(s): {len(message.tool_calls)} =======")
                 
                 # Process each function call
                 function_responses = []
@@ -410,7 +427,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                     function_name = tool_call.function.name
                     function_args = json.loads(tool_call.function.arguments)
                     
-                    logger.info(f"===== TRACING: Processing function call: {function_name} =====")
+                    logger.debug(f"===== TRACING: Processing function call: {function_name} =====")
                     
                     # Call the function
                     try:
@@ -437,8 +454,8 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                             source_provider_id=self.function_cache[function_name].get("provider_id")
                         )
                         
-                        logger.info(f"===== TRACING: Function call completed in {end_time - start_time:.2f} seconds =====")
-                        logger.info(f"===== TRACING: Function result: {function_result} =====")
+                        logger.debug(f"===== TRACING: Function call completed in {end_time - start_time:.2f} seconds =====")
+                        logger.debug(f"===== TRACING: Function result: {function_result} =====")
                         
                         # Extract result value if in dict format
                         if isinstance(function_result, dict) and "result" in function_result:
@@ -450,7 +467,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                             "name": function_name,
                             "content": str(function_result)
                         })
-                        logger.info(f"===== TRACING: Function {function_name} returned: {function_result} =====")
+                        logger.debug(f"===== TRACING: Function {function_name} returned: {function_result} =====")
                     except Exception as e:
                         logger.error(f"===== TRACING: Error calling function {function_name}: {str(e)} =====")
                         function_responses.append({
@@ -463,7 +480,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                 # If we have function responses, send them back to the model
                 if function_responses:
                     # Create a new conversation with the function responses
-                    logger.info("===== TRACING: Sending function responses back to OpenAI =====")
+                    logger.debug("===== TRACING: Sending function responses back to OpenAI =====")
                     
                     # Create chain event for second LLM call start
                     self._publish_llm_call_start(
@@ -491,16 +508,16 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
                     
                     # Extract the final response
                     final_message = second_response.choices[0].message.content
-                    logger.info(f"===== TRACING: Final response: {final_message} =====")
+                    logger.debug(f"===== TRACING: Final response: {final_message} =====")
                     return {"message": final_message, "status": 0}
             
             # If no function call, just return the response
             text_response = message.content
-            logger.info(f"===== TRACING: Response (no function call): {text_response} =====")
+            logger.debug(f"===== TRACING: Response (no function call): {text_response} =====")
             return {"message": text_response, "status": 0}
                 
         except Exception as e:
-            logger.error(f"===== TRACING: Error processing request: {str(e)} =====")
+            logger.error(f"===== TRACING: Error processing request: {str(e)} =======")
             logger.error(traceback.format_exc())
             return {"message": f"Error: {str(e)}", "status": 1}
     
@@ -517,7 +534,7 @@ Be friendly, professional, and maintain a helpful tone while being concise and c
             # Close base class resources
             await super().close()
             
-            logger.info(f"OpenAIGenesisAgent closed successfully")
+            logger.debug(f"OpenAIGenesisAgent closed successfully")
         except Exception as e:
             logger.error(f"Error closing OpenAIGenesisAgent: {str(e)}")
             logger.error(traceback.format_exc())

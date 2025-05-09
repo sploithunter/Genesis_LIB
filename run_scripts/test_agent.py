@@ -2,6 +2,7 @@ from genesis_lib.openai_genesis_agent import OpenAIGenesisAgent
 import os
 import asyncio
 import sys
+import logging
 
 class TestAgent(OpenAIGenesisAgent):
     def __init__(self):
@@ -15,6 +16,25 @@ class TestAgent(OpenAIGenesisAgent):
         )
 
 async def main():
+    # Configure basic logging for the script and to see genesis_lib DEBUG logs
+    log_level = logging.DEBUG # Or logging.INFO for less verbosity
+
+    # AGGRESSIVE LOGGING RESET
+    root_logger = logging.getLogger()
+    for handler in root_logger.handlers[:]: # Iterate over a copy
+        root_logger.removeHandler(handler)
+        handler.close() # Ensure handlers release resources
+
+    logging.basicConfig(
+        level=log_level,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        stream=sys.stdout # Ensure logs go to stdout to be captured by test runner
+    )
+    # Ensure specific genesis_lib loggers are also at DEBUG if needed,
+    # basicConfig might set root, but good to be explicit for key modules.
+    logging.getLogger("genesis_lib.function_discovery").setLevel(logging.DEBUG)
+    logging.getLogger("genesis_app").setLevel(logging.DEBUG) # For GenesisApp close logs
+
     # Create and run the agent
     agent = TestAgent()
     

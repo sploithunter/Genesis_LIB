@@ -30,7 +30,6 @@ import logging
 from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass
 import json
-from genesis_lib.logging_config import configure_genesis_logging
 import uuid
 import time
 import rti.connextdds as dds
@@ -40,23 +39,24 @@ import os
 from genesis_lib.utils import get_datamodel_path
 import asyncio
 import sys
+import traceback
 
 # Configure root logger to handle all loggers
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler()
-    ]
-)
+# logging.basicConfig( # REMOVE THIS BLOCK
+#     level=logging.DEBUG,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     handlers=[
+#         logging.StreamHandler()
+#     ]
+# )
 
 # Configure function discovery logger specifically
 logger = logging.getLogger("function_discovery")
-logger.setLevel(logging.DEBUG)
+# logger.setLevel(logging.DEBUG) # REMOVE - Let the script control the level
 
 # Set all genesis_lib loggers to DEBUG
-for name in ['genesis_lib', 'genesis_lib.function_discovery', 'genesis_lib.agent', 'genesis_lib.monitored_agent', 'genesis_lib.genesis_app']:
-    logging.getLogger(name).setLevel(logging.DEBUG)
+# for name in ['genesis_lib', 'genesis_lib.function_discovery', 'genesis_lib.agent', 'genesis_lib.monitored_agent', 'genesis_lib.genesis_app']:
+#     logging.getLogger(name).setLevel(logging.DEBUG) # REMOVE THIS LOOP
 
 @dataclass
 class FunctionInfo:
@@ -471,16 +471,16 @@ class FunctionRegistry:
             
             if found_topic:
                 self.capability_topic = found_topic
-                logger.info("===== DDS TRACE: Found existing FunctionCapability topic. =====")
+                logger.debug("===== DDS TRACE: Found existing FunctionCapability topic. =====")
             else:
                  # Topic not found, create it
-                logger.info("===== DDS TRACE: FunctionCapability topic not found, creating new one... =====")
+                logger.debug("===== DDS TRACE: FunctionCapability topic not found, creating new one... =====")
                 self.capability_topic = dds.DynamicData.Topic(
                     participant=participant,
                     topic_name="FunctionCapability",
                     topic_type=self.capability_type
                 )
-                logger.info("===== DDS TRACE: Created new FunctionCapability topic. =====")
+                logger.debug("===== DDS TRACE: Created new FunctionCapability topic. =====")
 
         except dds.Error as e:
             # Handle potential errors during find_topics or create_topic
@@ -679,7 +679,7 @@ class FunctionRegistry:
     
     def _advertise_function(self, function_info: FunctionInfo):
         """Advertise function capability via DDS"""
-        logger.info(f"===== DDS TRACE: Preparing DDS data for advertising function: {function_info.name} ({function_info.function_id}) =====")
+        logger.debug(f"===== DDS TRACE: Preparing DDS data for advertising function: {function_info.name} ({function_info.function_id}) =====")
         capability = dds.DynamicData(self.capability_type)
         capability['function_id'] = function_info.function_id
         capability['name'] = function_info.name
@@ -699,11 +699,11 @@ class FunctionRegistry:
             logger.warning(f"Could not determine service_name when advertising function {function_info.name}")
             capability['service_name'] = "UnknownService" # Default if service name is not found
         
-        logger.info(f"===== DDS TRACE: Publishing FunctionCapability for {function_info.name} ({function_info.function_id}): {capability} =====")
+        logger.debug(f"===== DDS TRACE: Publishing FunctionCapability for {function_info.name} ({function_info.function_id}): {capability} =====")
         try:
             self.capability_writer.write(capability)
             self.capability_writer.flush()
-            logger.info(f"===== DDS TRACE: Successfully published FunctionCapability for {function_info.name} =====")
+            logger.debug(f"===== DDS TRACE: Successfully published FunctionCapability for {function_info.name} =====")
         except Exception as e:
             logger.error(f"===== DDS TRACE: Error publishing FunctionCapability for {function_info.name}: {e} ====", exc_info=True)
             # Optionally re-raise or handle
@@ -713,7 +713,7 @@ class FunctionRegistry:
         function_id_str = "unknown_id"
         try:
             function_id_str = capability.get_string("function_id") # Get ID for logging early
-            logger.info(f"===== DDS TRACE: handle_capability_advertisement received data for function_id: {function_id_str} =====")
+            logger.debug(f"===== DDS TRACE: handle_capability_advertisement received data for function_id: {function_id_str} =====")
 
             # Check if instance state is ALIVE before processing
             if info.state.instance_state != dds.InstanceState.ALIVE:
@@ -754,11 +754,11 @@ class FunctionRegistry:
             
             # Signal that at least one function has been discovered
             if not self._discovery_event.is_set():
-                logger.info(f"===== DDS TRACE: Setting _discovery_event for function_id: {function_id} =====")
+                logger.debug(f"===== DDS TRACE: Setting _discovery_event for function_id: {function_id} =====")
                 self._discovery_event.set()
-                logger.info("===== DDS TRACE: Discovery event set (first function discovered). =====")
+                logger.debug("===== DDS TRACE: Discovery event set (first function discovered). =====")
             else:
-                logger.info(f"===== DDS TRACE: _discovery_event already set (function_id: {function_id}). =====")
+                logger.debug(f"===== DDS TRACE: _discovery_event already set (function_id: {function_id}). =====")
 
         except KeyError as e:
             logger.error(f"===== DDS TRACE: Missing key in capability data (function_id: {function_id_str}): {e} ====")
@@ -839,32 +839,88 @@ class FunctionRegistry:
         if function_id in self.discovered_functions:
             removed_function_name = self.discovered_functions[function_id].get("name", "unknown_function")
             del self.discovered_functions[function_id]
-            logger.info(f"===== DDS TRACE: Removed function {removed_function_name} ({function_id}) from discovered functions cache. =====")
+            logger.debug(f"===== DDS TRACE: Removed function {removed_function_name} ({function_id}) from discovered functions cache. =====")
         else:
             logger.warning(f"===== DDS TRACE: Attempted to remove non-existent function ID {function_id} from cache. =====")
 
     def close(self):
-        """Cleanup DDS entities"""
-        if hasattr(self, 'execution_client'):
-            self.execution_client.close()
-        if hasattr(self, 'capability_reader'):
-            self.capability_reader.close()
-        if hasattr(self, 'capability_writer'):
-            self.capability_writer.close()
-        if hasattr(self, 'capability_topic'):
-            self.capability_topic.close()
-        if hasattr(self, 'subscriber'):
-            self.subscriber.close()
-        if hasattr(self, 'publisher'):
-            self.publisher.close()
-        
-        # Clear references
-        self.capability_writer = None
-        self.capability_reader = None
-        self.capability_topic = None
-        self.subscriber = None
-        self.publisher = None
-        self.execution_client = None
+        """Clean up resources"""
+        print("===== PRINT TRACE: FunctionRegistry.close() ENTERED =====", flush=True) # ADDED FOR DEBUGGING
+        logger.debug("===== DDS TRACE: FunctionRegistry.close() ENTERED LOGGER =====") # ADDED FOR DEBUGGING
+
+        if hasattr(self, '_closed') and self._closed:
+            logger.debug("FunctionRegistry already closed.")
+            return
+
+        logger.debug("Closing FunctionRegistry and its resources")
+        try:
+            # Detach and delete StatusCondition and WaitSet first
+            logger.debug("===== DDS TRACE: FunctionRegistry.close() - WaitSet/StatusCondition cleanup START ====")
+            if hasattr(self, 'status_condition') and self.status_condition:
+                logger.debug("===== DDS TRACE: FunctionRegistry.close() - 'status_condition' attribute exists. Disabling... =====")
+                try:
+                    self.status_condition.enabled_statuses = dds.StatusMask.NONE
+                    logger.debug("===== DDS TRACE: FunctionRegistry.close() - status_condition.enabled_statuses set to NONE. =====")
+                except Exception as sc_disable_ex:
+                    logger.error(f"===== DDS TRACE: FunctionRegistry.close() - EXCEPTION during status_condition disable: {sc_disable_ex} =====")
+
+            if hasattr(self, 'waitset') and self.waitset:
+                logger.debug("===== DDS TRACE: FunctionRegistry.close() - 'waitset' attribute exists. =====")
+                if hasattr(self, 'status_condition') and self.status_condition: # Check again as it might have been set to None
+                    is_attached_before = self.status_condition.is_attached
+                    logger.debug(f"===== DDS TRACE: FunctionRegistry.close() - StatusCondition.is_attached BEFORE detach: {is_attached_before} =====")
+                    if is_attached_before:
+                        try:
+                            self.waitset.detach(self.status_condition)
+                            logger.debug("===== DDS TRACE: FunctionRegistry.close() - waitset.detach(status_condition) CALLED. =====")
+                            is_attached_after = self.status_condition.is_attached 
+                            logger.debug(f"===== DDS TRACE: FunctionRegistry.close() - StatusCondition.is_attached AFTER detach: {is_attached_after} =====")
+                        except Exception as detach_ex:
+                            logger.error(f"===== DDS TRACE: FunctionRegistry.close() - EXCEPTION during waitset.detach(): {detach_ex} =====")
+                    else:
+                        logger.debug("===== DDS TRACE: FunctionRegistry.close() - StatusCondition was NOT attached, skipping detach. =====")
+                else:
+                    logger.debug("===== DDS TRACE: FunctionRegistry.close() - 'status_condition' is None or does not exist when trying to detach from waitset. =====")
+                self.waitset = None # Allow garbage collection
+                logger.debug("===== DDS TRACE: FunctionRegistry.close() - self.waitset set to None. =====")
+            else:
+                logger.debug("===== DDS TRACE: FunctionRegistry.close() - 'waitset' attribute does NOT exist. =====")
+            
+            if hasattr(self, 'status_condition') and self.status_condition: # Ensure it's nulled if not already
+                self.status_condition = None # Allow garbage collection
+                logger.debug("===== DDS TRACE: FunctionRegistry.close() - self.status_condition set to None (final check). =====")
+
+            logger.debug("===== DDS TRACE: FunctionRegistry.close() - WaitSet/StatusCondition cleanup END ====")
+
+            # Close DDS entities
+            if hasattr(self, 'execution_client'):
+                self.execution_client.close()
+            if hasattr(self, 'capability_reader'):
+                self.capability_reader.close()
+            if hasattr(self, 'capability_writer'):
+                self.capability_writer.close()
+            if hasattr(self, 'capability_topic'):
+                self.capability_topic.close()
+            if hasattr(self, 'subscriber'):
+                self.subscriber.close()
+            if hasattr(self, 'publisher'):
+                self.publisher.close()
+            
+            # Clear references
+            self.capability_writer = None
+            self.capability_reader = None
+            self.capability_topic = None
+            self.subscriber = None
+            self.publisher = None
+            self.execution_client = None
+
+            logger.debug("===== DDS TRACE: FunctionRegistry.close() - DDS entities closed. =====")
+        except Exception as e:
+            logger.error(f"===== DDS TRACE: Error closing FunctionRegistry: {e} =====")
+            logger.error(traceback.format_exc())
+
+        logger.debug("===== DDS TRACE: FunctionRegistry.close() - Cleanup completed. =====")
+        self._closed = True
 
 class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
     """Listener for function capability advertisements"""
@@ -873,11 +929,11 @@ class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
         """Initialize listener with a reference to the registry"""
         super().__init__()
         self.registry = registry
-        logger.info("FunctionCapabilityListener initialized")
+        logger.debug("FunctionCapabilityListener initialized")
 
     def on_subscription_matched(self, reader, info):
         """Handle subscription matches"""
-        logger.info(f"Capability subscription matched: {info.current_count} total writers")
+        logger.debug(f"Capability subscription matched: {info.current_count} total writers")
         # Optionally, trigger an initial check or event if needed
         # maybe set the discovery event here if count > 0?
         # if info.current_count > 0 and not self.registry._discovery_event.is_set():
@@ -886,18 +942,18 @@ class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
 
     def on_data_available(self, reader):
         """Handle incoming capability data"""
-        logger.info("===== DDS TRACE: FunctionCapabilityListener.on_data_available entered =====")
+        logger.debug("===== DDS TRACE: FunctionCapabilityListener.on_data_available entered =====")
         try:
-            samples = reader.take() # Take all available samples
-            logger.info(f"===== DDS TRACE: Took {len(samples)} FunctionCapability samples =====")
+            samples = reader.read() # Take all available samples
+            logger.debug(f"===== DDS TRACE: Read {len(samples)} FunctionCapability samples =====")
             # Print sample details for debugging
             for sample, info in samples:
-                logger.info("===== DDS TRACE: Sample details =====")
-                logger.info(f"Sample data: {sample}")
-                logger.info(f"Sample info: {info}")
-                logger.info(f"Sample state: {info.state.sample_state}")
-                logger.info(f"Instance state: {info.state.instance_state}")
-                logger.info("===== DDS TRACE: End sample details =====")
+                logger.debug("===== DDS TRACE: Sample details =====")
+                logger.debug(f"Sample data: {sample}")
+                logger.debug(f"Sample info: {info}")
+                logger.debug(f"Sample state: {info.state.sample_state}")
+                logger.debug(f"Instance state: {info.state.instance_state}")
+                logger.debug("===== DDS TRACE: End sample details =====")
             for capability_data, info in samples:
                 # Check if the sample contains valid data that hasn't been read before
                 if info.state.sample_state == dds.SampleState.NOT_READ: # FIX: Check for NOT_READ
@@ -908,9 +964,9 @@ class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
                              log_fid = capability_data.get_string("function_id") or "ID_NOT_IN_DATA"
                         except Exception:
                              log_fid = "ERROR_GETTING_ID"
-                    logger.info(f"===== DDS TRACE: Processing READ sample - FuncID: {log_fid} =====")
+                    logger.debug(f"===== DDS TRACE: Processing READ sample - FuncID: {log_fid} =====")
                     # Re-log state for this specific case
-                    logger.info(f"===== DDS TRACE:   SampleState: {str(info.state.sample_state)}, InstanceState: {str(info.state.instance_state)} =====")
+                    logger.debug(f"===== DDS TRACE:   SampleState: {str(info.state.sample_state)}, InstanceState: {str(info.state.instance_state)} =====")
 
                     # Process the valid data
                     self.registry.handle_capability_advertisement(capability_data, info)
@@ -927,9 +983,9 @@ class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
                     except Exception:
                         log_fid = "ERROR_GETTING_ID"
 
-                    logger.info(f"===== DDS TRACE: Processing Non-ALIVE sample - FuncID: {log_fid} =====")
+                    logger.debug(f"===== DDS TRACE: Processing Non-ALIVE sample - FuncID: {log_fid} =====")
                     # Re-log state for this specific case
-                    logger.info(f"===== DDS TRACE:   SampleState: {str(info.state.sample_state)}, InstanceState: {str(info.state.instance_state)} =====")
+                    logger.debug(f"===== DDS TRACE:   SampleState: {str(info.state.sample_state)}, InstanceState: {str(info.state.instance_state)} =====")
 
                     # Process the removal
                     try:
@@ -938,7 +994,7 @@ class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
                         function_id_to_remove = log_fid if log_fid not in ["N/A", "ID_NOT_IN_DATA", "ERROR_GETTING_ID"] else None
 
                         if function_id_to_remove:
-                            logger.info(f"===== DDS TRACE: Instance for function ID {function_id_to_remove} no longer alive (state: {info.state.instance_state}). Attempting removal from registry. =====")
+                            logger.debug(f"===== DDS TRACE: Instance for function ID {function_id_to_remove} no longer alive (state: {info.state.instance_state}). Attempting removal from registry. =====")
                             # Check if already removed to avoid redundant logging
                             if function_id_to_remove in self.registry.discovered_functions:
                                 self.registry.remove_discovered_function(function_id_to_remove)
@@ -955,7 +1011,7 @@ class FunctionCapabilityListener(dds.DynamicData.NoOpDataReaderListener):
                     # Potentially other states, e.g. sample_state != READ and instance_state == ALIVE.
                     # logger.debug(f"===== DDS TRACE: Ignoring sample with info.state.sample_state={info.state.sample_state} and info.instance_state={info.instance_state} =====")
 
-            logger.info("===== DDS TRACE: Finished processing FunctionCapability samples in on_data_available =====")
+            logger.debug("===== DDS TRACE: Finished processing FunctionCapability samples in on_data_available =====")
         except dds.Error as e: # Catch DDS errors from reader.take()
             logger.error(f"DDS Error in on_data_available (e.g., during take()): {e}")
             logger.error(logging.traceback.format_exc())

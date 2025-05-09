@@ -43,21 +43,31 @@ class GenesisAgent(ABC):
     """Base class for all Genesis agents"""
     registration_writer: Optional[dds.DynamicData.DataWriter] = None # Define at class level
 
-    def __init__(self, agent_name: str, service_name: str, agent_id: str = None):
+    def __init__(self, agent_name: str, base_service_name: str, 
+                 service_instance_tag: Optional[str] = None, agent_id: str = None):
         """
         Initialize the agent.
         
         Args:
-            agent_name: Name of the agent
-            service_name: Name of the service this agent provides
+            agent_name: Name of the agent (for display, identification)
+            base_service_name: The fundamental type of service offered (e.g., "Chat", "ImageGeneration")
+            service_instance_tag: Optional tag to make this instance's RPC service name unique (e.g., "Primary", "User1")
             agent_id: Optional UUID for the agent (if None, will generate one)
         """
-        logger.info(f"GenesisAgent {agent_name} STARTING initializing with agent_id {agent_id}")
+        logger.info(f"GenesisAgent {agent_name} STARTING initializing with agent_id {agent_id}, base_service_name: {base_service_name}, tag: {service_instance_tag}")
         self.agent_name = agent_name
-        self.service_name = service_name
-        logger.info("===== DDS TRACE: Creating GenesisApp in GenesisAgent =====")
+        
+        self.base_service_name = base_service_name
+        if service_instance_tag:
+            self.rpc_service_name = f"{base_service_name}_{service_instance_tag}"
+        else:
+            self.rpc_service_name = base_service_name
+        
+        logger.info(f"Determined RPC service name: {self.rpc_service_name}")
+
+        logger.debug("===== DDS TRACE: Creating GenesisApp in GenesisAgent =====")
         self.app = GenesisApp(preferred_name=self.agent_name, agent_id=agent_id)
-        logger.info(f"===== DDS TRACE: GenesisApp created with agent_id {self.app.agent_id} =====")
+        logger.debug(f"===== DDS TRACE: GenesisApp created with agent_id {self.app.agent_id} =====")
         logger.info(f"GenesisAgent {self.agent_name} initialized with app {self.app.agent_id}")
 
 
@@ -89,7 +99,7 @@ class GenesisAgent(ABC):
             self.app.registration_topic,
             qos=writer_qos
         )
-        logger.info("✅ TRACE: Registration writer created with QoS settings")
+        logger.debug("✅ TRACE: Registration writer created with QoS settings")
 
         # Create replier with data available listener
         class RequestListener(dds.DynamicData.DataReaderListener):
@@ -115,8 +125,32 @@ class GenesisAgent(ABC):
                         
             async def _process_request(self, request, info):
                 try:
-                    # Get reply data from concrete implementation
-                    reply_data = await self.agent.process_request(request)
+                    request_dict = {}
+                    if hasattr(self.agent.request_type, 'members') and callable(self.agent.request_type.members):
+                        for member in self.agent.request_type.members():
+                            member_name = member.name
+                            try:
+                                # Check member type and use appropriate getter
+                                # Assuming InterfaceAgentRequest has only string members for now
+                                # A more robust solution would check member.type.kind
+                                if member.type.kind == dds.TypeKind.STRING_TYPE:
+                                    request_dict[member_name] = request.get_string(member_name)
+                                # TODO: Add handling for other types (INT32, BOOLEAN, etc.) if InterfaceAgentRequest evolves
+                                else:
+                                    logger.warning(f"Unsupported member type for '{member_name}' during DDS-to-dict conversion. Attempting direct assignment (may fail).")
+                                    # This part is risky and likely incorrect for non-basic types if not handled properly
+                                    request_dict[member_name] = request[member_name] 
+                            except Exception as e:
+                                logger.warning(f"Could not convert member '{member_name}' from DDS request to dict: {e}")
+                    else:
+                        logger.error("Cannot convert DDS request to dict: self.agent.request_type does not have a members() method. THIS IS A PROBLEM.")
+                        # If we can't determine members, we can't reliably convert.
+                        # Passing the raw request here would be inconsistent with agents expecting a dict.
+                        # It's better to let it fail or send an error reply if conversion is impossible.
+                        raise TypeError("Failed to introspect request_type members for DDS-to-dict conversion.")
+
+                    # Get reply data from concrete implementation, passing the dictionary
+                    reply_data = await self.agent.process_request(request_dict)
                     
                     # Create reply
                     reply = dds.DynamicData(self.agent.reply_type)
@@ -140,7 +174,7 @@ class GenesisAgent(ABC):
             request_type=self.request_type,
             reply_type=self.reply_type,
             participant=self.app.participant,
-            service_name=self.service_name
+            service_name=self.rpc_service_name
         )
         
         # Set listener on replier's DataReader with status mask for data available
@@ -206,31 +240,33 @@ class GenesisAgent(ABC):
             
             # Create registration dynamic data
             registration = dds.DynamicData(self.app.registration_type)
-            registration["message"] = f"Agent {self.agent_name} announcing presence"
+            registration["message"] = f"Agent {self.agent_name} ({self.base_service_name}) announcing presence"
             registration["prefered_name"] = self.agent_name
-            registration["default_capable"] = 1
+            registration["default_capable"] = 1 # Assuming this means it can handle default requests for its service type
             registration["instance_id"] = self.app.agent_id
-            registration["service_name"] = self.service_name
+            registration["service_name"] = self.rpc_service_name # This is the name clients connect to for RPC
+            # TODO: If IDL is updated, add a separate field for self.base_service_name for better type discovery by interfaces.
+            # For now, CLI will see self.rpc_service_name as 'Service' and can use it to connect.
             
-            logger.info(f"Created registration announcement: message='{registration['message']}', prefered_name='{registration['prefered_name']}', default_capable={registration['default_capable']}, instance_id='{registration['instance_id']}', service_name='{registration['service_name']}'")
+            logger.debug(f"Created registration announcement: message='{registration['message']}', prefered_name='{registration['prefered_name']}', default_capable={registration['default_capable']}, instance_id='{registration['instance_id']}', service_name='{registration['service_name']}' (base_service_name: {self.base_service_name})")
             
             # Write and flush the registration announcement
-            logger.info("🔍 TRACE: About to write registration announcement...")
+            logger.debug("🔍 TRACE: About to write registration announcement...")
             write_result = self.registration_writer.write(registration)
-            logger.info(f"✅ TRACE: Registration announcement write result: {write_result}")
+            logger.debug(f"✅ TRACE: Registration announcement write result: {write_result}")
             
             try:
-                logger.info("🔍 TRACE: About to flush registration writer...")
+                logger.debug("🔍 TRACE: About to flush registration writer...")
                 # Get writer status before flush
                 status = self.registration_writer.datawriter_protocol_status
-                logger.info(f"📊 TRACE: Writer status before flush - Sent")
+                logger.debug(f"📊 TRACE: Writer status before flush - Sent")
                 
                 self.registration_writer.flush()
                 
                 # Get writer status after flush
                 status = self.registration_writer.datawriter_protocol_status
-                logger.info(f"📊 TRACE: Writer status after flush - Sent")
-                logger.info("✅ TRACE: Registration writer flushed successfully")
+                logger.debug(f"📊 TRACE: Writer status after flush - Sent")
+                logger.debug("✅ TRACE: Registration writer flushed successfully")
                 logger.info("Successfully announced agent presence")
             except Exception as flush_error:
                 logger.error(f"💥 TRACE: Error flushing registration writer: {flush_error}")

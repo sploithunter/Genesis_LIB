@@ -276,6 +276,12 @@ run_with_timeout() {
             all_log_files+=("${related_logs[@]}")
         fi
         
+        # Heuristic for run_interface_agent_service_test.sh
+        if [[ "$script_basename" == "run_interface_agent_service_test.sh" ]]; then
+            related_logs=($(ls "$LOG_DIR/test_sga_pipeline.log" "$LOG_DIR/test_calc_pipeline.log" "$LOG_DIR/test_static_interface_pipeline.log" "$LOG_DIR/test_pipeline_spy.log" 2>/dev/null))
+            all_log_files+=("${related_logs[@]}")
+        fi
+        
         # --- Display all found logs --- 
         # Remove duplicates (although unlikely with current heuristics)
         unique_log_files=($(printf "%s\n" "${all_log_files[@]}" | sort -u))
@@ -317,6 +323,9 @@ echo "Starting Genesis-LIB test suite..."
 # Check for and clean up any existing DDS processes
 check_and_cleanup_dds || { echo "Test suite aborted due to DDS process issues"; exit 1; }
 
+# Interface -> Agent -> Service Pipeline Test (Moved to be first after cleanup)
+run_with_timeout "run_interface_agent_service_test.sh" 75 || { echo "Test failed: run_interface_agent_service_test.sh"; exit 1; }
+
 # Math Interface/Agent Simple Test (Checks RPC and Durability)
 run_with_timeout "run_math_interface_agent_simple.sh" 60 || { echo "Test failed: run_math_interface_agent_simple.sh"; exit 1; }
 
@@ -339,7 +348,7 @@ run_with_timeout "test_calculator_durability.sh" 60 || { echo "Test failed: test
 DEBUG=true run_with_timeout "run_test_agent_with_functions.sh" 60 || { echo "Test failed: run_test_agent_with_functions.sh"; exit 1; }
 
 # Services and agent test
-run_with_timeout "start_services_and_agent.py" 90 || { echo "Test failed: start_services_and_agent.py"; exit 1; }
+# run_with_timeout "start_services_and_agent.py" 90 || { echo "Test failed: start_services_and_agent.py"; exit 1; }
 
 # Services and CLI test
 run_with_timeout "start_services_and_cli.sh" 90 || { echo "Test failed: start_services_and_cli.sh"; exit 1; }

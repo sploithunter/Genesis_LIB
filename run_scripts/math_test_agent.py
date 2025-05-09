@@ -43,7 +43,8 @@ class MathTestAgent(MonitoredAgent):
         try:
             super().__init__(
                 agent_name="MathTestAgent",
-                service_name="GenericAgent",  # Changed service name to test generic naming
+                base_service_name="MathTestService",
+                agent_type="TEST_AGENT",
                 agent_id=str(uuid.uuid4())
             )
             logger.info("✅ TRACE: MonitoredAgent base class initialized")
@@ -56,9 +57,12 @@ class MathTestAgent(MonitoredAgent):
     async def process_request(self, request):
         """Process math operation requests"""
         try:
-            # Get the message field from the DynamicData object
-            message = request.get_string("message")
-            # Parse request JSON
+            # Get the message field from the dictionary
+            message = request.get("message")
+            if message is None:
+                raise ValueError("Request dictionary missing 'message' key")
+            
+            # Parse request JSON (message itself is expected to be a JSON string)
             request_data = json.loads(message)
             
             # Extract operation and numbers from request

@@ -3,10 +3,14 @@ GENESIS Library - A distributed function discovery and execution framework
 """
 
 import logging
-from .logging_config import configure_genesis_logging
+# from .logging_config import configure_genesis_logging # REMOVE THIS
 
 # Configure root logger for genesis_lib
-configure_genesis_logging("genesis_lib", "genesis_lib", logging.INFO)
+# configure_genesis_logging("genesis_lib", "genesis_lib", logging.INFO) # REMOVE THIS
+
+# Instead of the above, just get a logger for the library. 
+# The application using the library will set up handlers and levels.
+logger = logging.getLogger(__name__) # or logging.getLogger("genesis_lib")
 
 from .genesis_app import GenesisApp
 from .agent import GenesisAgent
