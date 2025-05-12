@@ -415,13 +415,14 @@ class FunctionRegistry:
     - Function execution results via DDS RPC
     """
     
-    def __init__(self, participant=None, domain_id=0):
+    def __init__(self, participant=None, domain_id=0, enable_discovery_listener: bool = True):
         """
         Initialize the function registry.
         
         Args:
             participant: DDS participant (if None, will create one)
             domain_id: DDS domain ID
+            enable_discovery_listener: If True, creates DDS reader to discover external functions. Defaults to True.
         """
         self.functions = {}  # Dict[str, FunctionInfo]
         self.function_by_name = {}  # Dict[str, str] mapping names to IDs
@@ -434,6 +435,7 @@ class FunctionRegistry:
         
         # Initialize function matcher with LLM support
         self.matcher = FunctionMatcher()
+        self.enable_discovery_listener = enable_discovery_listener
         
         # Create DDS participant if not provided
         if participant is None:
@@ -442,18 +444,13 @@ class FunctionRegistry:
         # Store participant reference
         self.participant = participant
         
-        # Create subscriber
-        self.subscriber = dds.Subscriber(participant)
-        
-        # Create publisher
+        # Create publisher (always needed for advertising own functions)
         self.publisher = dds.Publisher(participant)
         
         # Get types from XML
         config_path = get_datamodel_path()
         self.type_provider = dds.QosProvider(config_path)
         self.capability_type = self.type_provider.type("genesis_lib", "FunctionCapability")
-        self.execution_request_type = self.type_provider.type("genesis_lib", "FunctionExecutionRequest")
-        self.execution_reply_type = self.type_provider.type("genesis_lib", "FunctionExecutionReply")
         
         # Create topics
         # Try to find the topic first, create if not found
@@ -491,25 +488,7 @@ class FunctionRegistry:
             logger.error(f"===== DDS TRACE: Unexpected error during topic find/create: {e} ====")
             raise
         
-        # Create DataReader for capability discovery
-        reader_qos = dds.QosProvider.default.datareader_qos
-        reader_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
-        reader_qos.history.kind = dds.HistoryKind.KEEP_LAST
-        reader_qos.history.depth = 500
-        reader_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
-        reader_qos.liveliness.kind = dds.LivelinessKind.AUTOMATIC
-        reader_qos.liveliness.lease_duration = dds.Duration(seconds=2)
-        
-        self.capability_listener = FunctionCapabilityListener(self)
-        self.capability_reader = dds.DynamicData.DataReader(
-            topic=self.capability_topic,
-            qos=reader_qos,
-            listener=self.capability_listener,
-            subscriber=self.subscriber,
-            mask=dds.StatusMask.ALL
-        )
-        
-        # Create DataWriter for capability advertisement
+        # Create DataWriter for capability advertisement (always needed)
         writer_qos = dds.QosProvider.default.datawriter_qos
         writer_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
         writer_qos.history.kind = dds.HistoryKind.KEEP_LAST
@@ -524,14 +503,49 @@ class FunctionRegistry:
             qos=writer_qos,
             mask=dds.StatusMask.ALL
         )
-        
-        # Create RPC client for function execution
-        self.execution_client = rpc.Requester(
-            request_type=self.execution_request_type,
-            reply_type=self.execution_reply_type,
-            participant=participant,
-            service_name="FunctionExecution"
-        )
+
+        if self.enable_discovery_listener:
+            # Create subscriber
+            self.subscriber = dds.Subscriber(participant)
+            
+            # Get types for execution (only if discovery is enabled)
+            self.execution_request_type = self.type_provider.type("genesis_lib", "FunctionExecutionRequest")
+            self.execution_reply_type = self.type_provider.type("genesis_lib", "FunctionExecutionReply")
+
+            # Create DataReader for capability discovery
+            reader_qos = dds.QosProvider.default.datareader_qos
+            reader_qos.durability.kind = dds.DurabilityKind.TRANSIENT_LOCAL
+            reader_qos.history.kind = dds.HistoryKind.KEEP_LAST
+            reader_qos.history.depth = 500
+            reader_qos.reliability.kind = dds.ReliabilityKind.RELIABLE
+            reader_qos.liveliness.kind = dds.LivelinessKind.AUTOMATIC
+            reader_qos.liveliness.lease_duration = dds.Duration(seconds=2)
+            
+            self.capability_listener = FunctionCapabilityListener(self)
+            self.capability_reader = dds.DynamicData.DataReader(
+                topic=self.capability_topic,
+                qos=reader_qos,
+                listener=self.capability_listener,
+                subscriber=self.subscriber,
+                mask=dds.StatusMask.ALL
+            )
+            
+            # Create RPC client for function execution
+            self.execution_client = rpc.Requester(
+                request_type=self.execution_request_type,
+                reply_type=self.execution_reply_type,
+                participant=participant,
+                service_name="FunctionExecution"
+            )
+        else:
+            self.subscriber = None
+            self.capability_reader = None
+            self.capability_listener = None
+            self.execution_client = None
+            # Ensure discovered_functions is initialized if discovery is off,
+            # though it's already initialized above.
+            self.discovered_functions = {}
+            logger.info("FunctionRegistry initialized with discovery listener DISABLED.")
     
     def register_function(self, 
                          func: Callable,
@@ -893,17 +907,22 @@ class FunctionRegistry:
             logger.debug("===== DDS TRACE: FunctionRegistry.close() - WaitSet/StatusCondition cleanup END ====")
 
             # Close DDS entities
-            if hasattr(self, 'execution_client'):
+            if hasattr(self, 'execution_client') and self.execution_client:
                 self.execution_client.close()
-            if hasattr(self, 'capability_reader'):
+            if hasattr(self, 'capability_reader') and self.capability_reader:
                 self.capability_reader.close()
-            if hasattr(self, 'capability_writer'):
+            
+            # capability_writer and capability_topic are always created (or should be)
+            if hasattr(self, 'capability_writer') and self.capability_writer:
                 self.capability_writer.close()
-            if hasattr(self, 'capability_topic'):
+            if hasattr(self, 'capability_topic') and self.capability_topic: # Topic is found or created
                 self.capability_topic.close()
-            if hasattr(self, 'subscriber'):
+
+            if hasattr(self, 'subscriber') and self.subscriber:
                 self.subscriber.close()
-            if hasattr(self, 'publisher'):
+            
+            # Publisher is always created
+            if hasattr(self, 'publisher') and self.publisher:
                 self.publisher.close()
             
             # Clear references

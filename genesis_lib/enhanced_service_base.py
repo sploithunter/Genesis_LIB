@@ -228,18 +228,21 @@ class EnhancedServiceBase(GenesisRPCService):
         # Now we can auto-register decorated functions
         self._auto_register_decorated_functions()
         
-        # Get DDS instance handle for consistent identification - will be set after registry is initialized
-        self.app_guid = None  # Will be set after capability writer is created
-        
         # Initialize the function registry and store reference to self
-        self.registry = registry if registry is not None else FunctionRegistry(participant=self.participant, domain_id=domain_id)
+        self.registry = registry if registry is not None else FunctionRegistry(
+            participant=self.participant, 
+            domain_id=domain_id,
+            enable_discovery_listener=False # Service does not discover others
+        )
         self.registry.service_base = self  # Set this instance as the service base
 
-        # Create and set our enhanced listener
-        self.capability_listener = EnhancedFunctionCapabilityListener(self.registry, self)
-        self.registry.capability_reader.listener = self.capability_listener
-        
-        # Now set app_guid using the capability writer's instance handle
+        # If discovery is disabled in the registry, its capability_reader will be None.
+        # The EnhancedFunctionCapabilityListener (now removed) logic or any logic
+        # relying on self.registry.capability_reader would need careful checking,
+        # but currently, no such logic remains directly in EnhancedServiceBase.
+        # The base listener is only created/attached within FunctionRegistry if enabled.
+
+        # Now set app_guid using the capability writer's instance handle (writer is always created)
         self.app_guid = str(self.registry.capability_writer.instance_handle)
         
         # Store service capabilities
